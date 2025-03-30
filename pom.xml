@@ -60,6 +60,7 @@
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
+			<!--<scope>provided</scope>-->
 		</dependency>
 		
 		<dependency>
@@ -102,7 +103,8 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<configuration>
+				<!--不要排除 Lombok-->
+				 <configuration>
 					<excludes>
 						<exclude>
 							<groupId>org.projectlombok</groupId>
