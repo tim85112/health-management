@@ -2,7 +2,8 @@
 
 # 享健你健康管理系統 (Health Management System)
 
-本專案是一个基于 Spring Boot 3.4.3 的後端專案，本專案採用SpringBoot+Vue的前後端分離架構，此後端項目提供會員管理、健康追踪、課程管理等功能的 RESTful API。
+本專案是一个基于 Spring Boot 3.4.3 的後端專案，本專案採用SpringBoot+Vue的前後端分離架構，此後端項目提供會員管理、健康追蹤、課程管理等功能的
+RESTful API。
 
 前端項目連接：待補
 
@@ -34,29 +35,29 @@ MVC 架構：
 
 ### 步驟
 
-1.  git clone https://github.com/yourusername/health-management.git
+1. git clone https://github.com/yourusername/health-management.git
 
-2.  設定資料库
+2. 設定資料库
 
-    - 创建資料库`HealthManagement`
-    - 修改`application.properties`中的資料库設定
+    - 創建資料庫`HealthManagement`
+    - 修改`application.properties`中的資料庫設定
 
-3.  建置並執行專案
-    mvn clean install
-    mvn spring-boot:run
+3. 建置並執行專案
+   mvn clean install
+   mvn spring-boot:run
 
-4.  訪問 API 文件
-    http://localhost:8080/swagger-ui/index.html
+4. 訪問 API 文件
+   http://localhost:8080/swagger-ui/index.html
 
 ## API 端點
 
 - 認證：/auth/
-  - 註冊：POST /auth/register
-  - 登入：POST /auth/login
+    - 註冊：POST /auth/register
+    - 登入：POST /auth/login
 - 用戶管理：/users/
-  - 取得用戶：GET /users/{id}
-  - 更新用戶：PUT /users/{id}
-  - 刪除用戶：DELETE /users/{id}
+    - 取得用戶：GET /users/{id}
+    - 更新用戶：PUT /users/{id}
+    - 刪除用戶：DELETE /users/{id}
 - 商品管理：/products/
 - 訂單管理：/orders/
 - 課程管理：/courses/
@@ -67,14 +68,14 @@ MVC 架構：
 
 1. 命名規範
 
-   - 使用 PascalCase 命名
-   - 使用 camelCase 命名方法與變數
+    - 使用 PascalCase 命名
+    - 使用 camelCase 命名方法與變數
 
 2. Git 工作流
 
-   - `main`：正式環境
-   - `dev`：開發環境
-   - `feature/xxx`：新功能分支
+    - `main`：正式環境
+    - `dev`：開發環境
+    - `feature/xxx`：新功能分支
 
 3. API 回應格式
 
