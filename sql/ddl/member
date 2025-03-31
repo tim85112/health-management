@@ -1,6 +1,6 @@
 CREATE TABLE Users (
     user_id INT IDENTITY(1,1) PRIMARY KEY,            -- 自動遞增主鍵
-    name VARCHAR(50) NOT NULL,                        -- 使用者名稱
+    name NVARCHAR(50) NOT NULL,                        -- 使用者名稱
     email NVARCHAR(100) NOT NULL,                      -- 電子郵件
     password_hash VARCHAR(255) NOT NULL,              -- 密碼哈希
     gender CHAR(1),                                   -- 性別，例如 'M' 或 'F'
