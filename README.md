@@ -1,6 +1,10 @@
-# 健康管理系統 (Health Management System)
+![image](https://github.com/user-attachments/assets/3beb153a-6824-4878-b2ee-f8f7d52293e3)
 
-健康管理系統是一个基于 Spring Boot 3.4.3 的後端專案，提供會員管理、健康追踪、課程管理等功能的 RESTful API。
+# 享健你健康管理系統 (Health Management System)
+
+本專案是一个基于 Spring Boot 3.4.3 的後端專案，本專案採用SpringBoot+Vue的前後端分離架構，此後端項目提供會員管理、健康追踪、課程管理等功能的 RESTful API。
+
+前端項目連接：待補
 
 ## 技術棧
 
