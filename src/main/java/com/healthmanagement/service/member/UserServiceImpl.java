@@ -4,6 +4,7 @@ import com.healthmanagement.dao.member.UserDAO;
 import com.healthmanagement.model.member.User;
 import com.healthmanagement.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,13 +16,23 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
 
     private final UserDAO userDAO;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
+    private final ApplicationContext applicationContext;
+    private PasswordEncoder passwordEncoder;
+    private JwtUtil jwtUtil;
 
     @Autowired
-    public UserServiceImpl(UserDAO userDAO, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+    public UserServiceImpl(UserDAO userDAO, ApplicationContext applicationContext) {
         this.userDAO = userDAO;
+        this.applicationContext = applicationContext;
+    }
+
+    @Autowired
+    public void setPasswordEncoder(PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
+    }
+
+    @Autowired
+    public void setJwtUtil(JwtUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
     }
 

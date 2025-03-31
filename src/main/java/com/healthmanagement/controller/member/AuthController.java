@@ -27,7 +27,7 @@ public class AuthController {
     public AuthController(UserService userService) {
         this.userService = userService;
     }
-
+    
     @PostMapping("/register")
     @Operation(summary = "Register a new user", description = "Create a new user account with the provided information")
     public ResponseEntity<ApiResponse<User>> register(@Valid @RequestBody RegisterRequest registerRequest) {
