@@ -1,22 +1,53 @@
 package com.healthmanagement.controller.social;
 
-import com.healthmanagement.util.ApiResponse;
+import com.healthmanagement.model.social.Post;
+import com.healthmanagement.service.social.ForumService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
-@RequestMapping("/forums")
-@Tag(name = "Forums", description = "Forum management APIs")
+@RequestMapping("/posts") 
+@Tag(name = "Forum Posts", description = "Forum post CRUD APIs")
 public class ForumController {
 
+    @Autowired
+    private ForumService forumService;
+
     @GetMapping
-    @Operation(summary = "Get all forum posts", description = "Retrieve a list of all forum posts")
-    public ResponseEntity<ApiResponse<String>> getAllForumPosts() {
-        // 此方法将由组员实现
-        return ResponseEntity.ok(ApiResponse.success("Forum posts will be implemented by Team Member D"));
+    @Operation(summary = "Get all forum posts")
+    public ResponseEntity<List<Post>> getAllPosts() {
+        return ResponseEntity.ok(forumService.getAllPosts());
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Get post by ID")
+    public ResponseEntity<Post> getPostById(@PathVariable Integer id) {
+        return ResponseEntity.ok(forumService.getPostById(id));
+    }
+
+    @PostMapping
+    @Operation(summary = "Create a new post")
+    public ResponseEntity<Post> createPost(@RequestBody Post post) {
+        return ResponseEntity.ok(forumService.createPost(post));
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Update an existing post")
+    public ResponseEntity<Post> updatePost(@PathVariable Integer id, @RequestBody Post updatedPost) {
+        return ResponseEntity.ok(forumService.updatePost(id, updatedPost));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete a post")
+    public ResponseEntity<Void> deletePost(@PathVariable Integer id) {
+        forumService.deletePost(id);
+        return ResponseEntity.noContent().build();
     }
 }
