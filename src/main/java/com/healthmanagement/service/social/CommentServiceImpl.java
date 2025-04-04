@@ -16,7 +16,12 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<Comment> getCommentsByPostId(Integer postId) {
-        return commentDAO.findByPost_ArticleId(postId);
+        return commentDAO.findByPost_Id(postId);
+    }
+
+    @Override
+    public List<Comment> getCommentsByUserId(Integer userId) {
+        return commentDAO.findByUser_UserId(userId);
     }
 
     @Override
@@ -41,7 +46,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public void deleteComment(Integer commentId) {
-        commentDAO.deleteById(commentId);
+    public void deleteComment(Integer id) {
+        commentDAO.deleteById(id);
     }
 }

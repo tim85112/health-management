@@ -8,6 +8,8 @@ public interface CommentService {
 
     List<Comment> getCommentsByPostId(Integer postId);
 
+    List<Comment> getCommentsByUserId(Integer userId);
+
     Comment getCommentById(Integer commentId);
 
     Comment createComment(Comment comment);

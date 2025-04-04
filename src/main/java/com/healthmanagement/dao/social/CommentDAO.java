@@ -10,7 +10,7 @@ import java.util.List;
 public interface CommentDAO extends JpaRepository<Comment, Integer> {
 
     // 查詢某篇文章底下的留言
-    List<Comment> findByPost_ArticleId(Integer articleId);
+    List<Comment> findByPost_Id(Integer postId);
 
     // 查詢某位使用者的所有留言
     List<Comment> findByUser_UserId(Integer userId);
