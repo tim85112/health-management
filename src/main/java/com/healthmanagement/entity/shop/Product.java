@@ -2,12 +2,18 @@ package com.healthmanagement.entity.shop;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 @Data
 @Entity
 @Table(name = "product")
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,6 +29,7 @@ public class Product {
     private BigDecimal price;
 
     @Column(name = "stock_quantity", nullable = false)
+    @Builder.Default
     private Integer stockQuantity = 0;
 
     @Column(name = "image_url", length = 500)
