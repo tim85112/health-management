@@ -24,13 +24,29 @@ public class MockPaymentServiceImpl implements PaymentService {
 
     @Override
     public PaymentResponse createPayment(PaymentRequest request) {
+        // 檢查訂單狀態
+        Order order = orderDAO.findById(Integer.parseInt(request.getOrderId()));
+        if (order == null) {
+            PaymentResponse errorResponse = new PaymentResponse();
+            errorResponse.setStatus("ERROR");
+            errorResponse.setErrorMessage("Order not found");
+            return errorResponse;
+        }
+
         PaymentResponse response = new PaymentResponse();
         response.setPaymentId(UUID.randomUUID().toString());
         response.setOrderId(request.getOrderId());
         response.setAmount(request.getAmount());
         response.setCurrency(request.getCurrency());
-        response.setStatus("PENDING");
-        response.setPaymentUrl("http://localhost:8080/api/order/payment/mock/" + response.getPaymentId());
+        
+        // 根據訂單狀態設置支付狀態
+        if ("completed".equalsIgnoreCase(order.getStatus())) {
+            response.setStatus("COMPLETED");
+            response.setErrorMessage("Payment already completed");
+        } else {
+            response.setStatus("PENDING");
+            response.setPaymentUrl("http://localhost:8080/api/order/payment/mock/" + response.getPaymentId());
+        }
         
         paymentStore.put(response.getPaymentId(), response);
         return response;

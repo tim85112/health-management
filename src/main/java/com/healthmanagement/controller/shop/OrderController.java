@@ -31,11 +31,22 @@ public class OrderController {
 
     @PostMapping
     @Operation(summary = "Create order from cart", description = "Create a new order from user's cart items")
-    public ResponseEntity<ApiResponse<OrderDTO>> createOrderFromCart(@RequestBody CreateOrderRequest request) {
+    public ResponseEntity<ApiResponse<OrderDTO>> createOrder(@RequestBody CreateOrderRequest request) {
         try {
-            OrderDTO order = orderService.createOrderFromCart(request.getUserId());
+            OrderDTO order = orderService.createOrder(request);
             return ResponseEntity.ok(ApiResponse.success(order));
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @PostMapping("/cart")
+    @Operation(summary = "Create order from cart", description = "Create a new order from user's cart items")
+    public ResponseEntity<ApiResponse<OrderDTO>> createOrderFromCart(@RequestParam Integer userId) {
+        try {
+            OrderDTO order = orderService.createOrderFromCart(userId);
+            return ResponseEntity.ok(ApiResponse.success(order));
+        } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
     }
