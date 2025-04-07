@@ -1,8 +1,10 @@
 package com.healthmanagement.dao.shop;
 
-import org.springframework.stereotype.Repository;
+import com.healthmanagement.entity.shop.Order;
+import java.util.List;
 
-@Repository
 public interface OrderDAO {
-    // 这个接口将由组员A实现
+    Order save(Order order);
+    Order findById(Integer id);
+    List<Order> findByUserId(Integer userId);
 }
