@@ -28,35 +28,28 @@ public class TestDataLoader implements CommandLineRunner {
     // 複寫run方法
     @Override
     public void run(String... args) throws Exception {
-
         // 找出資料庫使用者數量
         long userCount = userDAO.count();
         System.out.println("當前資料庫使用者數量: " + userCount);
 
-        // 添加一個環境變數控制是否強制重新初始化
-        boolean forceReset = Boolean.parseBoolean(System.getProperty("app.db.force-reset", "false"));
-
-        // 有資料就不重置
-        if (userCount > 0 && !forceReset) {
-            System.out.println("資料庫已有使用者資料，跳過測試資料初始化");
-            return;
+        // 如果少於20筆資料，則補充到20筆
+        if (userCount < 20) {
+            System.out.println("開始初始化測試使用者資料...");
+            
+            // 建立測試使用者
+            List<User> testUsers = createTestUsers();
+            
+            // 儲存進資料庫
+            userDAO.saveAll(testUsers);
+            
+            System.out.println("測試使用者資料初始化完成！共建立 " + testUsers.size() + " 位使用者");
+        } else {
+            System.out.println("資料庫已有足夠的使用者資料，跳過測試資料初始化");
         }
 
-        // 強制重置模式
-        if (forceReset && userCount > 0) {
-            System.out.println("強制重置模式：清除現有使用者資料...");
-            userDAO.deleteAll();
-        }
-
-        System.out.println("開始初始化測試使用者資料...");
-
-        // 建立測試使用者
-        List<User> testUsers = createTestUsers();
-
-        // 儲存進資料庫
-        userDAO.saveAll(testUsers);
-
-        System.out.println("測試使用者資料初始化完成！共建立 " + testUsers.size() + " 位使用者");
+        // 顯示最終的資料庫使用者數量
+        long finalCount = userDAO.count();
+        System.out.println("目前資料庫總共有 " + finalCount + " 位使用者");
     }
 
     // 建立測試使用者清單
@@ -74,9 +67,17 @@ public class TestDataLoader implements CommandLineRunner {
         users.add(createUser("大哥2", "ivan2@example.com", "user123", "M", "NULL", "user", 0));
 
         // 創建測試用戶
-        users.add(createUser("測試用戶1", "test1@example.com", "password123", "M", "測試用戶簡介1", "user", 0));
-        users.add(createUser("測試用戶2", "test2@example.com", "password123", "M", "測試用戶簡介2", "user", 0));
-        users.add(createUser("測試用戶3", "test3@example.com", "password123", "M", "測試用戶簡介3", "user", 0));
+        for (int i = 1; i <= 16; i++) {
+            users.add(createUser(
+                "測試用戶" + i,
+                "test" + i + "@example.com",
+                "password123",
+                i % 2 == 0 ? "M" : "F",
+                "測試用戶簡介" + i,
+                "user",
+                0
+            ));
+        }
 
         return users;
     }
