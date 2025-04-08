@@ -1,6 +1,6 @@
 package com.healthmanagement.dao.shop;
 
-import com.healthmanagement.entity.shop.CartItem;
+import com.healthmanagement.model.shop.CartItem;
 import java.util.List;
 
 public interface CartItemDAO {

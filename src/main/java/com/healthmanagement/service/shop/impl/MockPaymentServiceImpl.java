@@ -3,7 +3,7 @@ package com.healthmanagement.service.shop.impl;
 import com.healthmanagement.dao.shop.OrderDAO;
 import com.healthmanagement.dto.shop.PaymentRequest;
 import com.healthmanagement.dto.shop.PaymentResponse;
-import com.healthmanagement.entity.shop.Order;
+import com.healthmanagement.model.shop.Order;
 import com.healthmanagement.service.shop.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

@@ -1,6 +1,6 @@
 package com.healthmanagement.dao.shop;
 
-import com.healthmanagement.entity.shop.Product;
+import com.healthmanagement.model.shop.Product;
 import java.math.BigDecimal;
 import java.util.List;
 

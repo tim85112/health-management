@@ -1,4 +1,4 @@
-package com.healthmanagement.entity.shop;
+package com.healthmanagement.model.shop;
 
 import jakarta.persistence.*;
 import lombok.Data;

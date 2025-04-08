@@ -1,19 +1,20 @@
-package com.healthmanagement.entity.shop;
+package com.healthmanagement.model.shop;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.sql.Timestamp;
+import java.math.BigDecimal;
 
 @Data
 @Entity
-@Table(name = "cart_item")
-public class CartItem {
+@Table(name = "order_item")
+public class OrderItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "user_id", nullable = false)
-    private Integer userId;
+    @ManyToOne
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
 
     @ManyToOne
     @JoinColumn(name = "product_id")
@@ -25,6 +26,6 @@ public class CartItem {
     @Column(name = "quantity", nullable = false)
     private Integer quantity = 1;
 
-    @Column(name = "added_at")
-    private Timestamp addedAt;
+    @Column(name = "subtotal", nullable = false, precision = 10, scale = 2)
+    private BigDecimal subtotal;
 } 

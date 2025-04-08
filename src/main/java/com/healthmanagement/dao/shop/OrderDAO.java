@@ -1,6 +1,6 @@
 package com.healthmanagement.dao.shop;
 
-import com.healthmanagement.entity.shop.Order;
+import com.healthmanagement.model.shop.Order;
 import java.util.List;
 
 public interface OrderDAO {

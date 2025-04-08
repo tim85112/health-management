@@ -1,7 +1,7 @@
 package com.healthmanagement.dao.shop.impl;
 
 import com.healthmanagement.dao.shop.ProductDAO;
-import com.healthmanagement.entity.shop.Product;
+import com.healthmanagement.model.shop.Product;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;

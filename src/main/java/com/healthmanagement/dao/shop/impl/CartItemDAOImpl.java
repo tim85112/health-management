@@ -1,8 +1,8 @@
 package com.healthmanagement.dao.shop.impl;
 
 import com.healthmanagement.dao.shop.CartItemDAO;
-import com.healthmanagement.entity.shop.CartItem;
-import com.healthmanagement.entity.shop.Product;
+import com.healthmanagement.model.shop.CartItem;
+import com.healthmanagement.model.shop.Product;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
