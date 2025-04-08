@@ -1,5 +1,11 @@
 package com.healthmanagement.model.member;
 
+import java.util.List;
+
+import com.healthmanagement.model.fitness.Achievements;
+import com.healthmanagement.model.fitness.ExerciseRecord;
+import com.healthmanagement.model.fitness.FitnessGoal;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -39,4 +45,15 @@ public class User {
 
     @Column(name = "user_points", columnDefinition = "INT DEFAULT 0")
     private Integer userPoints;
+    
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<ExerciseRecord> exerciseRecords; // 健身紀錄
+    
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<FitnessGoal> fitnessGoals; // 健身目標
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Achievements> achievements; // 成就
+
+
 }

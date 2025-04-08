@@ -1,0 +1,88 @@
+package com.healthmanagement.service.fitness;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
+import com.healthmanagement.dao.fitness.BodyMetricDAO;
+import com.healthmanagement.dao.fitness.ExerciseRecordDAO;
+import com.healthmanagement.dao.fitness.ExerciseTypeCoefficientDAO;
+import com.healthmanagement.dto.fitness.ExerciseRecordDTO;
+import com.healthmanagement.model.fitness.BodyMetric;
+import com.healthmanagement.model.fitness.ExerciseRecord;
+import com.healthmanagement.model.fitness.ExerciseTypeCoefficient;
+
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class ExerciseServiceImpl implements ExerciseService {
+
+    private final ExerciseRecordDAO exerciseRecordRepo;
+    private final BodyMetricDAO bodyMetricRepo;  
+    private final ExerciseTypeCoefficientDAO exerciseTypeCoefficientRepo;  
+
+    @Override
+    public ExerciseRecordDTO saveExerciseRecord(ExerciseRecordDTO exerciseRecordDTO) {
+        // 步驟 1: 從 BodyMetrics 中獲取用戶體重
+    	List<BodyMetric> bodyMetrics = bodyMetricRepo.findByUserId(exerciseRecordDTO.getUserId());
+    	if (bodyMetrics == null || bodyMetrics.isEmpty()) {
+    	    throw new EntityNotFoundException("找不到用戶的身體數據。");
+    	}
+    	BodyMetric bodyMetric = bodyMetrics.get(0); // 或使用排序後的第一筆最新資料
+
+
+        // 步驟 2: 根據運動類型獲取 MET 值
+    	ExerciseTypeCoefficient exerciseType = exerciseTypeCoefficientRepo
+    		    .findByExerciseName(exerciseRecordDTO.getExerciseType())
+    		    .orElseThrow(() -> new EntityNotFoundException("找不到該運動類型的 MET 值。"));
+        
+
+        // 步驟 3: 計算消耗的卡路里
+        double weight = bodyMetric.getWeight(); // 用戶的體重
+        double met = exerciseType.getMet().doubleValue(); // 運動的 MET 值
+        double durationInHours = exerciseRecordDTO.getExerciseDuration() / 60.0; // 將運動時長轉換為小時
+
+        // 計算消耗的卡路里
+        double caloriesBurned = met * weight * durationInHours;
+
+        // 設置計算後的卡路里消耗
+        exerciseRecordDTO.setCaloriesBurned(caloriesBurned);
+
+        // 步驟 4: 保存運動紀錄
+        ExerciseRecord exerciseRecord = new ExerciseRecord();
+        exerciseRecord.setUserId(exerciseRecordDTO.getUserId());
+        exerciseRecord.setExerciseType(exerciseRecordDTO.getExerciseType());
+        exerciseRecord.setExerciseDuration(exerciseRecordDTO.getExerciseDuration());
+        exerciseRecord.setCaloriesBurned(caloriesBurned);
+        exerciseRecord.setExerciseDate(exerciseRecordDTO.getExerciseDate());
+
+        // 保存運動紀錄並返回 DTO
+        ExerciseRecord savedRecord = exerciseRecordRepo.save(exerciseRecord);
+        return toDTO(savedRecord);
+    }
+
+    @Override
+    public void deleteExerciseRecord(Integer recordId) {
+        exerciseRecordRepo.deleteById(recordId);
+    }
+
+    @Override
+    public List<ExerciseRecordDTO> getExerciseRecordsByUserId(Integer userId) {
+        List<ExerciseRecord> exerciseRecords = exerciseRecordRepo.findByUserId(userId);
+        return exerciseRecords.stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
+    private ExerciseRecordDTO toDTO(ExerciseRecord exerciseRecord) {
+        return new ExerciseRecordDTO(
+                exerciseRecord.getRecordId(),
+                exerciseRecord.getUserId(),
+                exerciseRecord.getExerciseType(),
+                exerciseRecord.getExerciseDuration(),
+                exerciseRecord.getCaloriesBurned(),
+                exerciseRecord.getExerciseDate()
+        );
+    }
+}
