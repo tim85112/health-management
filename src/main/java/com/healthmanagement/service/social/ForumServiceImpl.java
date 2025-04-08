@@ -1,6 +1,7 @@
 package com.healthmanagement.service.social;
 
 import com.healthmanagement.dao.social.ForumDAO;
+import com.healthmanagement.dto.social.PostRequest;
 import com.healthmanagement.model.social.Post;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,7 +34,7 @@ public class ForumServiceImpl implements ForumService {
     }
 
     @Override
-    public Post updatePost(Integer id, Post updatedPost) {
+    public Post updatePost(Integer id, PostRequest updatedPost) {
         Post existingPost = getPostById(id);
         existingPost.setTitle(updatedPost.getTitle());
         existingPost.setContent(updatedPost.getContent());

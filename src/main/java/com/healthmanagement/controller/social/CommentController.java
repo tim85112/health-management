@@ -1,5 +1,6 @@
 package com.healthmanagement.controller.social;
 
+import com.healthmanagement.dto.social.CommentRequest;
 import com.healthmanagement.model.social.Comment;
 import com.healthmanagement.service.social.CommentService;
 
@@ -8,6 +9,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,10 +23,22 @@ public class CommentController {
     @Autowired
     private CommentService commentService;
 
-    @GetMapping("/post/{postId}")
-    @Operation(summary = "Get all comments by post ID")
-    public ResponseEntity<List<Comment>> getByPost(@PathVariable Integer postId) {
-        return ResponseEntity.ok(commentService.getCommentsByPostId(postId));
+    @PostMapping("/post/{postId}")
+    @Operation(summary = "Create a new comment under post")
+    public ResponseEntity<Comment> createComment(
+            @PathVariable Integer postId,
+            @RequestBody CommentRequest commentRequest,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(commentService.createComment(postId, userDetails.getUsername(), commentRequest));
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Update a comment")
+    public ResponseEntity<Comment> updateComment(
+            @PathVariable Integer id,
+            @RequestBody CommentRequest commentRequest,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(commentService.updateComment(id, userDetails.getUsername(), commentRequest));
     }
 
     @GetMapping("/{id}")
@@ -32,22 +47,18 @@ public class CommentController {
         return ResponseEntity.ok(commentService.getCommentById(id));
     }
 
-    @PostMapping
-    @Operation(summary = "Create a new comment")
-    public ResponseEntity<Comment> create(@RequestBody Comment comment) {
-        return ResponseEntity.ok(commentService.createComment(comment));
-    }
-
-    @PutMapping("/{id}")
-    @Operation(summary = "Update a comment")
-    public ResponseEntity<Comment> update(@PathVariable Integer id, @RequestBody Comment comment) {
-        return ResponseEntity.ok(commentService.updateComment(id, comment));
+    @GetMapping("/post/{postId}")
+    @Operation(summary = "Get comments by post ID")
+    public ResponseEntity<List<Comment>> getByPost(@PathVariable Integer postId) {
+        return ResponseEntity.ok(commentService.getCommentsByPostId(postId));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a comment")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        commentService.deleteComment(id);
+    public ResponseEntity<Void> deleteComment(
+            @PathVariable Integer id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        commentService.deleteComment(id, userDetails.getUsername());
         return ResponseEntity.noContent().build();
     }
 }
