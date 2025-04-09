@@ -1,11 +1,11 @@
 # 健康管理系統 (Health Management System)
 
-健康管理系統是一个基于 Spring Boot 3.4.3 的後端專案，提供會員管理、健康追踪、課程管理等功能的 RESTful API。
+健康管理系統是一个基于 Spring Boot 3.2.4 的後端專案，提供會員管理、健康追踪、課程管理等功能的 RESTful API。
 
 ## 技術棧
 
 - Java 17
-- Spring Boot 3.2.3
+- Spring Boot 3.2.4
 - Spring Security + JWT
 - Spring Data JPA
 - SQL Server
