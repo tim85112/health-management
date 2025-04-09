@@ -14,7 +14,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @AllArgsConstructor
 public class ExerciseRecordDTO {
 
-    @Schema(example = "1")
     private Integer recordId;
 
     @Schema(example = "123")

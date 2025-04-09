@@ -16,7 +16,6 @@ import com.healthmanagement.model.fitness.Achievements;
 @Builder
 public class AchievementDTO {
 
-    @Schema(description = "獎勳 ID", example = "1")
     private Integer achievementId;       
 
     @Schema(description = "用戶 ID", example = "123")

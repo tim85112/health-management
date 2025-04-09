@@ -47,14 +47,6 @@ public class FitnessGoalController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "取得單一健身目標", description = "根據目標 ID 取得單筆健身目標資料")
-    @GetMapping("/{goalId}")
-    public ResponseEntity<FitnessGoalDTO> getFitnessGoalById(
-            @Parameter(description = "健身目標 ID") @PathVariable Integer goalId) {
-        FitnessGoalDTO fitnessGoal = fitnessGoalService.getFitnessGoalById(goalId);
-        return ResponseEntity.ok(fitnessGoal);
-    }
-
     @Operation(summary = "取得用戶的所有健身目標", description = "根據用戶 ID 取得所有健身目標資料")
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<FitnessGoalDTO>> getAllFitnessGoalsByUserId(

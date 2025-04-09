@@ -17,9 +17,6 @@ import com.healthmanagement.model.fitness.BodyMetric;
 public class BodyMetricDTO {
 
     @Schema(example = "1")
-    private Integer id;
-
-    @Schema(example = "123")
     private Integer userId;
 
     @Schema(example = "70.5")
