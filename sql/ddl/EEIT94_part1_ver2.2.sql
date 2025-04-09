@@ -1,13 +1,11 @@
-
-	/*
-		注意：user表格的插入數據是程式自動生成，user表要有數據才能執行part2! 不然就會報錯!
-		如果不想插入測試數據可以先不執行part2!
-	*/
-
+/*
+	注意：user表格的插入數據是程式自動生成，user表要有數據才能執行part2! 不然就會報錯!
+	如果不想插入測試數據可以先不執行part2!
+*/
 
 use health_db
--- 創建 user 表
-CREATE TABLE [user]
+-- 創建 users 表
+CREATE TABLE [users]
 (
     [user_id]       INT PRIMARY KEY IDENTITY (1, 1),-- 自動遞增主鍵
     [name]          NVARCHAR(50)  NOT NULL,-- 使用者名稱
@@ -17,7 +15,7 @@ CREATE TABLE [user]
     [bio]           NVARCHAR(MAX),-- 個人簡介
     [role]          VARCHAR(10) CHECK (role IN ('user', 'admin')),-- 角色，只能是 user 或 admin 
     [user_points]   INT           NOT NULL DEFAULT 0,	 -- 使用者點數，預設為 0 
-		[last_login]    DATETIME	DEFAULT CURRENT_TIMESTAMP	-- 最後登入時間
+	[last_login]    DATETIME	DEFAULT CURRENT_TIMESTAMP	-- 最後登入時間
 );
 GO
 
@@ -114,7 +112,7 @@ GO
 CREATE TABLE [body_metrics]
 (
     [id] INT PRIMARY KEY IDENTITY(1, 1),
-    [user_id] INT NOT NULL FOREIGN KEY REFERENCES [user](user_id) ON DELETE CASCADE,
+    [user_id] INT NOT NULL FOREIGN KEY REFERENCES [users](user_id) ON DELETE CASCADE,
     [weight] FLOAT NOT NULL,
     [body_fat] FLOAT,
     [muscle_mass] FLOAT,
@@ -130,7 +128,7 @@ GO
 CREATE TABLE [exercise_records]
 (
     [record_id] INT PRIMARY KEY IDENTITY(1, 1),
-    [user_id] INT NOT NULL FOREIGN KEY REFERENCES [user](user_id) ON DELETE CASCADE,
+    [user_id] INT NOT NULL FOREIGN KEY REFERENCES [users](user_id) ON DELETE CASCADE,
     [exercise_type] NVARCHAR(50) NOT NULL,
     [exercise_duration] INT NOT NULL,
     [calories_burned] FLOAT NOT NULL,
@@ -142,7 +140,7 @@ GO
 CREATE TABLE [nutrition_records]
 (
     [record_id] INT PRIMARY KEY IDENTITY(1, 1),
-    [user_id] INT FOREIGN KEY REFERENCES [user](user_id) ON DELETE CASCADE,
+    [user_id] INT FOREIGN KEY REFERENCES [users](user_id) ON DELETE CASCADE,
     [food_name] NVARCHAR(255) NOT NULL,
     [calories] INT NOT NULL,
     [protein] FLOAT NOT NULL,
@@ -157,7 +155,7 @@ GO
 CREATE TABLE [fitness_goals]
 (
     [goal_id] INT PRIMARY KEY IDENTITY(1, 1),
-    [user_id] INT NOT NULL FOREIGN KEY REFERENCES [user](user_id) ON DELETE CASCADE,
+    [user_id] INT NOT NULL FOREIGN KEY REFERENCES [users](user_id) ON DELETE CASCADE,
     [goal_type] NVARCHAR(50) NOT NULL CHECK (goal_type IN ('減重', '增肌', '心肺健康', '其他')),
     [target_value] FLOAT NOT NULL,
     [current_progress] FLOAT DEFAULT 0,
@@ -173,7 +171,7 @@ GO
 CREATE TABLE [achievements]
 (
     [achievement_id] INT PRIMARY KEY IDENTITY(1, 1),
-    [user_id] INT NOT NULL FOREIGN KEY REFERENCES [user](user_id) ON DELETE CASCADE,
+    [user_id] INT NOT NULL FOREIGN KEY REFERENCES [users](user_id) ON DELETE CASCADE,
     [achievement_type] NVARCHAR(50) CHECK (achievement_type IN ('目標達成', '一般成就')),
     [title] NVARCHAR(255) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
     [description] NVARCHAR(500),
@@ -185,7 +183,7 @@ GO
 -- 創建 DashboardStats 視圖
 CREATE VIEW [DashboardStats] AS
 SELECT 
-    (SELECT COUNT(*) FROM [user] WHERE [role] = 'user') AS TotalUsers,
+    (SELECT COUNT(*) FROM [users] WHERE [role] = 'user') AS TotalUsers,
     (SELECT COUNT(*) FROM [exercise_records]) AS TotalWorkouts,
     (SELECT SUM([exercise_duration]) FROM [exercise_records]) AS TotalWorkoutMinutes,
     (SELECT SUM([calories_burned]) FROM [exercise_records]) AS TotalCaloriesBurned,
@@ -218,81 +216,36 @@ CREATE TABLE [comment]
 GO
 
 -- 添加外鍵約束
-ALTER TABLE [user_point]
-    ADD FOREIGN KEY ([user_id]) REFERENCES [user] ([user_id])
+ALTER TABLE [user_point] ADD FOREIGN KEY ([user_id]) REFERENCES [users] ([user_id])
 GO
-
-ALTER TABLE [order]
-    ADD FOREIGN KEY ([user_id]) REFERENCES [user] ([user_id])
+ALTER TABLE [order] ADD FOREIGN KEY ([user_id]) REFERENCES [users] ([user_id])
 GO
-
-ALTER TABLE [order_item]
-    ADD FOREIGN KEY ([order_id]) REFERENCES [order] ([id])
+ALTER TABLE [order_item] ADD FOREIGN KEY ([order_id]) REFERENCES [order] ([id])
 GO
-
-ALTER TABLE [order_item]
-    ADD FOREIGN KEY ([product_id]) REFERENCES [product] ([id])
+ALTER TABLE [order_item] ADD FOREIGN KEY ([product_id]) REFERENCES [product] ([id])
 GO
-
-ALTER TABLE [order_item]
-    ADD FOREIGN KEY ([course_id]) REFERENCES [course] ([id])
+ALTER TABLE [order_item] ADD FOREIGN KEY ([course_id]) REFERENCES [course] ([id])
 GO
-
-ALTER TABLE [course]
-    ADD FOREIGN KEY ([coach_id]) REFERENCES [coach] ([id])
+ALTER TABLE [course] ADD FOREIGN KEY ([coach_id]) REFERENCES [coach] ([id])
 GO
-
-ALTER TABLE [cart_item]
-    ADD FOREIGN KEY ([user_id]) REFERENCES [user] ([user_id])
+ALTER TABLE [cart_item] ADD FOREIGN KEY ([user_id]) REFERENCES [users] ([user_id])
 GO
-
-ALTER TABLE [cart_item]
-    ADD FOREIGN KEY ([product_id]) REFERENCES [product] ([id])
+ALTER TABLE [cart_item] ADD FOREIGN KEY ([product_id]) REFERENCES [product] ([id])
 GO
-
-ALTER TABLE [cart_item]
-    ADD FOREIGN KEY ([course_id]) REFERENCES [course] ([id])
+ALTER TABLE [cart_item] ADD FOREIGN KEY ([course_id]) REFERENCES [course] ([id])
 GO
-
-ALTER TABLE [exercise_record]
-    ADD FOREIGN KEY ([user_id]) REFERENCES [user] ([user_id])
+ALTER TABLE [social_post] ADD FOREIGN KEY ([user_id]) REFERENCES [users] ([user_id])
 GO
-
-ALTER TABLE [social_post]
-    ADD FOREIGN KEY ([user_id]) REFERENCES [user] ([user_id])
+ALTER TABLE [comment] ADD FOREIGN KEY ([post_id]) REFERENCES [social_post] ([id])
 GO
-
-ALTER TABLE [comment]
-    ADD FOREIGN KEY ([post_id]) REFERENCES [social_post] ([id])
+ALTER TABLE [comment] ADD FOREIGN KEY ([user_id]) REFERENCES [users] ([user_id])
 GO
-
-ALTER TABLE [comment]
-    ADD FOREIGN KEY ([user_id]) REFERENCES [user] ([user_id])
-GO
-
-ALTER TABLE [body_metric]
-    ADD FOREIGN KEY ([user_id]) REFERENCES [user] ([user_id]) ON DELETE CASCADE
-GO
-
-ALTER TABLE [nutrition_record]
-    ADD FOREIGN KEY ([user_id]) REFERENCES [user] ([user_id]) ON DELETE CASCADE
-GO
-
-ALTER TABLE [fitness_goal]
-    ADD FOREIGN KEY ([user_id]) REFERENCES [user] ([user_id]) ON DELETE CASCADE
-GO
-
-ALTER TABLE [achievement]
-    ADD FOREIGN KEY ([user_id]) REFERENCES [user] ([user_id]) ON DELETE CASCADE
-GO
-
-
 
 -- 創建視圖
 CREATE VIEW dashboard_stat AS
-SELECT (SELECT COUNT(*) FROM [user] WHERE role = 'user')                             AS total_users,
-       (SELECT COUNT(*) FROM exercise_record)                                        AS total_workouts,
-       (SELECT SUM(duration) FROM exercise_record)                                   AS total_workout_minutes,
-       (SELECT SUM(calories_burned) FROM exercise_record)                            AS total_calories_burned,
-       (SELECT COUNT(*) FROM [user] WHERE DATEDIFF(DAY, last_login, GETDATE()) <= 7) AS active_users_this_week;
+SELECT (SELECT COUNT(*) FROM [users] WHERE role = 'user')                             AS total_users,
+       (SELECT COUNT(*) FROM exercise_records)                                        AS total_workouts,
+       (SELECT SUM(exercise_duration) FROM exercise_records)                          AS total_workout_minutes,
+       (SELECT SUM(calories_burned) FROM exercise_records)                            AS total_calories_burned,
+       (SELECT COUNT(*) FROM [users] WHERE DATEDIFF(DAY, last_login, GETDATE()) <= 7) AS active_users_this_week;
 GO

@@ -176,7 +176,7 @@ VALUES (1, 1, NULL, 1, '2023-02-21 10:00:00'),
 GO
 
 -- 插入 body_metrics 數據 (20筆)
-INSERT INTO [body_metrics] ([user_id], [weight], [body_fat], [muscle_mass], [bmi], [record_date])
+INSERT INTO [body_metrics] ([user_id], [weight], [body_fat], [muscle_mass], [bmi], [date_recorded])
 VALUES
 (1, 70.0, 20.0, 30.0, 23.5, '2025-04-09'),
 (2, 80.0, 25.0, 35.0, 24.0, '2025-04-09'),

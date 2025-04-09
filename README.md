@@ -5,9 +5,9 @@
 
 # 享健你健康管理系統 (Health Management System)
 
-健康管理系統是一个基于 Spring Boot 3.2.4 的後端專案，提供會員管理、健康追踪、課程管理等功能的 RESTful API。
+健康管理系統是一个基于 Spring Boot 3.2.4 的後端專案，提供會員管理、健康追蹤、課程管理等功能的 RESTful API。
 
-前端項目連接：待補
+前端項目連接：https://github.com/EEIT94Team2/HealthManagement-vue
 
 
 ## 技術棧
@@ -61,8 +61,9 @@ MVC 架構：
     - 取得用戶：GET /users/{id}
     - 更新用戶：PUT /users/{id}
     - 刪除用戶：DELETE /users/{id}
-- 商品管理：/products/
-- 訂單管理：/orders/
+- 商品管理：/product/
+- 訂單管理：/order/
+- 購物車管理：/cart/
 - 課程管理：/courses/
 - 健身追蹤：/tracking/
 - 社交論壇：/forums/

@@ -11,7 +11,7 @@ GO
 CREATE TABLE [body_metrics]
 (
     [id] INT PRIMARY KEY IDENTITY(1, 1),
-    [user_id] INT NOT NULL FOREIGN KEY REFERENCES [user](user_id) ON DELETE CASCADE,  -- 外鍵參照 [user] 表格的 user_id
+    [user_id] INT NOT NULL FOREIGN KEY REFERENCES [users](user_id) ON DELETE CASCADE,  -- 外鍵參照 [users] 表格的 user_id
     [weight] FLOAT NOT NULL,                                            -- 體重
     [body_fat] FLOAT,                                                  -- 體脂率
     [muscle_mass] FLOAT,                                                -- 肌肉量
@@ -27,7 +27,7 @@ GO
 CREATE TABLE [exercise_records]
 (
     [record_id] INT PRIMARY KEY IDENTITY(1, 1),
-    [user_id] INT NOT NULL FOREIGN KEY REFERENCES [user](user_id) ON DELETE CASCADE,  -- 外鍵參照 [user] 表格的 user_id
+    [user_id] INT NOT NULL FOREIGN KEY REFERENCES [users](user_id) ON DELETE CASCADE,  -- 外鍵參照 [users] 表格的 user_id
     [exercise_type] NVARCHAR(50) NOT NULL,                                -- 運動類型
     [exercise_duration] INT NOT NULL,                                     -- 運動時長（分鐘）
     [calories_burned] FLOAT NOT NULL,                                     -- 消耗的卡路里
@@ -39,7 +39,7 @@ GO
 CREATE TABLE [nutrition_records]
 (
     [record_id] INT PRIMARY KEY IDENTITY(1, 1),
-    [user_id] INT FOREIGN KEY REFERENCES [user](user_id) ON DELETE CASCADE,  -- 外鍵參照 [user] 表格的 user_id
+    [user_id] INT FOREIGN KEY REFERENCES [users](user_id) ON DELETE CASCADE,  -- 外鍵參照 [users] 表格的 user_id
     [food_name] NVARCHAR(255) NOT NULL,                                    -- 食物名稱
     [calories] INT NOT NULL,                                               -- 食物卡路里
     [protein] FLOAT NOT NULL,                                              -- 蛋白質含量
@@ -54,7 +54,7 @@ GO
 CREATE TABLE [fitness_goals]
 (
     [goal_id] INT PRIMARY KEY IDENTITY(1, 1),                            -- 目標 ID
-    [user_id] INT NOT NULL FOREIGN KEY REFERENCES [user](user_id) ON DELETE CASCADE, -- 外鍵參照 [user] 表格的 user_id
+    [user_id] INT NOT NULL FOREIGN KEY REFERENCES [users](user_id) ON DELETE CASCADE, -- 外鍵參照 [users] 表格的 user_id
     [goal_type] NVARCHAR(50) NOT NULL CHECK (goal_type IN ('減重', '增肌', '心肺健康', '其他')),  -- 目標類型
     [target_value] FLOAT NOT NULL,                                        -- 目標值（例如：減少 5 公斤）
     [current_progress] FLOAT DEFAULT 0,                                   -- 當前進度
@@ -70,7 +70,7 @@ GO
 CREATE TABLE [achievements]
 (
     [achievement_id] INT PRIMARY KEY IDENTITY(1, 1),
-    [user_id] INT NOT NULL FOREIGN KEY REFERENCES [user](user_id) ON DELETE CASCADE,  -- 外鍵參照 [user] 表格的 user_id
+    [user_id] INT NOT NULL FOREIGN KEY REFERENCES [users](user_id) ON DELETE CASCADE,  -- 外鍵參照 [users] 表格的 user_id
     [achievement_type] NVARCHAR(50) CHECK (achievement_type IN ('目標達成', '一般成就')),  -- 獎勳類型
     [title] NVARCHAR(255) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,  -- 獎勳標題
     [description] NVARCHAR(500),                                          -- 獎勳描述
@@ -82,7 +82,7 @@ GO
 -- 創建 DashboardStats 視圖
 CREATE VIEW [DashboardStats] AS
 SELECT 
-    (SELECT COUNT(*) FROM [user] WHERE [role] = 'user') AS TotalUsers,                  -- 總用戶數
+    (SELECT COUNT(*) FROM [users] WHERE [role] = 'user') AS TotalUsers,                  -- 總用戶數
     (SELECT COUNT(*) FROM [exercise_records]) AS TotalWorkouts,                        -- 總運動紀錄數
     (SELECT SUM([exercise_duration]) FROM [exercise_records]) AS TotalWorkoutMinutes,    -- 總運動時長（分鐘）
     (SELECT SUM([calories_burned]) FROM [exercise_records]) AS TotalCaloriesBurned,      -- 總消耗卡路里

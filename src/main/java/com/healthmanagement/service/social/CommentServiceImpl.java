@@ -1,8 +1,13 @@
 package com.healthmanagement.service.social;
 
 import com.healthmanagement.dao.social.CommentDAO;
+import com.healthmanagement.dao.social.ForumDAO;
+import com.healthmanagement.dto.social.CommentRequest;
 import com.healthmanagement.model.social.Comment;
+import com.healthmanagement.service.member.UserService;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -13,6 +18,12 @@ public class CommentServiceImpl implements CommentService {
 
     @Autowired
     private CommentDAO commentDAO;
+    
+    @Autowired
+    private ForumDAO forumDAO;
+
+    @Autowired
+    private UserService userService;
 
     @Override
     public List<Comment> getCommentsByPostId(Integer postId) {
@@ -31,22 +42,40 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public Comment createComment(Comment comment) {
+    public Comment createComment(Integer postId, String email, CommentRequest request) {
+        Comment comment = new Comment();
+        comment.setText(request.getContent());
         comment.setCreatedAt(LocalDateTime.now());
         comment.setUpdatedAt(LocalDateTime.now());
+
+        comment.setPost(forumDAO.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found")));
+        comment.setUser(userService.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found")));
+
         return commentDAO.save(comment);
     }
-
     @Override
-    public Comment updateComment(Integer commentId, Comment updated) {
+    public Comment updateComment(Integer commentId, String email, CommentRequest request) {
         Comment comment = getCommentById(commentId);
-        comment.setCommentText(updated.getCommentText());
+
+        // 檢查是否為留言本人
+        if (!comment.getUser().getEmail().equals(email)) {
+            throw new AccessDeniedException("您無權修改此留言！");
+        }
+
+        comment.setText(request.getContent());
         comment.setUpdatedAt(LocalDateTime.now());
+
         return commentDAO.save(comment);
     }
 
     @Override
-    public void deleteComment(Integer id) {
-        commentDAO.deleteById(id);
+    public void deleteComment(Integer commentId, String email) {
+        Comment comment = getCommentById(commentId);
+        if (!comment.getUser().getEmail().equals(email)) {
+            throw new AccessDeniedException("您無權刪除此留言！");
+        }
+        commentDAO.deleteById(commentId);
     }
 }
