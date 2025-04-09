@@ -12,7 +12,7 @@
 	<artifactId>health-management</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>health-management</name>
-	<description>健康管理系统后端</description>
+	<description>健康管理系統後端</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -34,9 +34,9 @@
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-			<version>2.3.0</version>
+			<version>2.5.0</version>
 		</dependency>
-
+ 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -60,6 +60,7 @@
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
+			<!--<scope>provided</scope>-->
 		</dependency>
 		
 		<dependency>
@@ -98,11 +99,13 @@
 	</dependencies>
 
 	<build>
+
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<configuration>
+				<!--不要排除 Lombok-->
+				 <configuration>
 					<excludes>
 						<exclude>
 							<groupId>org.projectlombok</groupId>

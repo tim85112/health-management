@@ -4,6 +4,7 @@ import com.healthmanagement.model.member.User;
 import com.healthmanagement.service.member.UserService;
 import com.healthmanagement.util.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/users")
 @Tag(name = "User Management", description = "User management APIs")
+@SecurityRequirement(name = "bearerAuth")
 public class UserController {
 
     private final UserService userService;
@@ -25,7 +27,7 @@ public class UserController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasAuthority('admin')")
     @Operation(summary = "Get all users", description = "Retrieve a list of all users")
     public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
         List<User> users = userService.getAllUsers();
@@ -33,7 +35,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    @PreAuthorize("hasRole('admin') or @userSecurity.isCurrentUser(#userId)")
+    @PreAuthorize("hasAuthority('admin') or @userSecurity.isCurrentUser(#userId)")
     @Operation(summary = "Get user by ID", description = "Retrieve user information by their ID")
     public ResponseEntity<ApiResponse<User>> getUserById(@PathVariable Integer userId) {
         return userService.getUserById(userId)
@@ -42,18 +44,18 @@ public class UserController {
     }
 
     @PutMapping("/{userId}")
-    @PreAuthorize("hasRole('admin') or @userSecurity.isCurrentUser(#userId)")
+    @PreAuthorize("hasAuthority('admin') or @userSecurity.isCurrentUser(#userId)")
     @Operation(summary = "Update user", description = "Update user information")
-    public ResponseEntity<ApiResponse<User>> updateUser(@PathVariable Integer userId, @RequestBody User userDetails) {
-        User updatedUser = userService.updateUser(userId, userDetails);
+    public ResponseEntity<ApiResponse<User>> updateUser(@PathVariable Integer userId, @RequestBody User user) {
+        User updatedUser = userService.updateUser(userId, user);
         return ResponseEntity.ok(ApiResponse.success(updatedUser));
     }
 
     @DeleteMapping("/{userId}")
-    @PreAuthorize("hasRole('admin') or @userSecurity.isCurrentUser(#userId)")
-    @Operation(summary = "Delete user", description = "Delete a user by their ID")
-    public ResponseEntity<ApiResponse<String>> deleteUser(@PathVariable Integer userId) {
+    @PreAuthorize("hasAuthority('admin') or @userSecurity.isCurrentUser(#userId)")
+    @Operation(summary = "Delete user", description = "Delete a user")
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Integer userId) {
         userService.deleteUser(userId);
-        return ResponseEntity.ok(ApiResponse.success("User deleted successfully"));
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 }

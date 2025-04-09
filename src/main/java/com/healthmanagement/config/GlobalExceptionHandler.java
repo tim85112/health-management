@@ -15,38 +15,44 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<String>> handleGenericException(Exception e) {
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("An unexpected error occurred: " + e.getMessage()));
-    }
+    // 暫時註解掉所有處理方法，避免 Swagger 解析錯誤
 
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ApiResponse<String>> handleBadCredentialsException(BadCredentialsException e) {
-        return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error(e.getMessage()));
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationExceptions(
-            MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(errors));
-    }
-
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ApiResponse<String>> handleRuntimeException(RuntimeException e) {
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(e.getMessage()));
-    }
+    // @ExceptionHandler(Exception.class)
+    // public ResponseEntity<ApiResponse<String>> handleGenericException(Exception
+    // e) {
+    // return ResponseEntity
+    // .status(HttpStatus.INTERNAL_SERVER_ERROR)
+    // .body(ApiResponse.error("An unexpected error occurred: " + e.getMessage()));
+    // }
+    //
+    // @ExceptionHandler(BadCredentialsException.class)
+    // public ResponseEntity<ApiResponse<String>>
+    // handleBadCredentialsException(BadCredentialsException e) {
+    // return ResponseEntity
+    // .status(HttpStatus.UNAUTHORIZED)
+    // .body(ApiResponse.error(e.getMessage()));
+    // }
+    //
+    // @ExceptionHandler(MethodArgumentNotValidException.class)
+    // public ResponseEntity<ApiResponse<Map<String, String>>>
+    // handleValidationExceptions(
+    // MethodArgumentNotValidException ex) {
+    // Map<String, String> errors = new HashMap<>();
+    // ex.getBindingResult().getAllErrors().forEach((error) -> {
+    // String fieldName = ((FieldError) error).getField();
+    // String errorMessage = error.getDefaultMessage();
+    // errors.put(fieldName, errorMessage);
+    // });
+    // return ResponseEntity
+    // .status(HttpStatus.BAD_REQUEST)
+    // .body(ApiResponse.error(errors));
+    // }
+    //
+    // @ExceptionHandler(RuntimeException.class)
+    // public ResponseEntity<ApiResponse<String>>
+    // handleRuntimeException(RuntimeException e) {
+    // return ResponseEntity
+    // .status(HttpStatus.BAD_REQUEST)
+    // .body(ApiResponse.error(e.getMessage()));
+    // }
 }

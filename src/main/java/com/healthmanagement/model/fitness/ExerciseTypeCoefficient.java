@@ -16,7 +16,7 @@ public class ExerciseTypeCoefficient {
     @Column(name = "exercise_type_id")  
     private Integer exerciseTypeId;
 
-    @Column(name = "exercise_name", nullable = false, length = 100 , columnDefinition = "NVARCHAR(50)") 
+    @Column(name = "exercise_name", length = 100 , columnDefinition = "NVARCHAR(50)") 
     private String exerciseName;
 
     @Column(name = "met", nullable = false)  
