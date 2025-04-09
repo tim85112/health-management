@@ -1,0 +1,22 @@
+CREATE TABLE [user]
+(
+    [user_id]       INT PRIMARY KEY IDENTITY (1, 1),-- 自動遞增主鍵
+    [name]          NVARCHAR(50)  NOT NULL,-- 使用者名稱
+    [email]         NVARCHAR(100) NOT NULL,-- 電子郵件
+    [password_hash] VARCHAR(255)  NOT NULL,-- 密碼哈希
+    [gender]        CHAR(1),-- 性別，例如 'M' 或 'F'
+    [bio]           NVARCHAR(MAX),-- 個人簡介
+    [role]          VARCHAR(10) CHECK (role IN ('user', 'admin')),-- 角色，只能是 user 或 admin
+    [user_points]   INT           NOT NULL DEFAULT 0,	 -- 使用者點數，預設為 0
+		[last_login]    DATETIME	DEFAULT CURRENT_TIMESTAMP	-- 最後登入時間
+);
+GO
+
+-- 創建 user_point 表
+CREATE TABLE [user_point]
+(
+    [user_id]      INT PRIMARY KEY,
+    [points]       INT DEFAULT (0),
+    [last_updated] DATETIME
+)
+GO

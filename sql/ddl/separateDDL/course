@@ -1,0 +1,21 @@
+-- 創建 coach 表
+CREATE TABLE [coach]
+(
+    [id]        INT PRIMARY KEY IDENTITY (1, 1),
+    [name]      NVARCHAR(255) NOT NULL,
+    [expertise] NVARCHAR(255)
+)
+GO
+
+-- 創建 course 表
+CREATE TABLE [course]
+(
+    [id]           INT PRIMARY KEY IDENTITY (1, 1),
+    [name]         NVARCHAR(255)  NOT NULL,
+    [description]  NVARCHAR(1000) NOT NULL,
+    [date]         DATE           NOT NULL,
+    [coach_id]     INT            NOT NULL,
+    [duration]     INT            NOT NULL,
+    [max_capacity] INT            NOT NULL
+)
+GO

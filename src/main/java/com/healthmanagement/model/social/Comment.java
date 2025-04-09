@@ -10,34 +10,37 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
-@Table(name = "Comments")
+@Table(name = "comment")
 public class Comment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "comment_id")
-    private Integer commentId;
+    @Column(name = "id")
+    private Integer id;
 
     @ManyToOne
-    @JoinColumn(name = "article_id", nullable = false)
+    @JoinColumn(name = "post_id", nullable = false)
     private Post post;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "comment_text", nullable = false)
-    private String commentText;
+    @Column(name = "text", nullable = false)
+    private String text;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     public Integer getCommentId() {
-		return commentId;
+		return id;
 	}
 
 	public void setCommentId(Integer commentId) {
-		this.commentId = commentId;
+		this.id = commentId;
 	}
 
 	public Post getPost() {
@@ -57,11 +60,11 @@ public class Comment {
 	}
 
 	public String getCommentText() {
-		return commentText;
+		return text;
 	}
 
 	public void setCommentText(String commentText) {
-		this.commentText = commentText;
+		this.text = commentText;
 	}
 
 	public LocalDateTime getCreatedAt() {
@@ -79,7 +82,4 @@ public class Comment {
 	public void setUpdatedAt(LocalDateTime updatedAt) {
 		this.updatedAt = updatedAt;
 	}
-
-	@Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 }
