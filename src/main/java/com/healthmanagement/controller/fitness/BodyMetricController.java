@@ -14,9 +14,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/tracking/body-metrics")
+@RequestMapping("/api/tracking/body-metrics")
 @RequiredArgsConstructor
 @Tag(name = "Fitness Tracking", description = "健身追蹤管理 API")
+@CrossOrigin(origins = "http://localhost:5174")
 public class BodyMetricController {
 
     private final BodyMetricService bodyMetricService;
@@ -30,7 +31,7 @@ public class BodyMetricController {
     @Operation(summary = "更新身體數據", description = "根據 ID 更新用戶的身體數據")
     @PutMapping("/{id}")
     public ResponseEntity<BodyMetricDTO> updateBodyMetric(
-            @Parameter(description = "身體數據 ID") @PathVariable Integer id, 
+            @Parameter(description = "身體數據 ID") @PathVariable Integer id,
             @RequestBody BodyMetricDTO bodyMetricDTO) {
         return ResponseEntity.ok(bodyMetricService.updateBodyMetric(id, bodyMetricDTO));
     }
@@ -46,5 +47,15 @@ public class BodyMetricController {
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<BodyMetricDTO>> getBodyMetricsByUserId(@Parameter(description = "用戶 ID") @PathVariable Integer userId) {
         return ResponseEntity.ok(bodyMetricService.findByUserId(userId));
+    }
+
+    @Operation(summary = "多條件查詢身體數據", description = "根據用戶 ID、姓名和日期範圍查詢身體數據")
+    @GetMapping("/search")
+    public ResponseEntity<List<BodyMetricDTO>> findBodyMetricsByCriteria(
+            @Parameter(description = "用戶 ID") @RequestParam(value = "userId", required = false) Integer userId,
+            @Parameter(description = "用戶姓名 (模糊查詢)") @RequestParam(value = "name", required = false) String name,
+            @Parameter(description = "開始日期 (YYYY-MM-DD)") @RequestParam(value = "startDate", required = false) String startDate,
+            @Parameter(description = "結束日期 (YYYY-MM-DD)") @RequestParam(value = "endDate", required = false) String endDate) {
+        return ResponseEntity.ok(bodyMetricService.findByMultipleCriteria(userId, name, startDate, endDate));
     }
 }

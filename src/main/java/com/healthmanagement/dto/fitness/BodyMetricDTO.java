@@ -51,6 +51,7 @@ public class BodyMetricDTO {
                 .height(bodyMetric.getHeight())
                 .waistCircumference(bodyMetric.getWaistCircumference())
                 .hipCircumference(bodyMetric.getHipCircumference())
+                .dateRecorded(bodyMetric.getDateRecorded())
                 .bmi(bodyMetric.getBmi())
                 .build();
     }

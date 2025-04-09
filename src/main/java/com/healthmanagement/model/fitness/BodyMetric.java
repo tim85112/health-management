@@ -5,6 +5,8 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+import com.healthmanagement.model.member.User;
+
 @Entity
 @Table(name = "body_metrics")
 @Data
@@ -44,4 +46,9 @@ public class BodyMetric {
 
     @Column(name = "date_recorded", nullable = false)  
     private LocalDateTime dateRecorded;
+    
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false, insertable = false, updatable = false) 
+	private User user;
+
 }

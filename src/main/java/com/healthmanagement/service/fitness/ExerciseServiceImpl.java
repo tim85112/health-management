@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.healthmanagement.dao.fitness.BodyMetricDAO;
@@ -13,6 +15,8 @@ import com.healthmanagement.dto.fitness.ExerciseRecordDTO;
 import com.healthmanagement.model.fitness.BodyMetric;
 import com.healthmanagement.model.fitness.ExerciseRecord;
 import com.healthmanagement.model.fitness.ExerciseTypeCoefficient;
+import com.healthmanagement.service.member.UserService;
+import com.healthmanagement.model.member.User;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +28,9 @@ public class ExerciseServiceImpl implements ExerciseService {
 	private final ExerciseRecordDAO exerciseRecordRepo;
 	private final BodyMetricDAO bodyMetricRepo;
 	private final ExerciseTypeCoefficientDAO exerciseTypeCoefficientRepo;
+
+	@Autowired(required = false)
+	private UserService userService;
 
 	@Override
 	public ExerciseRecordDTO saveExerciseRecord(ExerciseRecordDTO exerciseRecordDTO) {
@@ -75,9 +82,7 @@ public class ExerciseServiceImpl implements ExerciseService {
 	}
 
 	private ExerciseRecordDTO toDTO(ExerciseRecord exerciseRecord) {
-		return new ExerciseRecordDTO(exerciseRecord.getRecordId(), exerciseRecord.getUserId(),
-				exerciseRecord.getExerciseType(), exerciseRecord.getExerciseDuration(),
-				exerciseRecord.getCaloriesBurned(), exerciseRecord.getExerciseDate());
+		return new ExerciseRecordDTO(exerciseRecord);
 	}
 
 	@Override
@@ -102,4 +107,20 @@ public class ExerciseServiceImpl implements ExerciseService {
 		return null; // 若紀錄不存在，回傳 null
 	}
 
+	@Override
+	public List<ExerciseRecordDTO> getExerciseRecordsByUserIdAndUserName(Integer userId, String userName) {
+		return exerciseRecordRepo.findByUserIdAndUserNameContaining(userId, userName).stream().map(this::toDTO)
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public List<ExerciseRecordDTO> getExerciseRecordsByUserName(String userName) {
+		if (userService == null) {
+			throw new IllegalStateException("UserService is not available. Cannot query by user name.");
+		}
+		List<User> users = userService.findByName(userName);
+		return users.stream().flatMap(user -> exerciseRecordRepo.findByUserId(user.getUserId()).stream())
+				.map(this::toDTO).collect(Collectors.toList());
+
+	}
 }

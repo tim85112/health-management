@@ -41,20 +41,13 @@ public class UserServiceImpl implements UserService {
         if (userDAO.existsByEmail(user.getEmail())) {
             throw new RuntimeException("Email already in use");
         }
-
-        // 加密密码
         user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
-
-        // 设置默认角色
         if (user.getRole() == null) {
             user.setRole("user");
         }
-
-        // 设置默认积分
         if (user.getUserPoints() == null) {
             user.setUserPoints(0);
         }
-
         return userDAO.save(user);
     }
 
@@ -62,11 +55,9 @@ public class UserServiceImpl implements UserService {
     public String loginUser(String email, String password) {
         User user = userDAO.findByEmail(email)
                 .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
-
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
             throw new BadCredentialsException("Invalid email or password");
         }
-
         return jwtUtil.generateToken(user.getEmail(), user.getRole());
     }
 
@@ -79,39 +70,30 @@ public class UserServiceImpl implements UserService {
     public User updateUser(Integer userId, User userDetails) {
         User user = userDAO.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // 更新用户信息
         if (userDetails.getName() != null) {
             user.setName(userDetails.getName());
         }
-
         if (userDetails.getEmail() != null && !userDetails.getEmail().equals(user.getEmail())) {
             if (userDAO.existsByEmail(userDetails.getEmail())) {
                 throw new RuntimeException("Email already in use");
             }
             user.setEmail(userDetails.getEmail());
         }
-
         if (userDetails.getPasswordHash() != null) {
             user.setPasswordHash(passwordEncoder.encode(userDetails.getPasswordHash()));
         }
-
         if (userDetails.getGender() != null) {
             user.setGender(userDetails.getGender());
         }
-
         if (userDetails.getBio() != null) {
             user.setBio(userDetails.getBio());
         }
-
         if (userDetails.getRole() != null) {
             user.setRole(userDetails.getRole());
         }
-
         if (userDetails.getUserPoints() != null) {
             user.setUserPoints(userDetails.getUserPoints());
         }
-
         return userDAO.save(user);
     }
 
@@ -136,5 +118,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> findByEmail(String email) {
         return userDAO.findByEmail(email);
+    }
+
+    @Override
+    public List<User> findByName(String name) {
+        return userDAO.findByName(name);
     }
 }

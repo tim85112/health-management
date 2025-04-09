@@ -15,8 +15,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/tracking/exercise-records")
+@RequestMapping("/api/tracking/exercise-records")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:5174")
 @Tag(name = "Fitness Tracking", description = "健身追蹤管理 API")
 public class ExerciseRecordsController {
     
@@ -51,6 +52,20 @@ public class ExerciseRecordsController {
             return ResponseEntity.ok(updatedRecord); // 返回更新後的紀錄
         }
         return ResponseEntity.notFound().build(); // 如果找不到紀錄，返回 404
+    }
+    @Operation(summary = "根據用戶 ID 和姓名模糊查詢運動紀錄", description = "根據用戶 ID 和包含特定姓名的用戶查詢運動紀錄")
+    @GetMapping("/user/{userId}/by-name")
+    public ResponseEntity<List<ExerciseRecordDTO>> getExerciseRecordsByUserIdAndUserName(
+            @Parameter(description = "用戶 ID") @PathVariable Integer userId,
+            @Parameter(description = "用戶姓名關鍵字") @RequestParam String userName) {
+        return ResponseEntity.ok(exerciseService.getExerciseRecordsByUserIdAndUserName(userId, userName));
+    }
+
+    @Operation(summary = "根據姓名模糊查詢所有運動紀錄", description = "查詢包含特定姓名的用戶的所有運動紀錄")
+    @GetMapping("/by-name")
+    public ResponseEntity<List<ExerciseRecordDTO>> getExerciseRecordsByUserName(
+            @Parameter(description = "用戶姓名關鍵字") @RequestParam String userName) {
+        return ResponseEntity.ok(exerciseService.getExerciseRecordsByUserName(userName));
     }
 
 }

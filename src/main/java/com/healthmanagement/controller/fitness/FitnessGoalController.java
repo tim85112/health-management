@@ -15,8 +15,9 @@ import lombok.RequiredArgsConstructor;
 import java.util.List;
 
 @RestController
-@RequestMapping("/tracking/fitnessgoals")
+@RequestMapping("/api/tracking/fitnessgoals")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:5174")
 @Tag(name = "Fitness Tracking", description = "健身追蹤管理 API")
 public class FitnessGoalController {
 

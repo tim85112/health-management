@@ -18,7 +18,7 @@ public class AchievementDTO {
 
     private Integer achievementId;       
 
-    @Schema(description = "用戶 ID", example = "123")
+    @Schema(description = "用戶 ID", example = "10")
     private Integer userId;              
 
     @Schema(description = "獎勳類型（如 'Goal Success' 或 'General Achievement'）", example = "'Goal Success'")
