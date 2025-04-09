@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import com.healthmanagement.model.fitness.BodyMetric;
 
 @Builder   
@@ -15,19 +16,36 @@ import com.healthmanagement.model.fitness.BodyMetric;
 @NoArgsConstructor
 public class BodyMetricDTO {
 
-    private Integer id;                           
-    private Integer userId;                       
-    private Double weight;                       
-    private Double bodyFat;                       
-    private Double muscleMass;                    
-    private Double waistCircumference;            
-    private Double hipCircumference;              
-    private Double height;                       
-    private Double bmi;                           
-    private LocalDateTime dateRecorded;           
+    @Schema(example = "1")
+    private Integer id;
 
-    
- // 在 DTO 層中提供靜態方法
+    @Schema(example = "123")
+    private Integer userId;
+
+    @Schema(example = "70.5")
+    private Double weight;
+
+    @Schema(example = "18.5")
+    private Double bodyFat;
+
+    @Schema(example = "32.0")
+    private Double muscleMass;
+
+    @Schema(example = "80.0")
+    private Double waistCircumference;
+
+    @Schema(example = "95.0")
+    private Double hipCircumference;
+
+    @Schema(example = "175.0")
+    private Double height;
+
+    @Schema(example = "22.5")
+    private Double bmi;
+
+    @Schema(example = "2025-04-08T12:30:00")
+    private LocalDateTime dateRecorded;
+
     public static BodyMetricDTO fromEntity(BodyMetric bodyMetric) {
         return BodyMetricDTO.builder()
                 .userId(bodyMetric.getUserId())
@@ -39,5 +57,4 @@ public class BodyMetricDTO {
                 .bmi(bodyMetric.getBmi())
                 .build();
     }
-
 }

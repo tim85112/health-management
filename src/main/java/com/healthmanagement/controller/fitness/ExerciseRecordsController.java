@@ -41,4 +41,16 @@ public class ExerciseRecordsController {
     public ResponseEntity<List<ExerciseRecordDTO>> getExerciseRecordsByUserId(@Parameter(description = "用戶 ID") @PathVariable Integer userId) {
         return ResponseEntity.ok(exerciseService.getExerciseRecordsByUserId(userId));
     }
+    @Operation(summary = "更新運動紀錄", description = "根據運動紀錄 ID 更新運動紀錄")
+    @PutMapping("/{recordId}")
+    public ResponseEntity<ExerciseRecordDTO> updateExerciseRecord(
+            @Parameter(description = "運動紀錄 ID") @PathVariable Integer recordId,
+            @RequestBody ExerciseRecordDTO exerciseRecordDTO) {
+        ExerciseRecordDTO updatedRecord = exerciseService.updateExerciseRecord(recordId, exerciseRecordDTO);
+        if (updatedRecord != null) {
+            return ResponseEntity.ok(updatedRecord); // 返回更新後的紀錄
+        }
+        return ResponseEntity.notFound().build(); // 如果找不到紀錄，返回 404
+    }
+
 }
