@@ -1,8 +1,14 @@
 package com.healthmanagement.dao.shop;
 
-import org.springframework.stereotype.Repository;
+import com.healthmanagement.model.shop.Product;
+import java.math.BigDecimal;
+import java.util.List;
 
-@Repository
 public interface ProductDAO {
-    // 这个接口将由组员A实现
+    Product findById(Integer id);
+    List<Product> findAll();
+    Product save(Product product);
+    void delete(Integer id);
+    List<Product> search(String keyword);
+    List<Product> findByPriceRange(BigDecimal minPrice, BigDecimal maxPrice);
 }
