@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.healthmanagement.dao.fitness.BodyMetricDAO;
@@ -17,6 +19,11 @@ import com.healthmanagement.model.fitness.ExerciseRecord;
 import com.healthmanagement.model.fitness.ExerciseTypeCoefficient;
 import com.healthmanagement.service.member.UserService;
 import com.healthmanagement.model.member.User;
+
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -80,10 +87,7 @@ public class ExerciseServiceImpl implements ExerciseService {
 		List<ExerciseRecord> exerciseRecords = exerciseRecordRepo.findByUserId(userId);
 		return exerciseRecords.stream().map(this::toDTO).collect(Collectors.toList());
 	}
-
-	private ExerciseRecordDTO toDTO(ExerciseRecord exerciseRecord) {
-		return new ExerciseRecordDTO(exerciseRecord);
-	}
+ 
 
 	@Override
 	public ExerciseRecordDTO updateExerciseRecord(Integer recordId, ExerciseRecordDTO exerciseRecordDTO) {
@@ -123,4 +127,39 @@ public class ExerciseServiceImpl implements ExerciseService {
 				.map(this::toDTO).collect(Collectors.toList());
 
 	}
+	@Override
+    public Page<ExerciseRecordDTO> getAllExerciseRecords(Pageable pageable, String exerciseType, String startDate, String endDate) {
+        LocalDate startLocalDate = null;
+        LocalDate endLocalDate = null;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        try {
+            if (startDate != null && !startDate.isEmpty()) {
+                startLocalDate = LocalDate.parse(startDate, formatter);
+            }
+            if (endDate != null && !endDate.isEmpty()) {
+                endLocalDate = LocalDate.parse(endDate, formatter);
+            }
+        } catch (DateTimeParseException e) {
+            System.err.println("日期格式錯誤: " + e.getMessage());
+            // 處理日期格式錯誤
+        }
+
+        Page<ExerciseRecord> exerciseRecordPage;
+        if (exerciseType != null && !exerciseType.isEmpty() && startLocalDate != null && endLocalDate != null) {
+            exerciseRecordPage = exerciseRecordRepo.findByExerciseTypeAndExerciseDateBetween(exerciseType, startLocalDate, endLocalDate, pageable);
+        } else if (exerciseType != null && !exerciseType.isEmpty()) {
+            exerciseRecordPage = exerciseRecordRepo.findByExerciseType(exerciseType, pageable);
+        } else if (startLocalDate != null && endLocalDate != null) {
+            exerciseRecordPage = exerciseRecordRepo.findByExerciseDateBetween(startLocalDate, endLocalDate, pageable);
+        } else {
+            exerciseRecordPage = exerciseRecordRepo.findAll(pageable);
+        }
+        return exerciseRecordPage.map(this::toDTO);
+    }
+
+    private ExerciseRecordDTO toDTO(ExerciseRecord exerciseRecord) {
+        return new ExerciseRecordDTO(exerciseRecord);
+    }
+
 }

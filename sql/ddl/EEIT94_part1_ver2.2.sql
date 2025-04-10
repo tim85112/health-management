@@ -120,7 +120,7 @@ CREATE TABLE [body_metrics]
     [hip_circumference] FLOAT,
     [height] FLOAT,
     [bmi] FLOAT,
-    [date_recorded] DATETIME2 DEFAULT GETDATE()
+    [date_recorded] DATE DEFAULT GETDATE()
 )
 GO
 
@@ -160,7 +160,7 @@ CREATE TABLE [fitness_goals]
     [target_value] FLOAT NOT NULL,
     [current_progress] FLOAT DEFAULT 0,
     [unit] NVARCHAR(20) CHECK (unit IN ('公斤', '百分比', '分鐘', '卡路里')),
-    [start_date] DATETIME2 DEFAULT GETDATE(),
+    [start_date] DATE DEFAULT GETDATE(),
     [end_date] DATETIME2 NULL,
     [status] NVARCHAR(20) CHECK (status IN ('進行中', '已完成', '未達成')) DEFAULT '進行中',
     CONSTRAINT [CK_EndDate] CHECK ([end_date] IS NULL OR [end_date] >= [start_date])

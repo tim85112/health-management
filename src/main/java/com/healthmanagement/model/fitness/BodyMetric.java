@@ -3,7 +3,7 @@ package com.healthmanagement.model.fitness;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import com.healthmanagement.model.member.User;
 
@@ -45,7 +45,7 @@ public class BodyMetric {
     private Double bmi;
 
     @Column(name = "date_recorded", nullable = false)  
-    private LocalDateTime dateRecorded;
+    private LocalDate dateRecorded;
     
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false, insertable = false, updatable = false) 

@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.CrossOrigin;
 
 import com.healthmanagement.dto.fitness.AchievementDTO;
 import com.healthmanagement.service.fitness.AchievementService;
@@ -19,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/tracking/achievements")
 @RequiredArgsConstructor
 @Tag(name = "Fitness Tracking", description = "健身追蹤管理 API")
-@CrossOrigin(origins = "http://localhost:5174")
 public class AchievementController {
 
     private final AchievementService achievementService;

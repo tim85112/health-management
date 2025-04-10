@@ -55,4 +55,30 @@ public class FitnessGoalController {
         List<FitnessGoalDTO> fitnessGoals = fitnessGoalService.getAllFitnessGoalsByUserId(userId);
         return ResponseEntity.ok(fitnessGoals);
     }
+    
+    @Operation(summary = "根據姓名取得健身目標", description = "根據用戶姓名取得所有健身目標資料")
+    @GetMapping("/user/by-name")
+    public ResponseEntity<List<FitnessGoalDTO>> getAllFitnessGoalsByUserName(
+            @Parameter(description = "用戶姓名") @RequestParam String name) {
+        List<FitnessGoalDTO> fitnessGoals = fitnessGoalService.getAllFitnessGoalsByUserName(name);
+        return ResponseEntity.ok(fitnessGoals);
+    }
+    
+    @Operation(summary = "根據日期範圍取得健身目標", description = "根據開始日期和結束日期取得所有健身目標資料")
+    @GetMapping("/by-date-range")
+    public ResponseEntity<List<FitnessGoalDTO>> getAllFitnessGoalsByDateRange(
+            @Parameter(description = "開始日期 (YYYY-MM-DD)") @RequestParam(required = false) String startDate,
+            @Parameter(description = "結束日期 (YYYY-MM-DD)") @RequestParam(required = false) String endDate) {
+        List<FitnessGoalDTO> fitnessGoals = fitnessGoalService.getAllFitnessGoalsByDateRange(startDate, endDate);
+        return ResponseEntity.ok(fitnessGoals);
+    }
+    @Operation(summary = "根據用戶 ID 和日期範圍取得健身目標", description = "根據用戶 ID、開始日期和結束日期取得所有健身目標資料")
+    @GetMapping("/user/{userId}/by-date-range")
+    public ResponseEntity<List<FitnessGoalDTO>> getAllFitnessGoalsByUserIdAndDateRange(
+            @Parameter(description = "用戶 ID") @PathVariable Integer userId,
+            @Parameter(description = "開始日期 (YYYY-MM-DD)") @RequestParam(required = false) String startDate,
+            @Parameter(description = "結束日期 (YYYY-MM-DD)") @RequestParam(required = false) String endDate) {
+        List<FitnessGoalDTO> fitnessGoals = fitnessGoalService.getAllFitnessGoalsByUserIdAndDateRange(userId, startDate, endDate);
+        return ResponseEntity.ok(fitnessGoals);
+    }
 }

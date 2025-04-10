@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @AllArgsConstructor
 public class ExerciseRecordDTO {
 
+    private Integer recordId;
 
     @Schema(example = "1")
     private Integer userId;
@@ -36,6 +37,7 @@ public class ExerciseRecordDTO {
     
     
     public ExerciseRecordDTO(ExerciseRecord exerciseRecord) {
+        this.recordId = exerciseRecord.getRecordId();
         this.userId = exerciseRecord.getUserId();
         this.exerciseType = exerciseRecord.getExerciseType();
         this.exerciseDuration = exerciseRecord.getExerciseDuration();

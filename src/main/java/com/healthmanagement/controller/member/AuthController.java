@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/auth")
-@Tag(name = "Authentication", description = "User authentication APIs")
+@RequestMapping("/api/auth")
+@Tag(name = "用戶認證", description = "用戶登錄和註冊相關API")
 public class AuthController {
 
     private final UserService userService;
@@ -27,9 +27,9 @@ public class AuthController {
     public AuthController(UserService userService) {
         this.userService = userService;
     }
-    
+
     @PostMapping("/register")
-    @Operation(summary = "Register a new user", description = "Create a new user account with the provided information")
+    @Operation(summary = "註冊新用戶", description = "使用提供的信息創建新用戶帳號")
     public ResponseEntity<ApiResponse<User>> register(@Valid @RequestBody RegisterRequest registerRequest) {
         User user = User.builder()
                 .name(registerRequest.getName())
@@ -44,11 +44,11 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    @Operation(summary = "User login", description = "Authenticate a user and return a JWT token")
+    @Operation(summary = "用戶登錄", description = "驗證用戶並返回JWT令牌")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest loginRequest) {
         String token = userService.loginUser(loginRequest.getEmail(), loginRequest.getPassword());
 
-        // 从数据库获取用户角色
+        // 從數據庫獲取用戶角色
         String role = userService.findByEmail(loginRequest.getEmail())
                 .map(User::getRole)
                 .orElse("user");

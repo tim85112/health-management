@@ -3,6 +3,8 @@ package com.healthmanagement.dao.fitness;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -29,4 +31,13 @@ public interface ExerciseRecordDAO extends JpaRepository<ExerciseRecord, Integer
 	@Query("SELECT er FROM ExerciseRecord er JOIN er.user u WHERE u.name LIKE %:userName%")
 	List<ExerciseRecord> findByUserNameContaining(@Param("userName") String userName);
 
+	// 新增的分頁查詢方法
+	Page<ExerciseRecord> findAll(Pageable pageable);
+
+	Page<ExerciseRecord> findByExerciseType(String exerciseType, Pageable pageable);
+
+	Page<ExerciseRecord> findByExerciseDateBetween(LocalDate startDate, LocalDate endDate, Pageable pageable);
+
+	Page<ExerciseRecord> findByExerciseTypeAndExerciseDateBetween(String exerciseType, LocalDate startDate,
+			LocalDate endDate, Pageable pageable);
 }

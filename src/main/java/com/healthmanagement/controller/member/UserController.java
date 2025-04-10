@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/users")
-@Tag(name = "User Management", description = "User management APIs")
+@RequestMapping("/api/users")
+@Tag(name = "用戶管理", description = "用戶管理相關API")
 @SecurityRequirement(name = "bearerAuth")
 public class UserController {
 
@@ -28,7 +28,7 @@ public class UserController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('admin')")
-    @Operation(summary = "Get all users", description = "Retrieve a list of all users")
+    @Operation(summary = "獲取所有用戶", description = "獲取所有用戶的列表")
     public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
         List<User> users = userService.getAllUsers();
         return ResponseEntity.ok(ApiResponse.success(users));
@@ -36,7 +36,7 @@ public class UserController {
 
     @GetMapping("/{userId}")
     @PreAuthorize("hasAuthority('admin') or @userSecurity.isCurrentUser(#userId)")
-    @Operation(summary = "Get user by ID", description = "Retrieve user information by their ID")
+    @Operation(summary = "根據ID獲取用戶", description = "通過用戶ID獲取用戶信息")
     public ResponseEntity<ApiResponse<User>> getUserById(@PathVariable Integer userId) {
         return userService.getUserById(userId)
                 .map(user -> ResponseEntity.ok(ApiResponse.success(user)))
@@ -45,7 +45,7 @@ public class UserController {
 
     @PutMapping("/{userId}")
     @PreAuthorize("hasAuthority('admin') or @userSecurity.isCurrentUser(#userId)")
-    @Operation(summary = "Update user", description = "Update user information")
+    @Operation(summary = "更新用戶", description = "更新用戶信息")
     public ResponseEntity<ApiResponse<User>> updateUser(@PathVariable Integer userId, @RequestBody User user) {
         User updatedUser = userService.updateUser(userId, user);
         return ResponseEntity.ok(ApiResponse.success(updatedUser));
@@ -53,7 +53,7 @@ public class UserController {
 
     @DeleteMapping("/{userId}")
     @PreAuthorize("hasAuthority('admin') or @userSecurity.isCurrentUser(#userId)")
-    @Operation(summary = "Delete user", description = "Delete a user")
+    @Operation(summary = "刪除用戶", description = "刪除指定用戶")
     public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Integer userId) {
         userService.deleteUser(userId);
         return ResponseEntity.ok(ApiResponse.success(null));

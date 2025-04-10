@@ -16,4 +16,9 @@ public interface FitnessGoalService {
 
 	List<FitnessGoalDTO> getFitnessGoalByUserId(Integer userId);
 
+	List<FitnessGoalDTO> getAllFitnessGoalsByUserName(String name);
+
+	List<FitnessGoalDTO> getAllFitnessGoalsByDateRange(String startDate, String endDate);
+
+	List<FitnessGoalDTO> getAllFitnessGoalsByUserIdAndDateRange(Integer userId, String startDate, String endDate);
 }

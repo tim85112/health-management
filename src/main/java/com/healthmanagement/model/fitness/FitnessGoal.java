@@ -2,7 +2,7 @@ package com.healthmanagement.model.fitness;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import com.healthmanagement.model.member.User;
 
@@ -32,10 +32,10 @@ public class FitnessGoal {
     private String unit;
 
     @Column(name = "start_date")
-    private LocalDateTime startDate;
+    private LocalDate startDate;
 
     @Column(name = "end_date")
-    private LocalDateTime endDate;
+    private LocalDate endDate;
 
     @Column(name = "status", length = 20 , columnDefinition = "NVARCHAR(50)")
     private String status;

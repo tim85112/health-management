@@ -19,7 +19,7 @@ CREATE TABLE [body_metrics]
     [hip_circumference] FLOAT,                                          -- 臀圍
     [height] FLOAT,                                                     -- 身高
     [bmi] FLOAT,                                                        -- BMI
-    [date_recorded] DATETIME2 DEFAULT GETDATE()                          -- 記錄日期，默認為當前日期
+    [date_recorded] DATE DEFAULT GETDATE()                          -- 記錄日期，默認為當前日期
 )
 GO
 
@@ -59,7 +59,7 @@ CREATE TABLE [fitness_goals]
     [target_value] FLOAT NOT NULL,                                        -- 目標值（例如：減少 5 公斤）
     [current_progress] FLOAT DEFAULT 0,                                   -- 當前進度
     [unit] NVARCHAR(20) CHECK (unit IN ('公斤', '百分比', '分鐘', '卡路里')), -- 單位（公斤、百分比、分鐘、卡路里）
-    [start_date] DATETIME2 DEFAULT GETDATE(),                             -- 開始日期，默認為當前日期
+    [start_date] DATE DEFAULT GETDATE(),                             -- 開始日期，默認為當前日期
     [end_date] DATETIME2 NULL,                                            -- 結束日期（可為 NULL）
     [status] NVARCHAR(20) CHECK (status IN ('進行中', '已完成', '未達成')) DEFAULT '進行中', -- 目標狀態
     CONSTRAINT [CK_EndDate] CHECK ([end_date] IS NULL OR [end_date] >= [start_date])  -- 結束日期檢查（結束日期不可早於開始日期）

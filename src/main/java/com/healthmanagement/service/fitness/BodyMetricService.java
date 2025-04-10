@@ -2,6 +2,9 @@ package com.healthmanagement.service.fitness;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import com.healthmanagement.dto.fitness.BodyMetricDTO;
 
 public interface BodyMetricService {
@@ -22,14 +25,16 @@ public interface BodyMetricService {
 
 	// 更新身體數據
 	BodyMetricDTO updateBodyMetric(Integer bodyMetricId, BodyMetricDTO bodyMetricDTO);
-	
-    // 根據 userId 和日期範圍查詢 BodyMetric
-    List<BodyMetricDTO> findByUserIdAndDateRange(Integer userId, String startDate, String endDate);
 
-    // 根據姓名查詢 BodyMetric (需要用戶服務)
-    List<BodyMetricDTO> findByUserName(String name);
-    
-    List<BodyMetricDTO> findByMultipleCriteria(Integer userId, String userName, String startDate, String endDate);
+	// 根據 userId 和日期範圍查詢 BodyMetric
+	List<BodyMetricDTO> findByUserIdAndDateRange(Integer userId, String startDate, String endDate);
 
+	// 根據姓名查詢 BodyMetric (需要用戶服務)
+	List<BodyMetricDTO> findByUserName(String name);
+
+	List<BodyMetricDTO> findByMultipleCriteria(Integer userId, String userName, String startDate, String endDate);
+
+	Page<BodyMetricDTO> findByMultipleCriteriaWithPagination(Integer userId, String userName, String startDate,
+			String endDate, Pageable pageable);
 
 }

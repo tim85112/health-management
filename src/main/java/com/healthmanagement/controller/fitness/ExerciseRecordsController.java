@@ -3,6 +3,9 @@ package com.healthmanagement.controller.fitness;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +20,6 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/tracking/exercise-records")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5174")
 @Tag(name = "Fitness Tracking", description = "健身追蹤管理 API")
 public class ExerciseRecordsController {
     
@@ -67,5 +69,17 @@ public class ExerciseRecordsController {
             @Parameter(description = "用戶姓名關鍵字") @RequestParam String userName) {
         return ResponseEntity.ok(exerciseService.getExerciseRecordsByUserName(userName));
     }
+    @GetMapping
+    @Operation(summary = "獲取所有運動紀錄 (分頁和條件查詢)", description = "獲取所有運動紀錄，支援分頁和根據運動類型及日期範圍查詢")
+    public ResponseEntity<Page<ExerciseRecordDTO>> getAllExerciseRecords(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String exerciseType,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate) {
 
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ExerciseRecordDTO> exerciseRecordPage = exerciseService.getAllExerciseRecords(pageable, exerciseType, startDate, endDate);
+        return ResponseEntity.ok(exerciseRecordPage); // 直接返回 Page 物件
+    }
 }

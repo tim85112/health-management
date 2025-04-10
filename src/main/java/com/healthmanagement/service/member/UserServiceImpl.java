@@ -124,4 +124,9 @@ public class UserServiceImpl implements UserService {
     public List<User> findByName(String name) {
         return userDAO.findByName(name);
     }
+    
+    @Override
+    public Optional<User> findById(Integer userId) {
+        return userDAO.findById(userId);
+    }
 }
