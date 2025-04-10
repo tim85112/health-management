@@ -7,19 +7,23 @@ import java.util.Optional;
 
 public interface UserService {
 
-    User registerUser(User user);
+	User registerUser(User user);
 
-    String loginUser(String email, String password);
+	String loginUser(String email, String password);
 
-    Optional<User> getUserById(Integer userId);
+	Optional<User> getUserById(Integer userId);
 
-    User updateUser(Integer userId, User userDetails);
+	User updateUser(Integer userId, User userDetails);
 
-    void deleteUser(Integer userId);
+	void deleteUser(Integer userId);
 
-    List<User> getAllUsers();
+	List<User> getAllUsers();
 
-    boolean existsByEmail(String email);
+	boolean existsByEmail(String email);
 
-    Optional<User> findByEmail(String email);
+	Optional<User> findByEmail(String email);
+	
+	Optional<User> findById(Integer userId);
+
+	List<User> findByName(String name);
 }

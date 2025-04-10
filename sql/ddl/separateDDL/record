@@ -1,92 +1,90 @@
--- 創建 body_metric 表
-CREATE TABLE [body_metric]
+-- 創建 exercise_type_coefficients 表格
+CREATE TABLE [exercise_type_coefficients]
 (
-    [id]                  INT PRIMARY KEY IDENTITY (1,1),
-    [user_id]             INT           NOT NULL,
-    [weight]              DECIMAL(5, 2) NOT NULL,
-    [body_fat]            DECIMAL(5, 2),
-    [muscle_mass]         DECIMAL(5, 2),
-    [waist_circumference] DECIMAL(5, 2),
-    [hip_circumference]   DECIMAL(5, 2),
-    [height]              DECIMAL(5, 2),
-    [bmi]                 AS (weight / (height / 100) / (height / 100)) PERSISTED,
-    [date_recorded]       DATETIME DEFAULT GETDATE()
+    [exercise_type_id] INT PRIMARY KEY IDENTITY(1, 1),
+    [exercise_name] NVARCHAR(50) NOT NULL,  -- 運動名稱
+    [met] FLOAT NOT NULL                    -- MET 值
 )
 GO
 
--- 創建 exercise_record 表
-CREATE TABLE [exercise_record]
+-- 創建 body_metrics 表格
+CREATE TABLE [body_metrics]
 (
-    [id]              INT PRIMARY KEY IDENTITY (1, 1),
-    [user_id]         INT            NOT NULL,
-    [exercise_type]   NVARCHAR(50)   NOT NULL,
-    [duration]        INT            NOT NULL,
-    [calories_burned] DECIMAL(10, 2) NOT NULL,
-    [date]            DATE           NOT NULL
+    [id] INT PRIMARY KEY IDENTITY(1, 1),
+    [user_id] INT NOT NULL FOREIGN KEY REFERENCES [users](user_id) ON DELETE CASCADE,  -- 外鍵參照 [users] 表格的 user_id
+    [weight] FLOAT NOT NULL,                                            -- 體重
+    [body_fat] FLOAT,                                                  -- 體脂率
+    [muscle_mass] FLOAT,                                                -- 肌肉量
+    [waist_circumference] FLOAT,                                        -- 腰圍
+    [hip_circumference] FLOAT,                                          -- 臀圍
+    [height] FLOAT,                                                     -- 身高
+    [bmi] FLOAT,                                                        -- BMI
+    [date_recorded] DATE DEFAULT GETDATE()                          -- 記錄日期，默認為當前日期
 )
 GO
 
--- 創建 nutrition_record 表
-CREATE TABLE [nutrition_record]
+-- 創建 exercise_records 表格
+CREATE TABLE [exercise_records]
 (
-    [id]            INT PRIMARY KEY IDENTITY (1,1),
-    [user_id]       INT           NOT NULL,
-    [food_name]     NVARCHAR(255) NOT NULL,
-    [calories]      INT           NOT NULL,
-    [protein]       FLOAT         NOT NULL,
-    [carbs]         FLOAT         NOT NULL,
-    [fats]          FLOAT         NOT NULL,
-    [mealtime]      NVARCHAR(50) CHECK ([mealtime] IN ('breakfast', 'lunch', 'dinner', 'snack')),
-    [date_recorded] DATETIME DEFAULT GETDATE()
+    [record_id] INT PRIMARY KEY IDENTITY(1, 1),
+    [user_id] INT NOT NULL FOREIGN KEY REFERENCES [users](user_id) ON DELETE CASCADE,  -- 外鍵參照 [users] 表格的 user_id
+    [exercise_type] NVARCHAR(50) NOT NULL,                                -- 運動類型
+    [exercise_duration] INT NOT NULL,                                     -- 運動時長（分鐘）
+    [calories_burned] FLOAT NOT NULL,                                     -- 消耗的卡路里
+    [exercise_date] DATE NOT NULL                                         -- 運動日期
 )
 GO
 
--- 創建 fitness_goal 表
-CREATE TABLE [fitness_goal]
+-- 創建 nutrition_records 表格
+CREATE TABLE [nutrition_records]
 (
-    [id]                 INT PRIMARY KEY IDENTITY (1,1),
-    [user_id]            INT      NOT NULL,
-    [type]               NVARCHAR(50) CHECK ([type] IN ('weight_loss', 'muscle_gain', 'cardio', 'other')),
-    [target_value]       FLOAT    NOT NULL,
-    [current_progress]   FLOAT                                                                   DEFAULT 0,
-    [unit]               NVARCHAR(20) CHECK ([unit] IN ('kg', '%', 'min', 'cal')),
-    [start_date]         DATETIME                                                                DEFAULT GETDATE(),
-    [end_date]           DATETIME NULL,
-    [status]             NVARCHAR(20) CHECK ([status] IN ('in_progress', 'completed', 'failed')) DEFAULT 'in_progress',
-    [frequency_goal]     INT      NULL,
-    [frequency_duration] INT      NULL,
-    [reference_table]    NVARCHAR(50) CHECK ([reference_table] IN ('exercise_record', 'body_metric')),
-    CONSTRAINT [CK_end_date] CHECK (end_date IS NULL OR end_date >= start_date)
+    [record_id] INT PRIMARY KEY IDENTITY(1, 1),
+    [user_id] INT FOREIGN KEY REFERENCES [users](user_id) ON DELETE CASCADE,  -- 外鍵參照 [users] 表格的 user_id
+    [food_name] NVARCHAR(255) NOT NULL,                                    -- 食物名稱
+    [calories] INT NOT NULL,                                               -- 食物卡路里
+    [protein] FLOAT NOT NULL,                                              -- 蛋白質含量
+    [carbs] FLOAT NOT NULL,                                                -- 碳水化合物含量
+    [fats] FLOAT NOT NULL,                                                 -- 脂肪含量
+    [mealtime] NVARCHAR(50) CHECK (mealtime IN ('早餐', '午餐', '晚餐', '點心')),  -- 餐點時間（早餐、午餐、晚餐、點心）
+    [record_date] DATETIME2 DEFAULT GETDATE()                              -- 記錄日期，默認為當前日期
 )
 GO
 
--- 創建 achievement 表
-CREATE TABLE [achievement]
+-- 創建 fitness_goals 表格
+CREATE TABLE [fitness_goals]
 (
-    [id]            INT PRIMARY KEY IDENTITY (1,1),
-    [user_id]       INT                                                NOT NULL,
-    [type]          NVARCHAR(50) CHECK ([type] IN ('goal_completed', 'general_reward')),
-    [title]         NVARCHAR(255) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
-    [description]   NVARCHAR(500),
-    [date_achieved] DATETIME DEFAULT GETDATE(),
-    CONSTRAINT [UC_unique_achievement] UNIQUE ([user_id], [title])
+    [goal_id] INT PRIMARY KEY IDENTITY(1, 1),                            -- 目標 ID
+    [user_id] INT NOT NULL FOREIGN KEY REFERENCES [users](user_id) ON DELETE CASCADE, -- 外鍵參照 [users] 表格的 user_id
+    [goal_type] NVARCHAR(50) NOT NULL CHECK (goal_type IN ('減重', '增肌', '心肺健康', '其他')),  -- 目標類型
+    [target_value] FLOAT NOT NULL,                                        -- 目標值（例如：減少 5 公斤）
+    [current_progress] FLOAT DEFAULT 0,                                   -- 當前進度
+    [unit] NVARCHAR(20) CHECK (unit IN ('公斤', '百分比', '分鐘', '卡路里')), -- 單位（公斤、百分比、分鐘、卡路里）
+    [start_date] DATE DEFAULT GETDATE(),                             -- 開始日期，默認為當前日期
+    [end_date] DATETIME2 NULL,                                            -- 結束日期（可為 NULL）
+    [status] NVARCHAR(20) CHECK (status IN ('進行中', '已完成', '未達成')) DEFAULT '進行中', -- 目標狀態
+    CONSTRAINT [CK_EndDate] CHECK ([end_date] IS NULL OR [end_date] >= [start_date])  -- 結束日期檢查（結束日期不可早於開始日期）
 )
 GO
 
--- 創建 exercise_type_coefficient 表
-CREATE TABLE [exercise_type_coefficient]
+-- 創建 achievements 表格
+CREATE TABLE [achievements]
 (
-    [id]   INT PRIMARY KEY IDENTITY (1,1),
-    [name] NVARCHAR(50)  NOT NULL,
-    [met]  DECIMAL(5, 2) NOT NULL
+    [achievement_id] INT PRIMARY KEY IDENTITY(1, 1),
+    [user_id] INT NOT NULL FOREIGN KEY REFERENCES [users](user_id) ON DELETE CASCADE,  -- 外鍵參照 [users] 表格的 user_id
+    [achievement_type] NVARCHAR(50) CHECK (achievement_type IN ('目標達成', '一般成就')),  -- 獎勳類型
+    [title] NVARCHAR(255) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,  -- 獎勳標題
+    [description] NVARCHAR(500),                                          -- 獎勳描述
+    [achieved_date] DATE DEFAULT GETDATE(),                               -- 獲得日期，默認為當前日期
+    CONSTRAINT [UC_UniqueAchievement] UNIQUE ([user_id], [title])         -- 獎勳標題唯一
 )
 GO
 
--- 創建視圖
-CREATE VIEW dashboard_stat AS
-SELECT (SELECT COUNT(*) FROM [user] WHERE role = 'user')                             AS total_users,
-       (SELECT COUNT(*) FROM exercise_record)                                        AS total_workouts,
-       (SELECT SUM(duration) FROM exercise_record)                                   AS total_workout_minutes,
-       (SELECT SUM(calories_burned) FROM exercise_record)                            AS total_calories_burned,
-       (SELECT COUNT(*) FROM [user] WHERE DATEDIFF(DAY, last_login, GETDATE()) <= 7) AS active_users_this_week;
+-- 創建 DashboardStats 視圖
+CREATE VIEW [DashboardStats] AS
+SELECT 
+    (SELECT COUNT(*) FROM [users] WHERE [role] = 'user') AS TotalUsers,                  -- 總用戶數
+    (SELECT COUNT(*) FROM [exercise_records]) AS TotalWorkouts,                        -- 總運動紀錄數
+    (SELECT SUM([exercise_duration]) FROM [exercise_records]) AS TotalWorkoutMinutes,    -- 總運動時長（分鐘）
+    (SELECT SUM([calories_burned]) FROM [exercise_records]) AS TotalCaloriesBurned,      -- 總消耗卡路里
+    (SELECT COUNT(DISTINCT [user_id]) FROM [exercise_records] WHERE DATEDIFF(DAY, [exercise_date], GETDATE()) <= 7 AND [user_id] IS NOT NULL) AS ActiveUsersThisWeek;  -- 本週活躍用戶數
 GO

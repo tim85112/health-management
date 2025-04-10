@@ -77,6 +77,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/comments/post/**").authenticated() // 留言需登入
                         .requestMatchers("/comments/**").permitAll() // 查詢留言不用登入
                         .requestMatchers("/posts/**").authenticated()
+                        .requestMatchers("/api/fitness/dashboard/stats").authenticated()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
