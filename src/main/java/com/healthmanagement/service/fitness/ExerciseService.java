@@ -22,7 +22,7 @@ public interface ExerciseService {
 	// 根據姓名模糊查詢所有運動紀錄
 	List<ExerciseRecordDTO> getExerciseRecordsByUserName(String userName);
 
-	Page<ExerciseRecordDTO> getAllExerciseRecords(Pageable pageable, String exerciseType, String startDate,
-			String endDate);
+	Page<ExerciseRecordDTO> getAllExerciseRecords(Pageable pageable, Integer userId, String userName,
+			String exerciseType, String startDate, String endDate);
 
 }
