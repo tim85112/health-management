@@ -68,7 +68,11 @@ public class WebSecurityConfig {
                                 "/swagger-ui/index.html",
                                 "/webjars/**",
                                 "/auth/**",
-                                "/api/auth/**")
+                                "/api/auth/**",
+                                "/api/products/**",
+                                "/api/cart/**",
+                                "/api/courses/**",
+                                "/users/**")
                         .permitAll()
                         .requestMatchers("/comments/post/**").authenticated() // 留言需登入
                         .requestMatchers("/comments/**").permitAll() // 查詢留言不用登入
