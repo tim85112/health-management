@@ -1,5 +1,6 @@
 package com.healthmanagement.model.social;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.healthmanagement.model.member.User;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -18,6 +19,7 @@ public class Comment {
     @Column(name = "id")
     private Integer id;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;

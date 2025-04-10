@@ -2,6 +2,7 @@ package com.healthmanagement.model.social;
 
 import java.time.LocalDateTime;
 import com.healthmanagement.model.member.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
