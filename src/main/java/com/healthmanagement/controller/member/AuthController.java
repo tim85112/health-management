@@ -48,12 +48,11 @@ public class AuthController {
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest loginRequest) {
         String token = userService.loginUser(loginRequest.getEmail(), loginRequest.getPassword());
 
-        // 從數據庫獲取用戶角色
-        String role = userService.findByEmail(loginRequest.getEmail())
-                .map(User::getRole)
-                .orElse("user");
+        // 從數據庫獲取用戶角色和用户信息
+        User user = userService.findByEmail(loginRequest.getEmail()).orElse(null);
+        String role = user != null ? user.getRole() : "user";
 
-        LoginResponse loginResponse = new LoginResponse(token, role);
+        LoginResponse loginResponse = new LoginResponse(token, role, user);
         return ResponseEntity.ok(ApiResponse.success(loginResponse));
     }
 }

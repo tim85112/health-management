@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.healthmanagement.model.member.User;
 
 @Entity
@@ -36,5 +37,6 @@ public class Achievements {
 
 	    @ManyToOne
 	    @JoinColumn(name = "user_id", nullable = false, insertable = false, updatable = false) 
-		private User user;
+            @JsonIgnore
+	    private User user;
 }

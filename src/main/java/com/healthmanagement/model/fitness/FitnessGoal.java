@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.healthmanagement.model.member.User;
 
 @Entity
@@ -34,7 +35,7 @@ public class FitnessGoal {
     @Column(name = "start_date")
     private LocalDate startDate;
 
-    @Column(name = "end_date")
+    @Column(name = "end_date", columnDefinition = "datetime2")
     private LocalDate endDate;
 
     @Column(name = "status", length = 20 , columnDefinition = "NVARCHAR(50)")
@@ -42,5 +43,6 @@ public class FitnessGoal {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 }

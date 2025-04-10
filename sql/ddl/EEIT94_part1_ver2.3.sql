@@ -1,16 +1,3 @@
-/*
-<<<<<<< HEAD:sql/ddl/EEIT94_part1_ver2.2.sql
-	注意：user表格的插入數據是程式自動生成，user表要有數據才能執行part2! 不然就會報錯!
-	如果不想插入測試數據可以先不執行part2!
-*/
-
-use HealthManagement
--- 創建 users 表
-=======
-    注意：user表格的插入數據是程式自動生成，user表要有數據才能執行part2! 不然就會報錯!
-    如果不想插入測試數據可以先不執行part2!
-*/
-
 
 /*
     注意：user表格的插入數據是程式自動生成，user表要有數據才能執行part2! 不然就會報錯!
