@@ -55,7 +55,7 @@ public class BodyMetricDTO {
 				.weight(bodyMetric.getWeight()).bodyFat(bodyMetric.getBodyFat()).height(bodyMetric.getHeight())
 				.waistCircumference(bodyMetric.getWaistCircumference())
 				.hipCircumference(bodyMetric.getHipCircumference()).dateRecorded(bodyMetric.getDateRecorded())
-				.bmi(bodyMetric.getBmi()).build();
+				.bmi(bodyMetric.getBmi()).muscleMass(bodyMetric.getMuscleMass()).build();
 	}
 
 	public static BodyMetricDTO fromEntity(BodyMetric bodyMetric) {
@@ -63,6 +63,6 @@ public class BodyMetricDTO {
 				.weight(bodyMetric.getWeight()).bodyFat(bodyMetric.getBodyFat()).height(bodyMetric.getHeight())
 				.waistCircumference(bodyMetric.getWaistCircumference())
 				.hipCircumference(bodyMetric.getHipCircumference()).dateRecorded(bodyMetric.getDateRecorded())
-				.bmi(bodyMetric.getBmi()).build();
+				.bmi(bodyMetric.getBmi()).muscleMass(bodyMetric.getMuscleMass()).build();
 	}
 }

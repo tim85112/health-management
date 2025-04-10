@@ -41,6 +41,7 @@ public class BodyMetricServiceImpl implements BodyMetricService {
 		bodyMetric.setWaistCircumference(bodyMetricDTO.getWaistCircumference());
 		bodyMetric.setHipCircumference(bodyMetricDTO.getHipCircumference());
 		bodyMetric.setDateRecorded(bodyMetricDTO.getDateRecorded());
+		bodyMetric.setMuscleMass(bodyMetricDTO.getMuscleMass());
 		bodyMetric.setBmi(calculateBMI(bodyMetricDTO.getWeight(), bodyMetricDTO.getHeight()));
 
 		BodyMetric savedBodyMetric = bodyMetricRepo.save(bodyMetric);
@@ -87,6 +88,7 @@ public class BodyMetricServiceImpl implements BodyMetricService {
 			existingBodyMetric.setHeight(bodyMetricDTO.getHeight());
 			existingBodyMetric.setWaistCircumference(bodyMetricDTO.getWaistCircumference());
 			existingBodyMetric.setHipCircumference(bodyMetricDTO.getHipCircumference());
+			existingBodyMetric.setMuscleMass(bodyMetricDTO.getMuscleMass());
 			existingBodyMetric.setDateRecorded(bodyMetricDTO.getDateRecorded());
 			existingBodyMetric.setBmi(calculateBMI(bodyMetricDTO.getWeight(), bodyMetricDTO.getHeight()));
 
