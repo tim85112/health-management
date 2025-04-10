@@ -68,8 +68,15 @@ public class WebSecurityConfig {
                                 "/swagger-ui/index.html",
                                 "/webjars/**",
                                 "/auth/**",
-                                "/api/auth/**")
+                                "/api/auth/**",
+                                "/api/products/**",
+                                "/api/cart/**",
+                                "/api/courses/**",
+                                "/users/**")
                         .permitAll()
+                        .requestMatchers("/api/users").hasAuthority("admin") // 獲取所有用戶僅限管理員
+                        .requestMatchers("/api/users/{userId}").authenticated() // 獲取特定用戶需要登入，具體權限在Controller中控制
+                        .requestMatchers("/api/users/{userId}/**").authenticated() // 用戶相關操作需要登入，具體權限在Controller中控制
                         .requestMatchers("/comments/post/**").authenticated() // 留言需登入
                         .requestMatchers("/comments/**").permitAll() // 查詢留言不用登入
                         .requestMatchers("/posts/**").authenticated()
