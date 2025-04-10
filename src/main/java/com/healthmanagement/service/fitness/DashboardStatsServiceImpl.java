@@ -16,7 +16,7 @@ public class DashboardStatsServiceImpl implements DashboardStatsService {
 
     @Override
     public DashboardStatsDTO getDashboardStats() {
-        Query query = entityManager.createNativeQuery("SELECT * FROM DashboardStats");
+        Query query = entityManager.createNativeQuery("SELECT * FROM dashboard_stat");
         List<Object[]> results = query.getResultList();
 
         if (!results.isEmpty()) {
