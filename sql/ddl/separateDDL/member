@@ -1,4 +1,4 @@
-CREATE TABLE [user]
+CREATE TABLE [users]
 (
     [user_id]       INT PRIMARY KEY IDENTITY (1, 1),-- 自動遞增主鍵
     [name]          NVARCHAR(50)  NOT NULL,-- 使用者名稱

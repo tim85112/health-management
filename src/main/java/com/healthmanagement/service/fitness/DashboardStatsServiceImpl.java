@@ -1,13 +1,11 @@
 package com.healthmanagement.service.fitness;
 
-
 import com.healthmanagement.dto.fitness.DashboardStatsDTO;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -27,7 +25,7 @@ public class DashboardStatsServiceImpl implements DashboardStatsService {
             stats.setTotalUsers(((Number) row[0]).intValue());
             stats.setTotalWorkouts(((Number) row[1]).intValue());
             stats.setTotalWorkoutMinutes(((Number) row[2]).intValue());
-            stats.setTotalCaloriesBurned(((BigDecimal) row[3]).doubleValue());
+            stats.setTotalCaloriesBurned(((Number) row[3]).doubleValue()); 
             stats.setActiveUsersThisWeek(((Number) row[4]).intValue());
             return stats;
         }
