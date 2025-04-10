@@ -4,7 +4,7 @@
 		如果不想插入測試數據可以先不執行part2!
 	*/
 
-use health_db
+use HealthManagement
 -- 插入測試數據
 -- 插入 user_point 數據 (20筆)
 INSERT INTO [user_point] ([user_id], [points], [last_updated])

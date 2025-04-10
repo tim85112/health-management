@@ -1,23 +1,22 @@
+/*
+    注意：user表格的插入數據是程式自動生成，user表要有數據才能執行part2! 不然就會報錯!
+    如果不想插入測試數據可以先不執行part2!
+*/
 
-	/*
-		注意：user表格的插入數據是程式自動生成，user表要有數據才能執行part2! 不然就會報錯!
-		如果不想插入測試數據可以先不執行part2!
-	*/
 
-
-use health_db
+use HealthManagement
 -- 創建 user 表
-CREATE TABLE [user]
+CREATE TABLE [users]
 (
     [user_id]       INT PRIMARY KEY IDENTITY (1, 1),-- 自動遞增主鍵
-    [name]          NVARCHAR(50)  NOT NULL,-- 使用者名稱
-    [email]         NVARCHAR(100) NOT NULL,-- 電子郵件
-    [password_hash] VARCHAR(255)  NOT NULL,-- 密碼哈希
+    [name]          NVARCHAR(50) NOT NULL,-- 使用者名稱
+    [email] NVARCHAR(100) NOT NULL,-- 電子郵件
+    [password_hash] VARCHAR(255) NOT NULL,-- 密碼哈希
     [gender]        CHAR(1),-- 性別，例如 'M' 或 'F'
     [bio]           NVARCHAR(MAX),-- 個人簡介
     [role]          VARCHAR(10) CHECK (role IN ('user', 'admin')),-- 角色，只能是 user 或 admin 
-    [user_points]   INT           NOT NULL DEFAULT 0,	 -- 使用者點數，預設為 0 
-		[last_login]    DATETIME	DEFAULT CURRENT_TIMESTAMP	-- 最後登入時間
+    [user_points]   INT          NOT NULL DEFAULT 0, -- 使用者點數，預設為 0
+    [last_login]    DATETIME              DEFAULT CURRENT_TIMESTAMP -- 最後登入時間
 );
 GO
 
@@ -211,81 +210,61 @@ CREATE TABLE [comment]
 GO
 
 -- 添加外鍵約束
+-- 修改 user_point 表的外鍵約束
 ALTER TABLE [user_point]
-    ADD FOREIGN KEY ([user_id]) REFERENCES [user] ([user_id])
+    ADD FOREIGN KEY ([user_id]) REFERENCES [users] ([user_id])
 GO
 
+-- 修改 order 表的外鍵約束
 ALTER TABLE [order]
-    ADD FOREIGN KEY ([user_id]) REFERENCES [user] ([user_id])
+    ADD FOREIGN KEY ([user_id]) REFERENCES [users] ([user_id])
 GO
 
-ALTER TABLE [order_item]
-    ADD FOREIGN KEY ([order_id]) REFERENCES [order] ([id])
-GO
-
-ALTER TABLE [order_item]
-    ADD FOREIGN KEY ([product_id]) REFERENCES [product] ([id])
-GO
-
-ALTER TABLE [order_item]
-    ADD FOREIGN KEY ([course_id]) REFERENCES [course] ([id])
-GO
-
-ALTER TABLE [course]
-    ADD FOREIGN KEY ([coach_id]) REFERENCES [coach] ([id])
-GO
-
+-- 修改 cart_item 表的外鍵約束
 ALTER TABLE [cart_item]
-    ADD FOREIGN KEY ([user_id]) REFERENCES [user] ([user_id])
+    ADD FOREIGN KEY ([user_id]) REFERENCES [users] ([user_id])
 GO
 
-ALTER TABLE [cart_item]
-    ADD FOREIGN KEY ([product_id]) REFERENCES [product] ([id])
-GO
-
-ALTER TABLE [cart_item]
-    ADD FOREIGN KEY ([course_id]) REFERENCES [course] ([id])
-GO
-
+-- 修改 exercise_record 表的外鍵約束
 ALTER TABLE [exercise_record]
-    ADD FOREIGN KEY ([user_id]) REFERENCES [user] ([user_id])
+    ADD FOREIGN KEY ([user_id]) REFERENCES [users] ([user_id])
 GO
 
+-- 修改 social_post 表的外鍵約束
 ALTER TABLE [social_post]
-    ADD FOREIGN KEY ([user_id]) REFERENCES [user] ([user_id])
+    ADD FOREIGN KEY ([user_id]) REFERENCES [users] ([user_id])
 GO
 
+-- 修改 comment 表的外鍵約束
 ALTER TABLE [comment]
-    ADD FOREIGN KEY ([post_id]) REFERENCES [social_post] ([id])
+    ADD FOREIGN KEY ([user_id]) REFERENCES [users] ([user_id])
 GO
 
-ALTER TABLE [comment]
-    ADD FOREIGN KEY ([user_id]) REFERENCES [user] ([user_id])
-GO
-
+-- 修改 body_metric 表的外鍵約束
 ALTER TABLE [body_metric]
-    ADD FOREIGN KEY ([user_id]) REFERENCES [user] ([user_id]) ON DELETE CASCADE
+    ADD FOREIGN KEY ([user_id]) REFERENCES [users] ([user_id]) ON DELETE CASCADE
 GO
 
+-- 修改 nutrition_record 表的外鍵約束
 ALTER TABLE [nutrition_record]
-    ADD FOREIGN KEY ([user_id]) REFERENCES [user] ([user_id]) ON DELETE CASCADE
+    ADD FOREIGN KEY ([user_id]) REFERENCES [users] ([user_id]) ON DELETE CASCADE
 GO
 
+-- 修改 fitness_goal 表的外鍵約束
 ALTER TABLE [fitness_goal]
-    ADD FOREIGN KEY ([user_id]) REFERENCES [user] ([user_id]) ON DELETE CASCADE
+    ADD FOREIGN KEY ([user_id]) REFERENCES [users] ([user_id]) ON DELETE CASCADE
 GO
 
+-- 修改 achievement 表的外鍵約束
 ALTER TABLE [achievement]
-    ADD FOREIGN KEY ([user_id]) REFERENCES [user] ([user_id]) ON DELETE CASCADE
+    ADD FOREIGN KEY ([user_id]) REFERENCES [users] ([user_id]) ON DELETE CASCADE
 GO
 
-
-
--- 創建視圖
-CREATE VIEW dashboard_stat AS
-SELECT (SELECT COUNT(*) FROM [user] WHERE role = 'user')                             AS total_users,
-       (SELECT COUNT(*) FROM exercise_record)                                        AS total_workouts,
-       (SELECT SUM(duration) FROM exercise_record)                                   AS total_workout_minutes,
-       (SELECT SUM(calories_burned) FROM exercise_record)                            AS total_calories_burned,
-       (SELECT COUNT(*) FROM [user] WHERE DATEDIFF(DAY, last_login, GETDATE()) <= 7) AS active_users_this_week;
+-- 修改 dashboard_stat 視圖
+CREATE OR ALTER VIEW dashboard_stat AS
+SELECT (SELECT COUNT(*) FROM [users] WHERE role = 'user')                             AS total_users,
+       (SELECT COUNT(*) FROM exercise_record)                                         AS total_workouts,
+       (SELECT SUM(duration) FROM exercise_record)                                    AS total_workout_minutes,
+       (SELECT SUM(calories_burned) FROM exercise_record)                             AS total_calories_burned,
+       (SELECT COUNT(*) FROM [users] WHERE DATEDIFF(DAY, last_login, GETDATE()) <= 7) AS active_users_this_week;
 GO
