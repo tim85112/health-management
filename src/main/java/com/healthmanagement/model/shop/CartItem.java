@@ -19,9 +19,6 @@ public class CartItem {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    @Column(name = "course_id")
-    private Integer courseId;
-
     @Column(name = "quantity", nullable = false)
     private Integer quantity = 1;
 

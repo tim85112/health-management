@@ -31,7 +31,6 @@ CREATE TABLE [order_item]
     [id]         INT PRIMARY KEY IDENTITY (1, 1),
     [order_id]   INT            NOT NULL,
     [product_id] INT,
-    [course_id]  INT,
     [quantity]   INT            NOT NULL DEFAULT (1),
     [subtotal]   DECIMAL(10, 2) NOT NULL
 )
@@ -43,7 +42,6 @@ CREATE TABLE [cart_item]
     [id]         INT PRIMARY KEY IDENTITY (1, 1),
     [user_id]    INT NOT NULL,
     [product_id] INT,
-    [course_id]  INT,
     [quantity]   INT NOT NULL DEFAULT (1),
     [added_at]   DATETIME     DEFAULT CURRENT_TIMESTAMP
 )

@@ -77,7 +77,6 @@ CREATE TABLE [order_item] (
     [id]         INT PRIMARY KEY IDENTITY(1, 1),
     [order_id]   INT NOT NULL,
     [product_id] INT,
-    [course_id]  INT,
     [quantity]   INT NOT NULL DEFAULT (1),
     [subtotal]   DECIMAL(10, 2) NOT NULL
 );
@@ -88,7 +87,6 @@ CREATE TABLE [cart_item] (
     [id]         INT PRIMARY KEY IDENTITY(1, 1),
     [user_id]    INT NOT NULL,
     [product_id] INT,
-    [course_id]  INT,
     [quantity]   INT NOT NULL DEFAULT (1),
     [added_at]   DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -197,11 +195,9 @@ ALTER TABLE [user_point] ADD FOREIGN KEY ([user_id]) REFERENCES [users]([user_id
 ALTER TABLE [order] ADD FOREIGN KEY ([user_id]) REFERENCES [users]([user_id]);
 ALTER TABLE [order_item] ADD FOREIGN KEY ([order_id]) REFERENCES [order]([id]);
 ALTER TABLE [order_item] ADD FOREIGN KEY ([product_id]) REFERENCES [product]([id]);
-ALTER TABLE [order_item] ADD FOREIGN KEY ([course_id]) REFERENCES [course]([id]);
 ALTER TABLE [course] ADD FOREIGN KEY ([coach_id]) REFERENCES [coach]([id]);
 ALTER TABLE [cart_item] ADD FOREIGN KEY ([user_id]) REFERENCES [users]([user_id]);
 ALTER TABLE [cart_item] ADD FOREIGN KEY ([product_id]) REFERENCES [product]([id]);
-ALTER TABLE [cart_item] ADD FOREIGN KEY ([course_id]) REFERENCES [course]([id]);
 ALTER TABLE [social_post] ADD FOREIGN KEY ([user_id]) REFERENCES [users]([user_id]);
 ALTER TABLE [comment] ADD FOREIGN KEY ([post_id]) REFERENCES [social_post]([id]);
 ALTER TABLE [comment] ADD FOREIGN KEY ([user_id]) REFERENCES [users]([user_id]);
