@@ -20,4 +20,12 @@ public interface ProductService {
     List<ProductDTO> searchProducts(String keyword);
     
     List<ProductDTO> getProductsByPriceRange(BigDecimal minPrice, BigDecimal maxPrice);
+    
+    List<ProductDTO> getProductsByCategory(String category);
+    
+    List<ProductDTO> getInStockProducts();
+    
+    List<ProductDTO> getLatestProducts();
+    
+    boolean updateProductStock(Integer productId, Integer quantity);
 }

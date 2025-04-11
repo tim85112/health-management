@@ -1,6 +1,7 @@
 package com.healthmanagement.dao.shop.impl;
 
-import com.healthmanagement.dao.shop.CartItemDAO;
+import com.healthmanagement.dao.shop.CustomCartItemDAO;
+import com.healthmanagement.model.member.User;
 import com.healthmanagement.model.shop.CartItem;
 import com.healthmanagement.model.shop.Product;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +17,10 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
-public class CartItemDAOImpl implements CartItemDAO {
+public class CartItemDAOImpl implements CustomCartItemDAO {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -35,7 +37,7 @@ public class CartItemDAOImpl implements CartItemDAO {
                         "VALUES (:userId, :productId, :quantity, CURRENT_TIMESTAMP)";
             
             MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("userId", cartItem.getUserId())
+                .addValue("userId", cartItem.getUser().getId())
                 .addValue("productId", cartItem.getProduct().getId())
                 .addValue("quantity", cartItem.getQuantity());
 
@@ -48,13 +50,13 @@ public class CartItemDAOImpl implements CartItemDAO {
             
             MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("id", cartItem.getId())
-                .addValue("userId", cartItem.getUserId())
+                .addValue("userId", cartItem.getUser().getId())
                 .addValue("productId", cartItem.getProduct().getId())
                 .addValue("quantity", cartItem.getQuantity());
 
             namedParameterJdbcTemplate.update(sql, params);
         }
-        return findById(cartItem.getId());
+        return findById(cartItem.getId()).orElse(null);
     }
 
     @Override
@@ -62,9 +64,14 @@ public class CartItemDAOImpl implements CartItemDAO {
         String sql = "DELETE FROM cart_item WHERE id = ?";
         jdbcTemplate.update(sql, id);
     }
+    
+    @Override
+    public void deleteById(Integer id) {
+        delete(id);
+    }
 
     @Override
-    public CartItem findById(Integer id) {
+    public Optional<CartItem> findById(Integer id) {
         String sql = "SELECT ci.id, ci.user_id, ci.quantity, ci.added_at, " +
                     "p.id as product_id, p.name, p.description, p.price, " +
                     "p.stock_quantity, p.image_url, p.created_at, p.updated_at " +
@@ -72,9 +79,10 @@ public class CartItemDAOImpl implements CartItemDAO {
                     "LEFT JOIN product p ON ci.product_id = p.id " +
                     "WHERE ci.id = ?";
         try {
-            return jdbcTemplate.queryForObject(sql, cartItemRowMapper, id);
+            CartItem item = jdbcTemplate.queryForObject(sql, cartItemRowMapper, id);
+            return Optional.ofNullable(item);
         } catch (EmptyResultDataAccessException e) {
-            return null;
+            return Optional.empty();
         }
     }
 
@@ -109,13 +117,35 @@ public class CartItemDAOImpl implements CartItemDAO {
         String sql = "DELETE FROM cart_item WHERE user_id = ?";
         jdbcTemplate.update(sql, userId);
     }
+    
+    // 兼容JPA接口的方法
+    @Override
+    public List<CartItem> findByUser(User user) {
+        return findByUserId(user.getId());
+    }
+    
+    @Override
+    public Optional<CartItem> findByUserAndProduct(User user, Product product) {
+        CartItem item = findByUserIdAndProductId(user.getId(), product.getId());
+        return Optional.ofNullable(item);
+    }
+    
+    @Override
+    public void deleteAllByUser(User user) {
+        deleteByUserId(user.getId());
+    }
 
     private static class CartItemRowMapper implements RowMapper<CartItem> {
         @Override
         public CartItem mapRow(ResultSet rs, int rowNum) throws SQLException {
             CartItem cartItem = new CartItem();
             cartItem.setId(rs.getInt("id"));
-            cartItem.setUserId(rs.getInt("user_id"));
+            
+            // 创建User对象
+            User user = new User();
+            user.setId(rs.getInt("user_id"));
+            cartItem.setUser(user);
+            
             cartItem.setQuantity(rs.getInt("quantity"));
             cartItem.setAddedAt(rs.getTimestamp("added_at"));
 

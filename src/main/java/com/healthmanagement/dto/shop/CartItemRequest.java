@@ -6,6 +6,9 @@ import lombok.Data;
 
 @Data
 public class CartItemRequest {
+    @NotNull(message = "用戶ID不能為空")
+    private Integer userId;
+    
     @NotNull(message = "商品ID不能為空")
     private Integer productId;
 

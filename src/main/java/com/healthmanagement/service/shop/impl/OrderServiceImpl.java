@@ -1,16 +1,21 @@
 package com.healthmanagement.service.shop.impl;
 
-import com.healthmanagement.dao.shop.OrderDAO;
+import com.healthmanagement.dao.shop.CustomOrderDAO;
 import com.healthmanagement.dao.shop.CartItemDAO;
 import com.healthmanagement.dao.shop.ProductDAO;
 import com.healthmanagement.dto.shop.CreateOrderRequest;
 import com.healthmanagement.dto.shop.OrderDTO;
 import com.healthmanagement.dto.shop.OrderItemDTO;
+import com.healthmanagement.dto.shop.OrderRequest;
+import com.healthmanagement.dto.shop.OrderStatisticsDTO;
+import com.healthmanagement.exception.ResourceNotFoundException;
+import com.healthmanagement.model.member.User;
 import com.healthmanagement.model.shop.Order;
 import com.healthmanagement.model.shop.OrderItem;
 import com.healthmanagement.model.shop.CartItem;
 import com.healthmanagement.model.shop.Product;
 import com.healthmanagement.service.shop.OrderService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +31,7 @@ import java.util.ArrayList;
 public class OrderServiceImpl implements OrderService {
 
     @Autowired
-    private OrderDAO orderDAO;
+    private CustomOrderDAO orderDAO;
 
     @Autowired
     private CartItemDAO cartItemDAO;
@@ -36,38 +41,25 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public OrderDTO createOrder(CreateOrderRequest request) {
+    public OrderDTO createOrder(OrderRequest request) {
         if (request.getItems() == null || request.getItems().isEmpty()) {
             throw new RuntimeException("訂單項目不能為空");
         }
 
-        // 1. 檢查所有商品是否在購物車中且數量足夠
-        for (CreateOrderRequest.OrderItemRequest itemRequest : request.getItems()) {
-            CartItem cartItem = cartItemDAO.findByUserIdAndProductId(request.getUserId(), itemRequest.getProductId());
-            if (cartItem == null) {
-                throw new RuntimeException("商品 ID:" + itemRequest.getProductId() + " 不在購物車中");
-            }
-            if (cartItem.getQuantity() < itemRequest.getQuantity()) {
-                throw new RuntimeException("商品 ID:" + itemRequest.getProductId() + " 購物車中數量不足，購物車數量: " + 
-                    cartItem.getQuantity() + "，請求數量: " + itemRequest.getQuantity());
-            }
-        }
-
-        // 2. 創建訂單
+        // 1. 創建訂單
         Order order = new Order();
-        order.setUserId(request.getUserId());
+        User user = new User();
+        user.setId(request.getUserId());
+        order.setUser(user);
         order.setStatus("pending");
         order.setCreatedAt(new Timestamp(System.currentTimeMillis()));
-        order.setOrderItems(new ArrayList<>());
         
-        // 3. 創建訂單項目並計算總金額
+        // 2. 創建訂單項目並計算總金額
         BigDecimal totalAmount = BigDecimal.ZERO;
         
-        for (CreateOrderRequest.OrderItemRequest itemRequest : request.getItems()) {
-            Product product = productDAO.findById(itemRequest.getProductId());
-            if (product == null) {
-                throw new RuntimeException("商品不存在: " + itemRequest.getProductId());
-            }
+        for (OrderRequest.OrderItemRequest itemRequest : request.getItems()) {
+            Product product = productDAO.findById(itemRequest.getProductId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + itemRequest.getProductId()));
             
             // 檢查庫存
             if (product.getStockQuantity() < itemRequest.getQuantity()) {
@@ -81,8 +73,8 @@ public class OrderServiceImpl implements OrderService {
             orderItem.setQuantity(itemRequest.getQuantity());
             orderItem.setSubtotal(product.getPrice().multiply(new BigDecimal(itemRequest.getQuantity())));
             
-            // 添加到訂單的項目列表中
-            order.getOrderItems().add(orderItem);
+            // 添加到訂單
+            order.addOrderItem(orderItem);
 
             // 更新總金額
             totalAmount = totalAmount.add(orderItem.getSubtotal());
@@ -90,18 +82,12 @@ public class OrderServiceImpl implements OrderService {
             // 更新庫存
             product.setStockQuantity(product.getStockQuantity() - itemRequest.getQuantity());
             productDAO.save(product);
-
-            // 從購物車中移除該商品
-            CartItem cartItem = cartItemDAO.findByUserIdAndProductId(request.getUserId(), product.getId());
-            if (cartItem != null) {
-                cartItemDAO.delete(cartItem.getId());
-            }
         }
 
         order.setTotalAmount(totalAmount);
         order = orderDAO.save(order);
 
-        // 4. 返回訂單DTO
+        // 3. 返回訂單DTO
         return convertToDTO(order);
     }
 
@@ -109,18 +95,18 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderDTO createOrderFromCart(Integer userId) {
         // 1. 獲取購物車項目
-        List<CartItem> cartItems = cartItemDAO.findByUserId(userId);
+        User user = new User();
+        user.setId(userId);
+        List<CartItem> cartItems = cartItemDAO.findByUser(user);
         if (cartItems.isEmpty()) {
             throw new RuntimeException("購物車為空");
         }
 
         // 2. 創建訂單
         Order order = new Order();
-        order.setUserId(userId);
+        order.setUser(user);
         order.setStatus("pending");
         order.setCreatedAt(new Timestamp(System.currentTimeMillis()));
-        order.setTotalAmount(BigDecimal.ZERO);
-        order.setOrderItems(new ArrayList<>());
 
         // 3. 創建訂單項目並計算總金額
         BigDecimal totalAmount = BigDecimal.ZERO;
@@ -139,8 +125,8 @@ public class OrderServiceImpl implements OrderService {
             orderItem.setQuantity(cartItem.getQuantity());
             orderItem.setSubtotal(product.getPrice().multiply(new BigDecimal(cartItem.getQuantity())));
             
-            // 添加到訂單的項目列表中
-            order.getOrderItems().add(orderItem);
+            // 添加到訂單
+            order.addOrderItem(orderItem);
 
             // 更新總金額
             totalAmount = totalAmount.add(orderItem.getSubtotal());
@@ -154,7 +140,7 @@ public class OrderServiceImpl implements OrderService {
         order = orderDAO.save(order);
 
         // 4. 清空購物車
-        cartItemDAO.deleteByUserId(userId);
+        cartItemDAO.deleteAllByUser(user);
 
         // 5. 返回訂單DTO
         return convertToDTO(order);
@@ -162,34 +148,122 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderDTO getOrderById(Integer orderId) {
-        Order order = orderDAO.findById(orderId);
-        if (order == null) {
-            throw new RuntimeException("訂單不存在");
-        }
+        Order order = orderDAO.findById(orderId)
+            .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
         return convertToDTO(order);
     }
 
     @Override
     public List<OrderDTO> getOrdersByUserId(Integer userId) {
-        List<Order> orders = orderDAO.findByUserId(userId);
+        User user = new User();
+        user.setId(userId);
+        List<Order> orders = orderDAO.findByUser(user);
         return orders.stream()
-                .map(this::convertToDTO)
+                .<OrderDTO>map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<OrderDTO> getOrdersByStatus(String status) {
+        List<Order> orders = orderDAO.findByStatus(status);
+        return orders.stream()
+                .<OrderDTO>map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<OrderDTO> getOrdersByDateRange(Timestamp startDate, Timestamp endDate) {
+        List<Order> orders = orderDAO.findOrdersByDateRange(startDate, endDate);
+        return orders.stream()
+                .<OrderDTO>map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public OrderStatisticsDTO getOrderStatistics() {
+        Long totalOrders = orderDAO.count();
+        Long completedOrders = Long.valueOf(orderDAO.findByStatus("completed").size());
+        Long pendingOrders = Long.valueOf(orderDAO.findByStatus("pending").size());
+        Long cancelledOrders = Long.valueOf(orderDAO.findByStatus("cancelled").size());
+        BigDecimal totalRevenue = orderDAO.getTotalRevenue();
+        
+        if (totalRevenue == null) {
+            totalRevenue = BigDecimal.ZERO;
+        }
+        
+        // 计算售出的总产品数量
+        Integer totalProductsSold = 0;
+        List<Order> completedOrdersList = orderDAO.findByStatus("completed");
+        for (Order order : completedOrdersList) {
+            for (OrderItem item : order.getOrderItems()) {
+                totalProductsSold += item.getQuantity();
+            }
+        }
+        
+        return OrderStatisticsDTO.builder()
+                .totalOrders(totalOrders)
+                .completedOrders(completedOrders)
+                .pendingOrders(pendingOrders)
+                .cancelledOrders(cancelledOrders)
+                .totalRevenue(totalRevenue)
+                .totalProductsSold(totalProductsSold)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public OrderDTO updateOrderStatus(Integer id, String status) {
+        Order order = orderDAO.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));
+        
+        order.setStatus(status);
+        Order updatedOrder = orderDAO.save(order);
+        return convertToDTO(updatedOrder);
+    }
+
+    @Override
+    @Transactional
+    public void cancelOrder(Integer orderId) {
+        Order order = orderDAO.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+        
+        // 只有待处理的订单可以取消
+        if (!"pending".equals(order.getStatus())) {
+            throw new IllegalStateException("Only pending orders can be cancelled");
+        }
+        
+        // 恢复产品库存
+        for (OrderItem item : order.getOrderItems()) {
+            Product product = item.getProduct();
+            product.setStockQuantity(product.getStockQuantity() + item.getQuantity());
+            productDAO.save(product);
+        }
+        
+        order.setStatus("cancelled");
+        orderDAO.save(order);
+    }
+
+    @Override
+    public List<OrderDTO> getAllOrders() {
+        List<Order> orders = orderDAO.findAll();
+        return orders.stream()
+                .<OrderDTO>map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
     private OrderDTO convertToDTO(Order order) {
         OrderDTO dto = new OrderDTO();
         dto.setId(order.getId());
-        dto.setUserId(order.getUserId());
+        dto.setUserId(order.getUser().getId());
         dto.setTotalAmount(order.getTotalAmount());
         dto.setStatus(order.getStatus());
         dto.setCreatedAt(order.getCreatedAt().toLocalDateTime());
-
-        List<OrderItemDTO> orderItemDTOs = order.getOrderItems().stream()
-                .map(this::convertToOrderItemDTO)
+        
+        List<OrderItemDTO> itemDTOs = order.getOrderItems().stream()
+                .<OrderItemDTO>map(this::convertToOrderItemDTO)
                 .collect(Collectors.toList());
-        dto.setOrderItems(orderItemDTOs);
-
+        dto.setOrderItems(itemDTOs);
+        
         return dto;
     }
 

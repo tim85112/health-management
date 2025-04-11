@@ -73,7 +73,7 @@ public class FitnessGoalServiceImpl implements FitnessGoalService {
 
 	@Override
 	public List<FitnessGoalDTO> getAllFitnessGoalsByUserId(Integer userId) {
-		List<FitnessGoal> fitnessGoals = fitnessGoalRepo.findByUserUserId(userId);
+		List<FitnessGoal> fitnessGoals = fitnessGoalRepo.findByUserId(userId);
 		return fitnessGoals.stream().map(FitnessGoalDTO::new).collect(Collectors.toList());
 	}
 
@@ -128,7 +128,7 @@ public class FitnessGoalServiceImpl implements FitnessGoalService {
 		}
 
 		return fitnessGoalRepo
-				.findByUserUserIdAndStartDateGreaterThanEqualAndEndDateLessThanEqual(userId, startDate, endDate)
+				.findByUserIdAndStartDateGreaterThanEqualAndEndDateLessThanEqual(userId, startDate, endDate)
 				.stream().map(FitnessGoalDTO::new).collect(Collectors.toList());
 	}
 }

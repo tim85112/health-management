@@ -13,6 +13,6 @@ public interface CommentDAO extends JpaRepository<Comment, Integer> {
     List<Comment> findByPost_Id(Integer postId);
 
     // 查詢某位使用者的所有留言
-    List<Comment> findByUser_UserId(Integer userId);
+    List<Comment> findByUserId(Integer userId);
 }
 

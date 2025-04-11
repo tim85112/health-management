@@ -32,7 +32,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<Comment> getCommentsByUserId(Integer userId) {
-        return commentDAO.findByUser_UserId(userId);
+        return commentDAO.findByUserId(userId);
     }
 
     @Override

@@ -1,50 +1,46 @@
 -- 創建 product 表
-CREATE TABLE [product]
-(
-    [id]             INT PRIMARY KEY IDENTITY (1, 1),
-    [name]           NVARCHAR(255)  NOT NULL,
+CREATE TABLE [product] (
+    [id]             INT PRIMARY KEY IDENTITY(1, 1),
+    [name]           NVARCHAR(255) NOT NULL,
     [description]    NVARCHAR(1000),
     [price]          DECIMAL(10, 2) NOT NULL,
-    [stock_quantity] INT            NOT NULL DEFAULT (0),
-    [image_url]      NVARCHAR(500),
-    [created_at]     DATETIME                DEFAULT CURRENT_TIMESTAMP,
-    [updated_at]     DATETIME                DEFAULT CURRENT_TIMESTAMP
-)
+    [stock_quantity] INT NOT NULL DEFAULT (0),
+    [category]       NVARCHAR(100),   -- 添加 category 欄位
+    [image_url]      NVARCHAR(MAX),  -- 修改為NVARCHAR(MAX)以支持更長的URL
+    [created_at]     DATETIME DEFAULT CURRENT_TIMESTAMP,
+    [updated_at]     DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 GO
 
 
 
 -- 創建 order 表
-CREATE TABLE [order]
-(
-    [id]           INT PRIMARY KEY IDENTITY (1, 1),
-    [user_id]      INT            NOT NULL,
+-- 創建 order 表
+CREATE TABLE [order] (
+    [id]           INT PRIMARY KEY IDENTITY(1, 1),
+    [user_id]      INT NOT NULL,
     [total_amount] DECIMAL(10, 2) NOT NULL,
     [status]       NVARCHAR(50) DEFAULT 'pending',
-    [created_at]   DATETIME     DEFAULT CURRENT_TIMESTAMP
-)
+    [created_at]   DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 GO
 
 -- 創建 order_item 表
-CREATE TABLE [order_item]
-(
-    [id]         INT PRIMARY KEY IDENTITY (1, 1),
-    [order_id]   INT            NOT NULL,
+CREATE TABLE [order_item] (
+    [id]         INT PRIMARY KEY IDENTITY(1, 1),
+    [order_id]   INT NOT NULL,
     [product_id] INT,
-    [course_id]  INT,
-    [quantity]   INT            NOT NULL DEFAULT (1),
+    [quantity]   INT NOT NULL DEFAULT (1),
     [subtotal]   DECIMAL(10, 2) NOT NULL
-)
+);
 GO
 
 -- 創建 cart_item 表
-CREATE TABLE [cart_item]
-(
-    [id]         INT PRIMARY KEY IDENTITY (1, 1),
+CREATE TABLE [cart_item] (
+    [id]         INT PRIMARY KEY IDENTITY(1, 1),
     [user_id]    INT NOT NULL,
     [product_id] INT,
-    [course_id]  INT,
     [quantity]   INT NOT NULL DEFAULT (1),
-    [added_at]   DATETIME     DEFAULT CURRENT_TIMESTAMP
-)
+    [added_at]   DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 GO

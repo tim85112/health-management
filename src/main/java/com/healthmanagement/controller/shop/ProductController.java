@@ -1,9 +1,9 @@
 package com.healthmanagement.controller.shop;
 
+import com.healthmanagement.util.ApiResponse;
 import com.healthmanagement.dto.shop.ProductDTO;
 import com.healthmanagement.dto.shop.ProductRequest;
 import com.healthmanagement.service.shop.ProductService;
-import com.healthmanagement.util.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +27,35 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
+    @GetMapping
+    @Operation(
+        summary = "獲取所有商品",
+        description = "獲取系統中所有商品的列表"
+    )
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "成功獲取商品列表")
+    })
+    public ResponseEntity<?> getAllProducts(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
+        List<ProductDTO> products = productService.getAllProducts();
+        return ResponseEntity.ok(ApiResponse.success(products));
+    }
+
+    @GetMapping("/{id}")
+    @Operation(
+        summary = "獲取商品詳情",
+        description = "根據商品ID獲取商品的詳細信息"
+    )
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "成功獲取商品信息"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "商品不存在")
+    })
+    public ResponseEntity<?> getProductById(@PathVariable Integer id) {
+        ProductDTO productDTO = productService.getProductById(id);
+        return ResponseEntity.ok(ApiResponse.success(productDTO));
+    }
+
     @PostMapping
     @Operation(
         summary = "創建新商品",
@@ -36,11 +66,9 @@ public class ProductController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "請求參數無效"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "服務器內部錯誤")
     })
-    public ResponseEntity<ApiResponse<ProductDTO>> createProduct(
-            @Parameter(description = "商品創建請求對象", required = true)
-            @Valid @RequestBody ProductRequest request) {
-        ProductDTO product = productService.createProduct(request);
-        return ResponseEntity.ok(ApiResponse.success(product));
+    public ResponseEntity<?> createProduct(@RequestBody ProductRequest productRequest) {
+        ProductDTO createdProduct = productService.createProduct(productRequest);
+        return new ResponseEntity<>(ApiResponse.success(createdProduct), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
@@ -53,13 +81,9 @@ public class ProductController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "商品不存在"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "請求參數無效")
     })
-    public ResponseEntity<ApiResponse<ProductDTO>> updateProduct(
-            @Parameter(description = "商品ID", required = true)
-            @PathVariable Integer id,
-            @Parameter(description = "商品更新請求對象", required = true)
-            @Valid @RequestBody ProductRequest request) {
-        ProductDTO product = productService.updateProduct(id, request);
-        return ResponseEntity.ok(ApiResponse.success(product));
+    public ResponseEntity<?> updateProduct(@PathVariable Integer id, @RequestBody ProductRequest productRequest) {
+        ProductDTO updatedProduct = productService.updateProduct(id, productRequest);
+        return ResponseEntity.ok(ApiResponse.success(updatedProduct));
     }
 
     @DeleteMapping("/{id}")
@@ -71,40 +95,9 @@ public class ProductController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "商品刪除成功"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "商品不存在")
     })
-    public ResponseEntity<ApiResponse<Void>> deleteProduct(
-            @Parameter(description = "商品ID", required = true)
-            @PathVariable Integer id) {
+    public ResponseEntity<?> deleteProduct(@PathVariable Integer id) {
         productService.deleteProduct(id);
-        return ResponseEntity.ok(ApiResponse.success(null));
-    }
-
-    @GetMapping("/{id}")
-    @Operation(
-        summary = "獲取商品詳情",
-        description = "根據商品ID獲取商品的詳細信息"
-    )
-    @ApiResponses(value = {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "成功獲取商品信息"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "商品不存在")
-    })
-    public ResponseEntity<ApiResponse<ProductDTO>> getProductById(
-            @Parameter(description = "商品ID", required = true)
-            @PathVariable Integer id) {
-        ProductDTO product = productService.getProductById(id);
-        return ResponseEntity.ok(ApiResponse.success(product));
-    }
-
-    @GetMapping
-    @Operation(
-        summary = "獲取所有商品",
-        description = "獲取系統中所有商品的列表"
-    )
-    @ApiResponses(value = {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "成功獲取商品列表")
-    })
-    public ResponseEntity<ApiResponse<List<ProductDTO>>> getAllProducts() {
-        List<ProductDTO> products = productService.getAllProducts();
-        return ResponseEntity.ok(ApiResponse.success(products));
+        return ResponseEntity.ok(ApiResponse.success("Product deleted successfully"));
     }
 
     @GetMapping("/search")
@@ -115,9 +108,7 @@ public class ProductController {
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "成功獲取搜索結果")
     })
-    public ResponseEntity<ApiResponse<List<ProductDTO>>> searchProducts(
-            @Parameter(description = "搜索關鍵字", required = true)
-            @RequestParam String keyword) {
+    public ResponseEntity<?> searchProducts(@RequestParam String keyword) {
         List<ProductDTO> products = productService.searchProducts(keyword);
         return ResponseEntity.ok(ApiResponse.success(products));
     }
@@ -131,12 +122,28 @@ public class ProductController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "成功獲取價格範圍內的商品列表"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "價格範圍參數無效")
     })
-    public ResponseEntity<ApiResponse<List<ProductDTO>>> getProductsByPriceRange(
-            @Parameter(description = "最低價格", required = true)
+    public ResponseEntity<?> getProductsByPriceRange(
             @RequestParam BigDecimal minPrice,
-            @Parameter(description = "最高價格", required = true)
             @RequestParam BigDecimal maxPrice) {
         List<ProductDTO> products = productService.getProductsByPriceRange(minPrice, maxPrice);
+        return ResponseEntity.ok(ApiResponse.success(products));
+    }
+
+    @GetMapping("/category/{category}")
+    public ResponseEntity<?> getProductsByCategory(@PathVariable String category) {
+        List<ProductDTO> products = productService.getProductsByCategory(category);
+        return ResponseEntity.ok(ApiResponse.success(products));
+    }
+
+    @GetMapping("/in-stock")
+    public ResponseEntity<?> getInStockProducts() {
+        List<ProductDTO> products = productService.getInStockProducts();
+        return ResponseEntity.ok(ApiResponse.success(products));
+    }
+
+    @GetMapping("/latest")
+    public ResponseEntity<?> getLatestProducts() {
+        List<ProductDTO> products = productService.getLatestProducts();
         return ResponseEntity.ok(ApiResponse.success(products));
     }
 }

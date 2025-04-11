@@ -24,6 +24,9 @@ public class ProductRequest {
     @Min(value = 0, message = "商品庫存必須大於等於0")
     private Integer stockQuantity;
 
+    @Size(max = 100, message = "商品類別不能超過100個字符")
+    private String category;
+
     @Size(max = 500, message = "圖片URL不能超過500個字符")
     private String imageUrl;
 } 

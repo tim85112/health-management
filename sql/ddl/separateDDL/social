@@ -8,7 +8,7 @@ CREATE TABLE [social_post]
     [user_id]    INT            NOT NULL,
     [created_at] DATETIME DEFAULT CURRENT_TIMESTAMP,
     [updated_at] DATETIME DEFAULT CURRENT_TIMESTAMP
-)
+);
 GO
 
 -- 創建 comment 表
@@ -20,5 +20,5 @@ CREATE TABLE [comment]
     [text]       NVARCHAR(1000) NOT NULL,
     [created_at] DATETIME DEFAULT CURRENT_TIMESTAMP,
     [updated_at] DATETIME DEFAULT CURRENT_TIMESTAMP
-)
+);
 GO

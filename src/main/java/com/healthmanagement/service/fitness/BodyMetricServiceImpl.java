@@ -140,7 +140,7 @@ public class BodyMetricServiceImpl implements BodyMetricService {
 
 		List<BodyMetric> bodyMetrics = bodyMetricRepo.findByMultipleCriteria(userId, userName, startLocalDate,
 				endLocalDate);
-		return bodyMetrics.stream().map(this::convertToDTO).collect(Collectors.toList());
+		return bodyMetrics.stream().map(bm -> convertToDTO(bm)).collect(Collectors.toList());
 	}
 
 	@Override
@@ -172,7 +172,7 @@ public class BodyMetricServiceImpl implements BodyMetricService {
 			// 處理日期格式錯誤
 		}
 
-		Page<BodyMetric> bodyMetricPage = bodyMetricRepo.findByMultipleCriteria(userId, userName, startLocalDate,
+		Page<BodyMetric> bodyMetricPage = bodyMetricRepo.findByMultipleCriteriaPage(userId, userName, startLocalDate,
 				endLocalDate, pageable);
 		return bodyMetricPage.map(bodyMetric -> {
 			User user = userService.findById(bodyMetric.getUserId()).orElse(null);
