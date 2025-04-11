@@ -29,9 +29,11 @@ public class CartItemController {
 
     @PostMapping("/items")
     @Operation(summary = "添加商品到購物車", description = "將商品添加到用戶的購物車中")
-    public ResponseEntity<?> addToCart(@RequestBody CartItemRequest request) {
+    public ResponseEntity<?> addToCart(@RequestBody CartItemRequest request, @RequestParam(required = false) Integer userId) {
         try {
-            Integer userId = securityUtils.getCurrentUserId();
+            if (userId == null) {
+                userId = securityUtils.getCurrentUserId();
+            }
             CartItemDTO result = cartItemService.addToCart(userId, request);
             Map<String, Object> response = new HashMap<>();
             response.put("status", "success");
@@ -49,9 +51,12 @@ public class CartItemController {
     @Operation(summary = "更新購物車商品數量", description = "修改購物車中商品的數量")
     public ResponseEntity<?> updateQuantity(
             @Parameter(description = "購物車項目ID") @PathVariable Integer cartItemId,
-            @Parameter(description = "新的數量") @RequestParam Integer quantity) {
+            @Parameter(description = "新的數量") @RequestParam Integer quantity,
+            @RequestParam(required = false) Integer userId) {
         try {
-            Integer userId = securityUtils.getCurrentUserId();
+            if (userId == null) {
+                userId = securityUtils.getCurrentUserId();
+            }
             CartItemDTO result = cartItemService.updateQuantity(userId, cartItemId, quantity);
             Map<String, Object> response = new HashMap<>();
             response.put("status", "success");
@@ -68,9 +73,12 @@ public class CartItemController {
     @DeleteMapping("/items/{cartItemId}")
     @Operation(summary = "從購物車移除商品", description = "從購物車中移除指定商品")
     public ResponseEntity<?> removeFromCart(
-            @Parameter(description = "購物車項目ID") @PathVariable Integer cartItemId) {
+            @Parameter(description = "購物車項目ID") @PathVariable Integer cartItemId,
+            @RequestParam(required = false) Integer userId) {
         try {
-            Integer userId = securityUtils.getCurrentUserId();
+            if (userId == null) {
+                userId = securityUtils.getCurrentUserId();
+            }
             cartItemService.removeFromCart(userId, cartItemId);
             Map<String, Object> response = new HashMap<>();
             response.put("status", "success");
@@ -85,9 +93,11 @@ public class CartItemController {
 
     @GetMapping("/items")
     @Operation(summary = "獲取購物車內容", description = "獲取用戶購物車中的所有商品")
-    public ResponseEntity<?> getCartItems() {
+    public ResponseEntity<?> getCartItems(@RequestParam(required = false) Integer userId) {
         try {
-            Integer userId = securityUtils.getCurrentUserId();
+            if (userId == null) {
+                userId = securityUtils.getCurrentUserId();
+            }
             List<CartItemDTO> items = cartItemService.getCartItems(userId);
             Map<String, Object> response = new HashMap<>();
             response.put("status", "success");
@@ -103,9 +113,11 @@ public class CartItemController {
 
     @DeleteMapping("/clear")
     @Operation(summary = "清空購物車", description = "清空用戶購物車中的所有商品")
-    public ResponseEntity<?> clearCart() {
+    public ResponseEntity<?> clearCart(@RequestParam(required = false) Integer userId) {
         try {
-            Integer userId = securityUtils.getCurrentUserId();
+            if (userId == null) {
+                userId = securityUtils.getCurrentUserId();
+            }
             cartItemService.clearCart(userId);
             Map<String, Object> response = new HashMap<>();
             response.put("status", "success");
@@ -120,9 +132,11 @@ public class CartItemController {
 
     @GetMapping("/total")
     @Operation(summary = "計算購物車總金額", description = "計算用戶購物車中所有商品的總金額")
-    public ResponseEntity<?> calculateTotal() {
+    public ResponseEntity<?> calculateTotal(@RequestParam(required = false) Integer userId) {
         try {
-            Integer userId = securityUtils.getCurrentUserId();
+            if (userId == null) {
+                userId = securityUtils.getCurrentUserId();
+            }
             BigDecimal total = cartItemService.calculateTotal(userId);
             Map<String, Object> response = new HashMap<>();
             response.put("status", "success");
