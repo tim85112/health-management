@@ -13,5 +13,5 @@ public interface ForumDAO extends JpaRepository<Post, Integer> {
     List<Post> findByCategory(String category);
     
     // 依照使用者查文章
-    List<Post> findByUser_UserId(Integer userId);
+    List<Post> findByUserId(Integer userId);
 }

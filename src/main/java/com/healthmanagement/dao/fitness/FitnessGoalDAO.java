@@ -13,7 +13,7 @@ import java.util.Optional;
 public interface FitnessGoalDAO extends JpaRepository<FitnessGoal, Integer> {
 
 	// 根據用戶 ID 獲取健身目標列表
-	List<FitnessGoal> findByUserUserId(Integer userId);
+	List<FitnessGoal> findByUserId(Integer userId);
 
 	// 根據目標 ID 查詢特定健身目標
 	Optional<FitnessGoal> findById(Integer goalId);
@@ -28,8 +28,8 @@ public interface FitnessGoalDAO extends JpaRepository<FitnessGoal, Integer> {
 			@Param("endDate") LocalDate endDate);
 
 	// 根據用戶 ID 和日期範圍查詢健身目標
-	@Query("SELECT fg FROM FitnessGoal fg JOIN fg.user u WHERE u.userId = :userId AND (:startDate IS NULL OR fg.startDate >= :startDate) AND (:endDate IS NULL OR fg.endDate <= :endDate)")
-	List<FitnessGoal> findByUserUserIdAndStartDateGreaterThanEqualAndEndDateLessThanEqual(
+	@Query("SELECT fg FROM FitnessGoal fg JOIN fg.user u WHERE u.id = :userId AND (:startDate IS NULL OR fg.startDate >= :startDate) AND (:endDate IS NULL OR fg.endDate <= :endDate)")
+	List<FitnessGoal> findByUserIdAndStartDateGreaterThanEqualAndEndDateLessThanEqual(
 			@Param("userId") Integer userId, @Param("startDate") LocalDate startDate,
 			@Param("endDate") LocalDate endDate);
 }

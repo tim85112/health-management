@@ -1,6 +1,6 @@
 package com.healthmanagement.dao.shop.impl;
 
-import com.healthmanagement.dao.shop.ProductDAO;
+import com.healthmanagement.dao.shop.CustomProductDAO;
 import com.healthmanagement.model.shop.Product;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -14,9 +14,10 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
-public class ProductDAOImpl implements ProductDAO {
+public class ProductDAOImpl implements CustomProductDAO {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -25,9 +26,14 @@ public class ProductDAOImpl implements ProductDAO {
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     @Override
-    public Product findById(Integer id) {
-        String sql = "SELECT * FROM product WHERE id = ?";
-        return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(Product.class), id);
+    public Optional<Product> findById(Integer id) {
+        try {
+            String sql = "SELECT * FROM product WHERE id = ?";
+            Product product = jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(Product.class), id);
+            return Optional.ofNullable(product);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
     @Override

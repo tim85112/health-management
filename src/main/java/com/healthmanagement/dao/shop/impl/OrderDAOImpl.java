@@ -1,6 +1,7 @@
 package com.healthmanagement.dao.shop.impl;
 
-import com.healthmanagement.dao.shop.OrderDAO;
+import com.healthmanagement.dao.shop.CustomOrderDAO;
+import com.healthmanagement.model.member.User;
 import com.healthmanagement.model.shop.Order;
 import com.healthmanagement.model.shop.OrderItem;
 import com.healthmanagement.model.shop.Product;
@@ -13,12 +14,16 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
-public class OrderDAOImpl implements OrderDAO {
+public class OrderDAOImpl implements CustomOrderDAO {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -35,7 +40,7 @@ public class OrderDAOImpl implements OrderDAO {
                         "VALUES (:userId, :totalAmount, :status, CURRENT_TIMESTAMP)";
             
             MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("userId", order.getUserId())
+                .addValue("userId", order.getUser().getUserId())
                 .addValue("totalAmount", order.getTotalAmount())
                 .addValue("status", order.getStatus());
 
@@ -64,17 +69,17 @@ public class OrderDAOImpl implements OrderDAO {
             
             MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("id", order.getId())
-                .addValue("userId", order.getUserId())
+                .addValue("userId", order.getUser().getUserId())
                 .addValue("totalAmount", order.getTotalAmount())
                 .addValue("status", order.getStatus());
 
             namedParameterJdbcTemplate.update(sql, params);
         }
-        return findById(order.getId());
+        return findById(order.getId()).orElse(null);
     }
 
     @Override
-    public Order findById(Integer id) {
+    public Optional<Order> findById(Integer id) {
         String sql = "SELECT * FROM [order] WHERE id = ?";
         Order order;
         try {
@@ -87,9 +92,9 @@ public class OrderDAOImpl implements OrderDAO {
                 List<OrderItem> items = jdbcTemplate.query(itemsSql, new OrderItemRowMapper(), id);
                 order.setOrderItems(items);
             }
-            return order;
+            return Optional.ofNullable(order);
         } catch (Exception e) {
-            return null;
+            return Optional.empty();
         }
     }
 
@@ -108,13 +113,87 @@ public class OrderDAOImpl implements OrderDAO {
         }
         return orders;
     }
+    
+    @Override
+    public List<Order> findByStatus(String status) {
+        String sql = "SELECT * FROM [order] WHERE status = ? ORDER BY created_at DESC";
+        List<Order> orders = jdbcTemplate.query(sql, orderRowMapper, status);
+        
+        // 为每个订单加载订单项目
+        for (Order order : orders) {
+            String itemsSql = "SELECT oi.*, p.* FROM order_item oi " +
+                            "LEFT JOIN product p ON oi.product_id = p.id " +
+                            "WHERE oi.order_id = ?";
+            List<OrderItem> items = jdbcTemplate.query(itemsSql, new OrderItemRowMapper(), order.getId());
+            order.setOrderItems(items);
+        }
+        return orders;
+    }
+    
+    @Override
+    public BigDecimal getTotalRevenue() {
+        String sql = "SELECT SUM(total_amount) FROM [order] WHERE status = 'completed'";
+        try {
+            return jdbcTemplate.queryForObject(sql, BigDecimal.class);
+        } catch (Exception e) {
+            return BigDecimal.ZERO;
+        }
+    }
+    
+    @Override
+    public List<Order> findByUser(User user) {
+        return findByUserId(user.getId());
+    }
+    
+    @Override
+    public List<Order> findOrdersByDateRange(Timestamp startDate, Timestamp endDate) {
+        String sql = "SELECT * FROM [order] WHERE created_at BETWEEN ? AND ? ORDER BY created_at DESC";
+        List<Order> orders = jdbcTemplate.query(sql, orderRowMapper, startDate, endDate);
+        
+        // 为每个订单加载订单项目
+        for (Order order : orders) {
+            String itemsSql = "SELECT oi.*, p.* FROM order_item oi " +
+                            "LEFT JOIN product p ON oi.product_id = p.id " +
+                            "WHERE oi.order_id = ?";
+            List<OrderItem> items = jdbcTemplate.query(itemsSql, new OrderItemRowMapper(), order.getId());
+            order.setOrderItems(items);
+        }
+        return orders;
+    }
+    
+    @Override
+    public List<Order> findAll() {
+        String sql = "SELECT * FROM [order] ORDER BY created_at DESC";
+        List<Order> orders = jdbcTemplate.query(sql, orderRowMapper);
+        
+        // 为每个订单加载订单项目
+        for (Order order : orders) {
+            String itemsSql = "SELECT oi.*, p.* FROM order_item oi " +
+                            "LEFT JOIN product p ON oi.product_id = p.id " +
+                            "WHERE oi.order_id = ?";
+            List<OrderItem> items = jdbcTemplate.query(itemsSql, new OrderItemRowMapper(), order.getId());
+            order.setOrderItems(items);
+        }
+        return orders;
+    }
+    
+    @Override
+    public Long count() {
+        String sql = "SELECT COUNT(*) FROM [order]";
+        return jdbcTemplate.queryForObject(sql, Long.class);
+    }
 
     private static class OrderRowMapper implements RowMapper<Order> {
         @Override
         public Order mapRow(ResultSet rs, int rowNum) throws SQLException {
             Order order = new Order();
             order.setId(rs.getInt("id"));
-            order.setUserId(rs.getInt("user_id"));
+            
+            // 创建User对象并设置ID
+            com.healthmanagement.model.member.User user = new com.healthmanagement.model.member.User();
+            user.setUserId(rs.getInt("user_id"));
+            order.setUser(user);
+            
             order.setTotalAmount(rs.getBigDecimal("total_amount"));
             order.setStatus(rs.getString("status"));
             order.setCreatedAt(rs.getTimestamp("created_at"));

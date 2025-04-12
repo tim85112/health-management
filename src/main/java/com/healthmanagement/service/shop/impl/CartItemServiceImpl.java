@@ -1,9 +1,10 @@
 package com.healthmanagement.service.shop.impl;
 
-import com.healthmanagement.dao.shop.CartItemDAO;
+import com.healthmanagement.dao.shop.CustomCartItemDAO;
 import com.healthmanagement.dao.shop.ProductDAO;
 import com.healthmanagement.dto.shop.CartItemDTO;
 import com.healthmanagement.dto.shop.CartItemRequest;
+import com.healthmanagement.model.member.User;
 import com.healthmanagement.model.shop.CartItem;
 import com.healthmanagement.model.shop.Product;
 import com.healthmanagement.service.shop.CartItemService;
@@ -21,20 +22,23 @@ import java.util.stream.Collectors;
 public class CartItemServiceImpl implements CartItemService {
 
     @Autowired
-    private CartItemDAO cartItemDAO;
+    private CustomCartItemDAO cartItemDAO;
 
     @Autowired
     private ProductDAO productDAO;
 
     @Override
     @Transactional
-    public CartItemDTO addToCart(Integer userId, CartItemRequest request) {
-        Product product = productDAO.findById(request.getProductId());
-        if (product == null) {
-            throw new RuntimeException("商品不存在");
-        }
+    public CartItemDTO addToCart(CartItemRequest request) {
+        Product product = productDAO.findById(request.getProductId())
+                .orElseThrow(() -> new RuntimeException("商品不存在"));
 
-        CartItem existingItem = cartItemDAO.findByUserIdAndProductId(userId, request.getProductId());
+        User user = new User();
+        user.setId(request.getUserId());
+
+        CartItem existingItem = cartItemDAO.findByUserAndProduct(user, product)
+                .orElse(null);
+                
         if (existingItem != null) {
             existingItem.setQuantity(existingItem.getQuantity() + request.getQuantity());
             existingItem.setAddedAt(Timestamp.valueOf(LocalDateTime.now()));
@@ -43,7 +47,7 @@ public class CartItemServiceImpl implements CartItemService {
         }
 
         CartItem cartItem = new CartItem();
-        cartItem.setUserId(userId);
+        cartItem.setUser(user);
         cartItem.setProduct(product);
         cartItem.setQuantity(request.getQuantity());
         cartItem.setAddedAt(Timestamp.valueOf(LocalDateTime.now()));
@@ -54,14 +58,10 @@ public class CartItemServiceImpl implements CartItemService {
 
     @Override
     @Transactional
-    public CartItemDTO updateQuantity(Integer userId, Integer cartItemId, Integer quantity) {
-        CartItem cartItem = cartItemDAO.findById(cartItemId);
-        if (cartItem == null) {
-            throw new RuntimeException("購物車項目不存在");
-        }
-        if (!cartItem.getUserId().equals(userId)) {
-            throw new RuntimeException("無權修改此購物車項目");
-        }
+    public CartItemDTO updateQuantity(Integer cartItemId, Integer quantity) {
+        CartItem cartItem = cartItemDAO.findById(cartItemId)
+                .orElseThrow(() -> new RuntimeException("購物車項目不存在"));
+                
         if (quantity <= 0) {
             throw new RuntimeException("數量必須大於0");
         }
@@ -74,16 +74,15 @@ public class CartItemServiceImpl implements CartItemService {
 
     @Override
     @Transactional
-    public void removeFromCart(Integer userId, Integer cartItemId) {
-        CartItem cartItem = cartItemDAO.findById(cartItemId);
-        if (cartItem != null && cartItem.getUserId().equals(userId)) {
-            cartItemDAO.delete(cartItemId);
-        }
+    public void removeFromCart(Integer cartItemId) {
+        cartItemDAO.deleteById(cartItemId);
     }
 
     @Override
     public List<CartItemDTO> getCartItems(Integer userId) {
-        return cartItemDAO.findByUserId(userId).stream()
+        User user = new User();
+        user.setId(userId);
+        return cartItemDAO.findByUser(user).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -91,20 +90,26 @@ public class CartItemServiceImpl implements CartItemService {
     @Override
     @Transactional
     public void clearCart(Integer userId) {
-        cartItemDAO.deleteByUserId(userId);
+        User user = new User();
+        user.setId(userId);
+        cartItemDAO.deleteAllByUser(user);
     }
 
     @Override
-    public BigDecimal calculateTotal(Integer userId) {
-        return cartItemDAO.findByUserId(userId).stream()
-                .map(item -> item.getProduct().getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+    public BigDecimal calculateCartTotal(Integer userId) {
+        User user = new User();
+        user.setId(userId);
+        List<CartItem> cartItems = cartItemDAO.findByUser(user);
+        
+        return cartItems.stream()
+                .map(item -> item.getProduct().getPrice().multiply(new BigDecimal(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private CartItemDTO convertToDTO(CartItem cartItem) {
         CartItemDTO dto = new CartItemDTO();
         dto.setId(cartItem.getId());
-        dto.setUserId(cartItem.getUserId());
+        dto.setUserId(cartItem.getUser().getId());
         dto.setProductId(cartItem.getProduct().getId());
         dto.setProductName(cartItem.getProduct().getName());
         dto.setProductPrice(cartItem.getProduct().getPrice());

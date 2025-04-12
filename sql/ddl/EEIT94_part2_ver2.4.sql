@@ -1,4 +1,3 @@
-
 	/*
 		注意：user表格的插入數據是程式自動生成，user表要有數據才能執行part2! 不然就會報錯!
 		如果不想插入測試數據可以先不執行part2!
@@ -55,28 +54,29 @@ VALUES ('李教練', '重量訓練'),
 GO
 
 -- 插入 product 數據 (20筆)
-INSERT INTO [product] ([name], [description], [price], [stock_quantity], [image_url])
-VALUES ('蛋白粉', '乳清蛋白粉，巧克力口味', 1200.00, 100, 'https://example.com/protein.jpg'),
-       ('健身手套', '防滑透氣健身手套', 450.00, 50, 'https://example.com/gloves.jpg'),
-       ('瑜伽墊', '加厚防滑瑜伽墊', 800.00, 30, 'https://example.com/mat.jpg'),
-       ('啞鈴組', '可調節重量啞鈴組', 2500.00, 20, 'https://example.com/dumbbell.jpg'),
-       ('彈力帶', '5種阻力彈力帶組', 600.00, 40, 'https://example.com/band.jpg'),
-       ('跳繩', '競速跳繩', 300.00, 60, 'https://example.com/rope.jpg'),
-       ('健身腰帶', '舉重腰帶', 900.00, 25, 'https://example.com/belt.jpg'),
-       ('運動水壺', '750ml運動水壺', 350.00, 80, 'https://example.com/bottle.jpg'),
-       ('健身服套裝', '透氣排汗健身服', 1200.00, 35, 'https://example.com/clothes.jpg'),
-       ('運動襪', '防滑運動襪3雙組', 250.00, 90, 'https://example.com/socks.jpg'),
-       ('健身背包', '多功能健身背包', 1500.00, 15, 'https://example.com/bag.jpg'),
-       ('按摩滾筒', '高密度泡沫滾筒', 700.00, 30, 'https://example.com/roller.jpg'),
-       ('運動毛巾', '速乾運動毛巾', 200.00, 70, 'https://example.com/towel.jpg'),
-       ('健身日誌', '健身記錄本', 180.00, 50, 'https://example.com/journal.jpg'),
-       ('心率錶', '藍牙心率監測錶', 2800.00, 10, 'https://example.com/watch.jpg'),
-       ('健身APP會員', '一年期健身APP會員', 1200.00, 999, 'https://example.com/app.jpg'),
-       ('運動耳機', '無線運動耳機', 1600.00, 20, 'https://example.com/earphone.jpg'),
-       ('健身課程DVD', '全套健身課程DVD', 950.00, 15, 'https://example.com/dvd.jpg'),
-       ('健身書籍', '健身營養全書', 550.00, 25, 'https://example.com/book.jpg'),
-       ('運動護腕', '支撐型運動護腕', 380.00, 40, 'https://example.com/wristband.jpg')
-GO
+    INSERT INTO [product] ([name], [description], [price], [stock_quantity], [category], [image_url])
+    VALUES
+        ('蛋白粉', '乳清蛋白粉，巧克力口味', 1200.00, 100, '營養補充品', 'https://images.pexels.com/photos/1212845/pexels-photo-1212845.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'),
+        ('健身手套', '防滑透氣健身手套', 450.00, 50, '健身裝備', 'https://images.pexels.com/photos/4327024/pexels-photo-4327024.jpeg?auto=compress&cs=tinysrgb&w=600'),
+        ('瑜伽墊', '加厚防滑瑜伽墊', 800.00, 30, '瑜伽用品', 'https://images.pexels.com/photos/1879066/pexels-photo-1879066.jpeg?auto=compress&cs=tinysrgb&w=600'),
+        ('啞鈴組', '可調節重量啞鈴組', 2500.00, 20, '重訓器材', 'https://images.pexels.com/photos/221247/pexels-photo-221247.jpeg?auto=compress&cs=tinysrgb&w=600'),
+        ('彈力帶', '5種阻力彈力帶組', 600.00, 40, '健身裝備', 'https://images.pexels.com/photos/269141/pexels-photo-269141.jpeg?auto=compress&cs=tinysrgb&w=600'),
+        ('跳繩', '競速跳繩', 300.00, 60, '有氧器材', 'https://images.pexels.com/photos/6389853/pexels-photo-6389853.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'),
+        ('健身腰帶', '舉重腰帶', 900.00, 25, '健身裝備', 'https://images.pexels.com/photos/4498574/pexels-photo-4498574.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'),
+        ('運動水壺', '750ml運動水壺', 350.00, 80, '健身配件', 'https://images.pexels.com/photos/130922/pexels-photo-130922.jpeg?auto=compress&cs=tinysrgb&w=600'),
+        ('健身服套裝', '透氣排汗健身服', 1200.00, 35, '運動服飾', 'https://images.pexels.com/photos/6339714/pexels-photo-6339714.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'),
+        ('運動襪', '防滑運動襪3雙組', 250.00, 90, '運動服飾', 'https://images.pexels.com/photos/1092878/pexels-photo-1092878.jpeg?auto=compress&cs=tinysrgb&w=600'),
+        ('健身背包', '多功能健身背包', 1500.00, 15, '健身配件', 'https://images.pexels.com/photos/8032923/pexels-photo-8032923.jpeg?auto=compress&cs=tinysrgb&w=600'),
+        ('按摩滾筒', '高密度泡沫滾筒', 700.00, 30, '恢復裝備', 'https://images.pexels.com/photos/1743229/pexels-photo-1743229.jpeg?auto=compress&cs=tinysrgb&w=600'),
+        ('運動毛巾', '速乾運動毛巾', 200.00, 70, '健身配件', 'https://images.pexels.com/photos/3099623/pexels-photo-3099623.jpeg?auto=compress&cs=tinysrgb&w=600'),
+        ('健身日誌', '健身記錄本', 180.00, 50, '健身配件', 'https://images.pexels.com/photos/821649/pexels-photo-821649.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'),
+        ('心率錶', '藍牙心率監測錶', 2800.00, 10, '運動電子產品', 'https://images.pexels.com/photos/3757376/pexels-photo-3757376.jpeg?auto=compress&cs=tinysrgb&w=600'),
+        ('健身APP會員', '一年期健身APP會員', 1200.00, 999, '數位服務', 'https://images.pexels.com/photos/31470217/pexels-photo-31470217.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'),
+        ('運動耳機', '無線運動耳機', 1600.00, 20, '運動電子產品', 'https://images.pexels.com/photos/2247179/pexels-photo-2247179.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'),
+        ('健身課程DVD', '全套健身課程DVD', 950.00, 15, '教學資源', 'https://images.pexels.com/photos/6296105/pexels-photo-6296105.jpeg?auto=compress&cs=tinysrgb&w=600'),
+        ('健身書籍', '健身營養全書', 550.00, 25, '教學資源', 'https://images.pexels.com/photos/1421176/pexels-photo-1421176.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'),
+        ('運動護腕', '支撐型運動護腕', 380.00, 40, '健身裝備', 'https://images.pexels.com/photos/6740735/pexels-photo-6740735.jpeg?auto=compress&cs=tinysrgb&w=600')
+    GO
 
 -- 插入 course 數據 (20筆)
 INSERT INTO [course] ([name], [description], [date], [coach_id], [duration], [max_capacity])
@@ -127,52 +127,52 @@ VALUES (1, 1200.00, 'completed', '2023-02-01 10:00:00'),
 GO
 
 -- 插入 order_item 數據 (20筆)
-INSERT INTO [order_item] ([order_id], [product_id], [course_id], [quantity], [subtotal])
-VALUES (1, 1, NULL, 1, 1200.00),
-       (2, 2, NULL, 1, 450.00),
-       (2, 9, NULL, 1, 1200.00),
-       (3, 3, NULL, 1, 800.00),
-       (4, 4, NULL, 1, 2500.00),
-       (5, 5, NULL, 1, 600.00),
-       (6, 6, NULL, 1, 300.00),
-       (7, 7, NULL, 1, 900.00),
-       (8, 8, NULL, 1, 350.00),
-       (9, 9, NULL, 1, 1200.00),
-       (10, 10, NULL, 1, 250.00),
-       (11, 11, NULL, 1, 1500.00),
-       (12, 12, NULL, 1, 700.00),
-       (13, 13, NULL, 1, 200.00),
-       (14, 14, NULL, 1, 180.00),
-       (15, 15, NULL, 1, 2800.00),
-       (16, 16, NULL, 1, 1200.00),
-       (17, 17, NULL, 1, 1600.00),
-       (18, 18, NULL, 1, 950.00),
-       (19, 19, NULL, 1, 550.00),
-       (20, 20, NULL, 1, 380.00)
+INSERT INTO [order_item] ([order_id], [product_id], [quantity], [subtotal])
+VALUES (1, 1, 1, 1200.00),
+       (2, 2, 1, 450.00),
+       (2, 9, 1, 1200.00),
+       (3, 3, 1, 800.00),
+       (4, 4, 1, 2500.00),
+       (5, 5, 1, 600.00),
+       (6, 6, 1, 300.00),
+       (7, 7, 1, 900.00),
+       (8, 8, 1, 350.00),
+       (9, 9, 1, 1200.00),
+       (10, 10, 1, 250.00),
+       (11, 11, 1, 1500.00),
+       (12, 12, 1, 700.00),
+       (13, 13, 1, 200.00),
+       (14, 14, 1, 180.00),
+       (15, 15, 1, 2800.00),
+       (16, 16, 1, 1200.00),
+       (17, 17, 1, 1600.00),
+       (18, 18, 1, 950.00),
+       (19, 19, 1, 550.00),
+       (20, 20, 1, 380.00)
 GO
 
 -- 插入 cart_item 數據 (20筆)
-INSERT INTO [cart_item] ([user_id], [product_id], [course_id], [quantity], [added_at])
-VALUES (1, 1, NULL, 1, '2023-02-21 10:00:00'),
-       (2, NULL, 1, 1, '2023-02-21 11:15:00'),
-       (3, 2, NULL, 1, '2023-02-21 14:30:00'),
-       (4, NULL, 2, 1, '2023-02-21 16:45:00'),
-       (5, 3, NULL, 1, '2023-02-22 08:10:00'),
-       (6, NULL, 3, 1, '2023-02-22 11:30:00'),
-       (7, 4, NULL, 1, '2023-02-22 13:15:00'),
-       (8, NULL, 4, 1, '2023-02-22 15:40:00'),
-       (9, 5, NULL, 1, '2023-02-23 17:25:00'),
-       (10, NULL, 5, 1, '2023-02-23 19:00:00'),
-       (11, 6, NULL, 1, '2023-02-23 20:35:00'),
-       (12, NULL, 6, 1, '2023-02-24 09:50:00'),
-       (13, 7, NULL, 1, '2023-02-24 11:15:00'),
-       (14, NULL, 7, 1, '2023-02-24 14:30:00'),
-       (15, 8, NULL, 1, '2023-02-25 16:45:00'),
-       (16, NULL, 8, 1, '2023-02-25 18:10:00'),
-       (17, 9, NULL, 1, '2023-02-25 20:35:00'),
-       (18, NULL, 9, 1, '2023-02-26 09:00:00'),
-       (19, 10, NULL, 1, '2023-02-26 11:25:00'),
-       (20, NULL, 10, 1, '2023-02-26 13:50:00')
+INSERT INTO [cart_item] ([user_id], [product_id], [quantity], [added_at])
+VALUES (1, 1, 1, '2023-02-21 10:00:00'),
+       (2, 2, 1, '2023-02-21 11:15:00'),
+       (3, 3, 1, '2023-02-21 14:30:00'),
+       (4, 4, 1, '2023-02-21 16:45:00'),
+       (5, 5, 1, '2023-02-22 08:10:00'),
+       (6, 6, 1, '2023-02-22 11:30:00'),
+       (7, 7, 1, '2023-02-22 13:15:00'),
+       (8, 8, 1, '2023-02-22 15:40:00'),
+       (9, 9, 1, '2023-02-23 17:25:00'),
+       (10, 10, 1, '2023-02-23 19:00:00'),
+       (11, 11, 1, '2023-02-23 20:35:00'),
+       (12, 12, 1, '2023-02-24 09:50:00'),
+       (13, 13, 1, '2023-02-24 11:15:00'),
+       (14, 14, 1, '2023-02-24 14:30:00'),
+       (15, 15, 1, '2023-02-25 16:45:00'),
+       (16, 16, 1, '2023-02-25 18:10:00'),
+       (17, 17, 1, '2023-02-25 20:35:00'),
+       (18, 18, 1, '2023-02-26 09:00:00'),
+       (19, 19, 1, '2023-02-26 11:25:00'),
+       (20, 20, 1, '2023-02-26 13:50:00')
 GO
 
 -- 插入 body_metrics 數據 (20筆)
@@ -375,4 +375,18 @@ VALUES (1, 2, '寫得真好，我也要開始健身了！', '2023-02-01 11:00:00
        (18, 19, '增肌餐看起來很美味！', '2023-02-18 10:00:00', '2023-02-18 10:00:00'),
        (19, 20, 'HIIT訓練真的很有效！', '2023-02-19 12:25:00', '2023-02-19 12:25:00'),
        (20, 1, '保持運動熱情的方法很棒！', '2023-02-20 14:50:00', '2023-02-20 14:50:00')
+GO
+
+-- 插入 payment 數據 (10筆)
+INSERT INTO [payment] ([id], [order_id], [amount], [currency], [method], [status], [created_at], [paid_at])
+VALUES ('b9e2c7d5-6b3a-4f8e-9a1c-0d5e8f4c3b2a', 1, 1200.00, 'TWD', 'CREDIT_CARD', 'COMPLETED', '2023-02-01 10:05:00', '2023-02-01 10:10:00'),
+       ('7a8b9c0d-1e2f-3g4h-5i6j-7k8l9m0n1o2p', 2, 1650.00, 'TWD', 'CREDIT_CARD', 'COMPLETED', '2023-02-02 11:20:00', '2023-02-02 11:25:00'),
+       ('a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6', 3, 800.00, 'TWD', 'ALIPAY', 'COMPLETED', '2023-02-03 14:35:00', '2023-02-03 14:40:00'),
+       ('c3d4e5f6-g7h8-i9j0-k1l2-m3n4o5p6q7r8', 5, 600.00, 'TWD', 'WECHAT_PAY', 'COMPLETED', '2023-02-05 08:15:00', '2023-02-05 08:20:00'),
+       ('e5f6g7h8-i9j0-k1l2-m3n4-o5p6q7r8s9t0', 6, 300.00, 'TWD', 'CREDIT_CARD', 'COMPLETED', '2023-02-06 11:35:00', '2023-02-06 11:40:00'),
+       ('g7h8i9j0-k1l2-m3n4-o5p6-q7r8s9t0u1v2', 7, 900.00, 'TWD', 'ALIPAY', 'COMPLETED', '2023-02-07 13:20:00', '2023-02-07 13:25:00'),
+       ('i9j0k1l2-m3n4-o5p6-q7r8-s9t0u1v2w3x4', 8, 350.00, 'TWD', 'WECHAT_PAY', 'COMPLETED', '2023-02-08 15:45:00', '2023-02-08 15:50:00'),
+       ('k1l2m3n4-o5p6-q7r8-s9t0-u1v2w3x4y5z6', 9, 1200.00, 'TWD', 'CREDIT_CARD', 'COMPLETED', '2023-02-09 17:30:00', '2023-02-09 17:35:00'),
+       ('m3n4o5p6-q7r8-s9t0-u1v2-w3x4y5z6a7b8', 10, 250.00, 'TWD', 'ALIPAY', 'COMPLETED', '2023-02-10 19:05:00', '2023-02-10 19:10:00'),
+       ('o5p6q7r8-s9t0-u1v2-w3x4-y5z6a7b8c9d0', 4, 2500.00, 'TWD', 'CREDIT_CARD', 'PENDING', '2023-02-04 16:50:00', NULL)
 GO

@@ -24,7 +24,7 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
-    private Integer userId;
+    private Integer id;
 
     @Column(name = "name", nullable = false, length = 50)
     private String name;
@@ -56,8 +56,15 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Achievements> achievements; // 成就
 
-
-
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
+    
+    // 兼容性方法
+    public Integer getUserId() {
+        return this.id;
+    }
+    
+    public void setUserId(Integer userId) {
+        this.id = userId;
+    }
 }
