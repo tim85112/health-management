@@ -148,9 +148,14 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderDTO getOrderById(Integer orderId) {
-        Order order = orderDAO.findById(orderId)
-            .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
-        return convertToDTO(order);
+        try {
+            return orderDAO.findById(orderId)
+                .map(this::convertToDTO)
+                .orElse(null);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override

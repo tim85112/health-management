@@ -13,9 +13,12 @@ import org.springframework.web.bind.annotation.*;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
 
 @RestController
-@RequestMapping("/api/order")
+@RequestMapping("/api/orders")
 public class OrderController {
 
     @Autowired
@@ -35,8 +38,16 @@ public class OrderController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getOrderById(@PathVariable Integer id) {
-        OrderDTO order = orderService.getOrderById(id);
-        return ResponseEntity.ok(ApiResponse.success(order));
+        try {
+            OrderDTO order = orderService.getOrderById(id);
+            if (order == null) {
+                return ResponseEntity.ok(ApiResponse.error("訂單不存在或已被刪除"));
+            }
+            return ResponseEntity.ok(ApiResponse.success(order));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(ApiResponse.error("獲取訂單詳情失敗: " + e.getMessage()));
+        }
     }
 
     @GetMapping
@@ -44,24 +55,48 @@ public class OrderController {
             @RequestParam(required = false) Integer userId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate) {
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "10") Integer size) {
         
-        // 根据查询参数调用相应的服务方法
-        List<OrderDTO> orders;
-        if (userId != null) {
-            orders = orderService.getOrdersByUserId(userId);
-        } else if (status != null && !status.isEmpty()) {
-            orders = orderService.getOrdersByStatus(status);
-        } else if (startDate != null && endDate != null) {
-            Timestamp startTimestamp = new Timestamp(startDate.getTime());
-            Timestamp endTimestamp = new Timestamp(endDate.getTime());
-            orders = orderService.getOrdersByDateRange(startTimestamp, endTimestamp);
-        } else {
-            // 管理员查看所有订单
-            orders = orderService.getAllOrders();
+        try {
+            // 獲取訂單列表
+            List<OrderDTO> allOrders;
+            if (userId != null) {
+                allOrders = orderService.getOrdersByUserId(userId);
+            } else if (status != null && !status.isEmpty()) {
+                allOrders = orderService.getOrdersByStatus(status);
+            } else if (startDate != null && endDate != null) {
+                Timestamp startTimestamp = new Timestamp(startDate.getTime());
+                Timestamp endTimestamp = new Timestamp(endDate.getTime());
+                allOrders = orderService.getOrdersByDateRange(startTimestamp, endTimestamp);
+            } else {
+                // 管理員查看所有訂單
+                allOrders = orderService.getAllOrders();
+            }
+            
+            // 手動分頁處理
+            int total = allOrders.size();
+            int fromIndex = page * size;
+            int toIndex = Math.min(fromIndex + size, total);
+            
+            List<OrderDTO> pageOrders = fromIndex < total 
+                ? allOrders.subList(fromIndex, toIndex) 
+                : new ArrayList<>();
+            
+            // 創建分頁響應格式
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("content", pageOrders);
+            responseData.put("totalElements", total);
+            responseData.put("totalPages", (int) Math.ceil((double) total / size));
+            responseData.put("size", size);
+            responseData.put("number", page);
+            
+            return ResponseEntity.ok(ApiResponse.success(responseData));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(ApiResponse.error("獲取訂單失敗: " + e.getMessage()));
         }
-        
-        return ResponseEntity.ok(ApiResponse.success(orders));
     }
     
     @PutMapping("/{id}/status")
