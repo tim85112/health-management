@@ -72,6 +72,9 @@ public class WebSecurityConfig {
                                 "/api/products/**",
                                 "/api/cart/**",
                                 "/api/courses/**",
+                                "/api/newebpay/**",
+                                "/api/order/**",
+                                "/api/orders/*/payment/**",
                                 "/users/**")
                         .permitAll()
                         .requestMatchers("/api/users").hasAuthority("admin") // 獲取所有用戶僅限管理員
