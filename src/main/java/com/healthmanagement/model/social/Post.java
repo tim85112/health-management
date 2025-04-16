@@ -36,6 +36,9 @@ public class Post {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    
+    @Column(name = "view_count", nullable = false)
+    private int viewCount;
 }
 
 
