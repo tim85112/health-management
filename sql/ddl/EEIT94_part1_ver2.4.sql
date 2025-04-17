@@ -2,9 +2,8 @@
     注意：user表格的插入數據是程式自動生成，user表要有數據才能執行part2! 不然就會報錯!
     如果不想插入測試數據可以先不執行part2!
 */
-
-USE HealthManagement;
-GO
+USE HealthManagement
+GO;
 
 -- 創建 users 表
 CREATE TABLE [users]
@@ -15,7 +14,7 @@ CREATE TABLE [users]
     [password_hash] VARCHAR(255)  NOT NULL,                          -- 密碼哈希
     [gender]        CHAR(1),                                         -- 性別，例如 'M' 或 'F'
     [bio]           NVARCHAR(MAX),                                   -- 個人簡介
-    [role]          VARCHAR(10) CHECK (role IN ('user', 'admin')),   -- 角色
+    [role]          VARCHAR(10) CHECK (role IN ('user', 'admin', 'coach')),   -- 角色
     [user_points]   INT           NOT NULL DEFAULT 0,                -- 使用者點數
     [last_login]    DATETIME               DEFAULT CURRENT_TIMESTAMP -- 最後登入時間
 );
@@ -27,6 +26,31 @@ CREATE TABLE [user_point]
     [user_id]      INT PRIMARY KEY,
     [points]       INT DEFAULT (0),
     [last_updated] DATETIME
+);
+GO
+
+-- 創建 course 表
+CREATE TABLE [course]
+(
+    [id] INT PRIMARY KEY IDENTITY (1, 1),
+    [name] VARCHAR(255) NOT NULL,
+    [description] TEXT,
+    [day_of_week] INT NOT NULL, -- 0: Sunday, 1: Monday, ..., 6: Saturday
+    [start_time] TIME NOT NULL,
+    [coach_id] INT NOT NULL,
+    [duration] INT NOT NULL, -- 以分鐘為單位
+    [max_capacity] INT NOT NULL
+);
+GO
+
+-- 創建 enrollment 表
+CREATE TABLE [enrollment]
+(
+    [id] INT PRIMARY KEY IDENTITY (1, 1),
+    [user_id] INT NOT NULL,
+    [course_id] INT NOT NULL,
+    [enrollment_time] DATETIME DEFAULT GETDATE(),
+    [status] VARCHAR(50) NOT NULL,
 );
 GO
 
@@ -45,27 +69,6 @@ CREATE TABLE [product]
 );
 GO
 
--- 創建 coach 表
-CREATE TABLE [coach]
-(
-    [id]        INT PRIMARY KEY IDENTITY (1, 1),
-    [name]      NVARCHAR(255) NOT NULL,
-    [expertise] NVARCHAR(255)
-);
-GO
-
--- 創建 course 表
-CREATE TABLE [course]
-(
-    [id]           INT PRIMARY KEY IDENTITY (1, 1),
-    [name]         NVARCHAR(255)  NOT NULL,
-    [description]  NVARCHAR(1000) NOT NULL,
-    [date]         DATE           NOT NULL,
-    [coach_id]     INT            NOT NULL,
-    [duration]     INT            NOT NULL,
-    [max_capacity] INT            NOT NULL
-);
-GO
 
 -- 創建 order 表
 CREATE TABLE [order]
@@ -300,8 +303,6 @@ ALTER TABLE [order_item]
     ADD FOREIGN KEY ([order_id]) REFERENCES [order] ([id]);
 ALTER TABLE [order_item]
     ADD FOREIGN KEY ([product_id]) REFERENCES [product] ([id]);
-ALTER TABLE [course]
-    ADD FOREIGN KEY ([coach_id]) REFERENCES [coach] ([id]);
 ALTER TABLE [cart_item]
     ADD FOREIGN KEY ([user_id]) REFERENCES [users] ([user_id]);
 ALTER TABLE [cart_item]
@@ -314,6 +315,12 @@ ALTER TABLE [comment]
     ADD FOREIGN KEY ([user_id]) REFERENCES [users] ([user_id]);
 ALTER TABLE [payment]
     ADD FOREIGN KEY ([order_id]) REFERENCES [order] ([id]);
+ALTER TABLE [course]
+    ADD FOREIGN KEY ([coach_id]) REFERENCES [users] ([user_id]);
+ALTER TABLE [enrollment]
+    ADD FOREIGN KEY ([user_id]) REFERENCES [users] ([user_id]);
+ALTER TABLE [enrollment]
+    ADD FOREIGN KEY ([course_id]) REFERENCES [course] ([id]);
 GO
 
 -- 儀表板視圖

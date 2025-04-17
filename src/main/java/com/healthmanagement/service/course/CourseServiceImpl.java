@@ -3,8 +3,9 @@ package com.healthmanagement.service.course;
 import com.healthmanagement.dao.course.CourseDAO;
 import com.healthmanagement.dto.course.CourseRequest;
 import com.healthmanagement.dto.course.CourseResponse;
-import com.healthmanagement.model.course.Coach;
 import com.healthmanagement.model.course.Course;
+import com.healthmanagement.model.member.User;
+
 import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,12 +41,14 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     public CourseResponse createCourse(CourseRequest courseRequest) {
-        Coach coachRef = entityManager.getReference(Coach.class, courseRequest.getCoachId());
+        // 使用 User Model 的 EntityManager 引用
+        User coachRef = entityManager.getReference(User.class, courseRequest.getCoachId());
         Course course = new Course();
         course.setName(courseRequest.getName());
         course.setDescription(courseRequest.getDescription());
-        course.setDate(courseRequest.getDate());
-        course.setCoach(coachRef);
+        course.setDayOfWeek(courseRequest.getDayOfWeek()); // 設定星期幾
+        course.setStartTime(courseRequest.getStartTime()); // 設定開始時間
+        course.setCoach(coachRef); // 設定關聯的 User 物件
         course.setDuration(courseRequest.getDuration());
         course.setMaxCapacity(courseRequest.getMaxCapacity());
         Course savedCourse = courseDAO.save(course);
@@ -61,9 +64,11 @@ public class CourseServiceImpl implements CourseService {
         Course existingCourse = optional.get();
         existingCourse.setName(courseRequest.getName());
         existingCourse.setDescription(courseRequest.getDescription());
-        existingCourse.setDate(courseRequest.getDate());
-        Coach coachRef = entityManager.getReference(Coach.class, courseRequest.getCoachId());
-        existingCourse.setCoach(coachRef);
+        existingCourse.setDayOfWeek(courseRequest.getDayOfWeek()); // 設定星期幾
+        existingCourse.setStartTime(courseRequest.getStartTime()); // 設定開始時間
+        // 使用 User Model 的 EntityManager 引用
+        User coachRef = entityManager.getReference(User.class, courseRequest.getCoachId());
+        existingCourse.setCoach(coachRef); // 設定關聯的 User 物件
         existingCourse.setDuration(courseRequest.getDuration());
         existingCourse.setMaxCapacity(courseRequest.getMaxCapacity());
         Course updatedCourse = courseDAO.save(existingCourse);
@@ -96,14 +101,22 @@ public class CourseServiceImpl implements CourseService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<CourseResponse> getCoursesByDayOfWeek(Integer dayOfWeek) {
+        return courseDAO.findByDayOfWeek(dayOfWeek).stream()
+                .map(this::convertToCourseResponse)
+                .collect(Collectors.toList());
+    }
+
     private CourseResponse convertToCourseResponse(Course course) {
         return new CourseResponse(
                 course.getId(),
                 course.getName(),
                 course.getDescription(),
-                course.getCoach().getId(),
-                course.getCoach().getName(),
-                course.getDate(),
+                course.getCoach().getId(), // 從關聯的 User 物件獲取 ID
+                course.getCoach().getName(), // 從關聯的 User 物件獲取 Name
+                course.getDayOfWeek(), // 新增星期幾
+                course.getStartTime(), // 新增開始時間
                 course.getDuration(),
                 course.getMaxCapacity()
         );
