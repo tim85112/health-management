@@ -3,7 +3,6 @@ package com.healthmanagement.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -46,7 +45,6 @@ public class WebSecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        //configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "Origin"));//龍
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -74,19 +72,19 @@ public class WebSecurityConfig {
                                 "/api/products/**",
                                 "/api/cart/**",
                                 "/api/courses/**",
+                                "/api/enrollments/**",
+                                "/api/newebpay/**",
+                                "/api/order/**",
+                                "/api/orders/*/payment/**",
                                 "/users/**")
                         .permitAll()
                         .requestMatchers("/api/users").hasAuthority("admin") // 獲取所有用戶僅限管理員
                         .requestMatchers("/api/users/{userId}").authenticated() // 獲取特定用戶需要登入，具體權限在Controller中控制
                         .requestMatchers("/api/users/{userId}/**").authenticated() // 用戶相關操作需要登入，具體權限在Controller中控制
-                        .requestMatchers("/api/comments/post/**").authenticated() // 留言需登入
-                        .requestMatchers("/api/comments/**").permitAll() // 查詢留言不用登入
-                        .requestMatchers("/api/posts").authenticated() // POST 發文需要登入
-                        .requestMatchers("/api/posts/**").permitAll() // 其他不需登入
-                        .requestMatchers("/api/favorites/**").authenticated()
+                        .requestMatchers("/comments/post/**").authenticated() // 留言需登入
+                        .requestMatchers("/comments/**").permitAll() // 查詢留言不用登入
+                        .requestMatchers("/posts/**").authenticated()
                         .requestMatchers("/api/fitness/dashboard/stats").authenticated()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/social/profile/avatar").authenticated()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
