@@ -8,6 +8,7 @@ import java.util.List;
 public interface ForumService {
     List<Post> getAllPosts();
     Post getPostById(Integer id);
+    Post incrementViewCountAndGetPostById(Integer id);
     Post createPost(Post post);
     Post updatePost(Integer id, PostRequest updatedPost);
     void deletePost(Integer id);

@@ -26,11 +26,19 @@ public class ForumServiceImpl implements ForumService {
                 .orElseThrow(() -> new RuntimeException("Post not found with ID: " + id));
     }
 
+    @Autowired
+    private UserActivityService userActivityService;
+    
     @Override
     public Post createPost(Post post) {
         post.setCreatedAt(LocalDateTime.now());
         post.setUpdatedAt(LocalDateTime.now());
-        return forumDAO.save(post);
+        Post saved = forumDAO.save(post);
+        
+        // 記錄使用者發文行為
+        userActivityService.logActivity(post.getUser().getUserId(), "post", saved.getId());
+
+        return saved;
     }
 
     @Override
@@ -46,6 +54,13 @@ public class ForumServiceImpl implements ForumService {
     @Override
     public void deletePost(Integer id) {
         forumDAO.deleteById(id);
+    }
+    
+    @Override
+    public Post incrementViewCountAndGetPostById(Integer id) {
+        Post post = getPostById(id);
+        post.setViewCount(post.getViewCount() + 1);  // 累加點擊數
+        return forumDAO.save(post); // 儲存更新後資料
     }
 }
 

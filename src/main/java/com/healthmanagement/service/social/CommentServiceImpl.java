@@ -40,7 +40,10 @@ public class CommentServiceImpl implements CommentService {
         return commentDAO.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("Comment not found"));
     }
-
+    
+    @Autowired
+    private UserActivityService userActivityService;
+    
     @Override
     public Comment createComment(Integer postId, String email, CommentRequest request) {
         Comment comment = new Comment();
@@ -53,7 +56,16 @@ public class CommentServiceImpl implements CommentService {
         comment.setUser(userService.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found")));
 
-        return commentDAO.save(comment);
+        Comment saved = commentDAO.save(comment);
+
+        // 記錄留言動態
+        userActivityService.logActivity(
+                saved.getUser().getUserId(),   // 使用者 ID
+                "comment",                     // 動作類型
+                saved.getId()                  // 留言 ID
+        );
+
+        return saved;
     }
     @Override
     public Comment updateComment(Integer commentId, String email, CommentRequest request) {
