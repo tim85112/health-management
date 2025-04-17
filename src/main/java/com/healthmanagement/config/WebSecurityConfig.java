@@ -46,7 +46,6 @@ public class WebSecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        //configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "Origin"));//龍
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -73,7 +72,6 @@ public class WebSecurityConfig {
                                 "/api/auth/**",
                                 "/api/products/**",
                                 "/api/cart/**",
-                                "/api/courses/**",
                                 "/api/newebpay/**",
                                 "/api/order/**",
                                 "/api/orders/*/payment/**",
@@ -82,16 +80,29 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/users").hasAuthority("admin") // 獲取所有用戶僅限管理員
                         .requestMatchers("/api/users/{userId}").authenticated() // 獲取特定用戶需要登入，具體權限在Controller中控制
                         .requestMatchers("/api/users/{userId}/**").authenticated() // 用戶相關操作需要登入，具體權限在Controller中控制
-                        .requestMatchers("/api/comments/post/**").authenticated() // 留言需登入
-                        .requestMatchers("/api/comments/**").permitAll() // 查詢留言不用登入
-                        .requestMatchers("/api/posts").authenticated() // POST 發文需要登入
-                        .requestMatchers("/api/posts/**").permitAll() // 其他不需登入
-                        .requestMatchers("/api/favorites/**").authenticated()
+                        .requestMatchers("/comments/post/**").authenticated() // 留言需登入
+                        .requestMatchers("/comments/**").permitAll() // 查詢留言不用登入
+                        .requestMatchers("/posts/**").authenticated()
                         .requestMatchers("/api/fitness/dashboard/stats").authenticated()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/social/profile/avatar").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/courses/**").permitAll() // 只開放 GET 查詢
+                        .requestMatchers("/api/courses/**").hasAuthority("admin") // 其他方法（POST/PUT/DELETE）需要 admin
+                        
+                        // 允許公開存取 /error 路徑
+                        .requestMatchers("/error").permitAll()
+                        
+                        // 允許公開存取查詢課程是否已滿和已報名人數
+                        .requestMatchers("/api/enrollments/courses/*/is-full").permitAll()
+                        .requestMatchers("/api/enrollments/courses/*/count").permitAll()
+
+                        // EnrollmentController 的權限設定
+                        .requestMatchers("/api/enrollments/users/{userId}/courses/{courseId}*").hasAuthority("user")
+                        .requestMatchers("/api/enrollments/{enrollmentId}").authenticated()
+                        .requestMatchers("/api/enrollments/users/{userId}").authenticated()
+                        .requestMatchers("/api/enrollments/courses/{courseId}").hasAnyAuthority("admin", "coach")
+                        .requestMatchers("/api/enrollments/users/{userId}/courses/{courseId}/is-enrolled").authenticated()
+                        .requestMatchers("/api/enrollments/**").authenticated() // 確保所有 /api/enrollments/** 都需要登入 (作為最後的防線)
                         .anyRequest().authenticated())
-                .sessionManagement(session -> session
+                		.sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         // 啟用 JWT 過濾器

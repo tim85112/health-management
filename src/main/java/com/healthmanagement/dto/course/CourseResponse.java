@@ -3,7 +3,7 @@ package com.healthmanagement.dto.course;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Data
 @AllArgsConstructor
@@ -13,7 +13,8 @@ public class CourseResponse {
     private String description;
     private Integer coachId;
     private String coachName;
-    private LocalDate date;
+    private Integer dayOfWeek; // 新增星期幾
+    private LocalTime startTime; // 新增開始時間
     private Integer duration;
     private Integer maxCapacity;
 }

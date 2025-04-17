@@ -5,7 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference; // 引入注解
+import com.healthmanagement.model.member.User;
 
 @Data
 @Entity
@@ -27,16 +32,23 @@ public class Course {
     private String description;  // 課程描述
 
     @ManyToOne
-    @JoinColumn(name = "coach_id", nullable = false)  // 外鍵連接 coach 資料表
-    private Coach coach;
+    @JoinColumn(name = "coach_id", nullable = false)  // 外鍵連接 User 資料表
+    @JsonBackReference // 防止序列化時無限遞迴
+    private User coach;
 
-    @Column(name = "date", nullable = false)
-    private LocalDate date;  // 課程日期，使用 LocalDate 類型
+    @Column(name = "day_of_week", nullable = false)
+    private Integer dayOfWeek;  // 課程星期幾 (0: Sunday, 1: Monday, ..., 6: Saturday)
 
+    @Column(name = "start_time", nullable = false)
+    private LocalTime startTime;  // 課程開始時間，使用 LocalTime 類型
 
     @Column(name = "duration", nullable = false)
     private Integer duration;  // 課程時長（以分鐘為單位）
 
     @Column(name = "max_capacity", nullable = false)
     private Integer maxCapacity;  // 最大容納人數
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
+    @JsonManagedReference // 添加此注解
+    private List<Enrollment> enrollments; // 課程的報名紀錄
 }

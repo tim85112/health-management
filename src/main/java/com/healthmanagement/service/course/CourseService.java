@@ -16,4 +16,5 @@ public interface CourseService {
     List<CourseResponse> findByCoachId(Integer coachId);
     List<CourseResponse> searchCoursesByCourseName(String name);
     List<CourseResponse> searchCoursesByCoachName(String coachName);
+    List<CourseResponse> getCoursesByDayOfWeek(Integer dayOfWeek);
 }
