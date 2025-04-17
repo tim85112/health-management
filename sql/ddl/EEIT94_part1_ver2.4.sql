@@ -205,7 +205,8 @@ CREATE TABLE [social_post]
     [content]    NVARCHAR(2000) NOT NULL,
     [user_id]    INT            NOT NULL,
     [created_at] DATETIME DEFAULT CURRENT_TIMESTAMP,
-    [updated_at] DATETIME DEFAULT CURRENT_TIMESTAMP
+    [updated_at] DATETIME DEFAULT CURRENT_TIMESTAMP,
+	[view_count] INT            NOT NULL DEFAULT 0
 );
 GO
 
@@ -220,6 +221,75 @@ CREATE TABLE [comment]
     [updated_at] DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 GO
+
+-- 創建 post_like 表：文章按讚功能
+CREATE TABLE [post_like] (
+    [user_id]   INT NOT NULL,
+    [post_id]   INT NOT NULL,
+    [created_at] DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY ([user_id], [post_id]),
+    FOREIGN KEY ([user_id]) REFERENCES [users]([user_id]),
+    FOREIGN KEY ([post_id]) REFERENCES [social_post]([id])
+);
+GO
+
+-- 創建 user_friend 表：好友關係（雙向）
+CREATE TABLE [user_friend] (
+    [user_id]   INT NOT NULL,
+    [friend_id] INT NOT NULL,
+    [created_at] DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY ([user_id], [friend_id]),
+    FOREIGN KEY ([user_id]) REFERENCES [users]([user_id]),
+    FOREIGN KEY ([friend_id]) REFERENCES [users]([user_id])
+);
+GO
+
+-- 創建 training_invitation 表：訓練邀請功能
+CREATE TABLE [training_invitation] (
+    [id]         INT PRIMARY KEY IDENTITY(1,1),
+    [sender_id]  INT NOT NULL,
+    [receiver_id] INT NOT NULL,
+    [message]    NVARCHAR(500),
+    [status]     VARCHAR(20) DEFAULT 'pending', -- pending / accepted / rejected
+    [sent_at]    DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY ([sender_id]) REFERENCES [users]([user_id]),
+    FOREIGN KEY ([receiver_id]) REFERENCES [users]([user_id])
+);
+GO
+
+-- 創建 user_activity 表：使用者動態紀錄
+CREATE TABLE [user_activity] (
+    [id]          INT PRIMARY KEY IDENTITY(1,1),
+    [user_id]     INT NOT NULL,
+    [action_type] VARCHAR(50) NOT NULL,  -- 例如：'post', 'like', 'comment'
+    [reference_id] INT,                  -- 關聯的 post_id、comment_id 等
+    [created_at]  DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY ([user_id]) REFERENCES [users]([user_id])
+);
+GO
+
+-- 圖片與媒體管理資料表
+CREATE TABLE [media_file] (
+    [id]           INT PRIMARY KEY IDENTITY(1,1),
+    [url]          NVARCHAR(1000) NOT NULL,     -- 圖片網址或相對路徑
+    [type]         VARCHAR(20) NOT NULL,        -- 'avatar', 'post'
+    [ref_id]       INT NOT NULL,                -- user_id or post_id
+    [uploaded_at]  DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+GO
+
+--文章收藏管理資料表
+CREATE TABLE [post_favorite] (
+    [id]           INT PRIMARY KEY IDENTITY(1,1),     -- 收藏編號
+    [user_id]      INT NOT NULL,                     -- 收藏者
+    [post_id]      INT NOT NULL,                     -- 被收藏的文章
+    [created_at]   DATETIME DEFAULT CURRENT_TIMESTAMP, -- 收藏時間
+    CONSTRAINT FK_favorite_user FOREIGN KEY ([user_id]) REFERENCES [users]([user_id]),
+    CONSTRAINT FK_favorite_post FOREIGN KEY ([post_id]) REFERENCES [social_post]([id]),
+    CONSTRAINT UQ_user_post UNIQUE ([user_id], [post_id]) -- 同一文章不可重複收藏
+);
+GO
+
 
 -- 外鍵約束設定
 ALTER TABLE [user_point]
