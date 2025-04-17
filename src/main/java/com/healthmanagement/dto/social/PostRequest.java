@@ -28,4 +28,5 @@ public class PostRequest {
     public void setContent(String content) {
         this.content = content;
     }
+
 }

@@ -3,6 +3,7 @@ package com.healthmanagement.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -71,7 +72,6 @@ public class WebSecurityConfig {
                                 "/api/auth/**",
                                 "/api/products/**",
                                 "/api/cart/**",
-                                "/api/courses/**",
                                 "/api/newebpay/**",
                                 "/api/order/**",
                                 "/api/orders/*/payment/**",
@@ -84,8 +84,25 @@ public class WebSecurityConfig {
                         .requestMatchers("/comments/**").permitAll() // 查詢留言不用登入
                         .requestMatchers("/posts/**").authenticated()
                         .requestMatchers("/api/fitness/dashboard/stats").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/courses/**").permitAll() // 只開放 GET 查詢
+                        .requestMatchers("/api/courses/**").hasAuthority("admin") // 其他方法（POST/PUT/DELETE）需要 admin
+                        
+                        // 允許公開存取 /error 路徑
+                        .requestMatchers("/error").permitAll()
+                        
+                        // 允許公開存取查詢課程是否已滿和已報名人數
+                        .requestMatchers("/api/enrollments/courses/*/is-full").permitAll()
+                        .requestMatchers("/api/enrollments/courses/*/count").permitAll()
+
+                        // EnrollmentController 的權限設定
+                        .requestMatchers("/api/enrollments/users/{userId}/courses/{courseId}*").hasAuthority("user")
+                        .requestMatchers("/api/enrollments/{enrollmentId}").authenticated()
+                        .requestMatchers("/api/enrollments/users/{userId}").authenticated()
+                        .requestMatchers("/api/enrollments/courses/{courseId}").hasAnyAuthority("admin", "coach")
+                        .requestMatchers("/api/enrollments/users/{userId}/courses/{courseId}/is-enrolled").authenticated()
+                        .requestMatchers("/api/enrollments/**").authenticated() // 確保所有 /api/enrollments/** 都需要登入 (作為最後的防線)
                         .anyRequest().authenticated())
-                .sessionManagement(session -> session
+                		.sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         // 啟用 JWT 過濾器

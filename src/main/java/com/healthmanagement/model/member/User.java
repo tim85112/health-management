@@ -2,6 +2,9 @@ package com.healthmanagement.model.member;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.healthmanagement.model.course.Course;
+import com.healthmanagement.model.course.Enrollment;
 import com.healthmanagement.model.fitness.Achievements;
 import com.healthmanagement.model.fitness.ExerciseRecord;
 import com.healthmanagement.model.fitness.FitnessGoal;
@@ -55,6 +58,14 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Achievements> achievements; // 成就
+
+    @OneToMany(mappedBy = "coach", cascade = CascadeType.ALL)
+    @JsonManagedReference // 標記為正向引用，在序列化時會包含這個列表
+    private List<Course> coursesCoached; // 教練所開的課程
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonManagedReference // 添加此注解
+    private List<Enrollment> enrollments; // 使用者的報名紀錄
 
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
