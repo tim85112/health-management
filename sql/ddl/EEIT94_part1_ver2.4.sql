@@ -3,7 +3,7 @@
     如果不想插入測試數據可以先不執行part2!
 */
 USE HealthManagement
-GO;
+GO
 
 -- 創建 users 表
 CREATE TABLE [users]
