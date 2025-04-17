@@ -34,8 +34,19 @@ public class CartItemController {
         try {
             // 如果未提供用户ID，使用当前登录用户的ID
             if (request.getUserId() == null) {
-                request.setUserId(securityUtils.getCurrentUserId());
+                try {
+                    request.setUserId(securityUtils.getCurrentUserId());
+                } catch (Exception e) {
+                    // 如果无法获取当前用户ID并且请求中没有userId
+                    return ResponseEntity.badRequest().body(ApiResponse.error("提供的客戶ID參數為空，請提供userId或確保已登錄"));
+                }
             }
+            
+            // 再次检查userId是否为空
+            if (request.getUserId() == null) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("提供的客戶ID參數為空，請提供userId或確保已登錄"));
+            }
+            
             CartItemDTO cartItem = cartItemService.addToCart(request);
             return ResponseEntity.ok(ApiResponse.success(cartItem));
         } catch (RuntimeException e) {
@@ -51,8 +62,17 @@ public class CartItemController {
             @RequestParam(required = false) Integer userId) {
         try {
             if (userId == null) {
-                userId = securityUtils.getCurrentUserId();
+                try {
+                    userId = securityUtils.getCurrentUserId();
+                } catch (Exception e) {
+                    return ResponseEntity.badRequest().body(ApiResponse.error("提供的客戶ID參數為空，請提供userId或確保已登錄"));
+                }
             }
+            
+            if (userId == null) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("提供的客戶ID參數為空，請提供userId或確保已登錄"));
+            }
+            
             CartItemDTO updatedItem = cartItemService.updateQuantity(id, quantity);
             return ResponseEntity.ok(ApiResponse.success(updatedItem));
         } catch (RuntimeException e) {
@@ -67,8 +87,17 @@ public class CartItemController {
             @RequestParam(required = false) Integer userId) {
         try {
             if (userId == null) {
-                userId = securityUtils.getCurrentUserId();
+                try {
+                    userId = securityUtils.getCurrentUserId();
+                } catch (Exception e) {
+                    return ResponseEntity.badRequest().body(ApiResponse.error("提供的客戶ID參數為空，請提供userId或確保已登錄"));
+                }
             }
+            
+            if (userId == null) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("提供的客戶ID參數為空，請提供userId或確保已登錄"));
+            }
+            
             cartItemService.removeFromCart(id);
             return ResponseEntity.ok(ApiResponse.success("Item removed from cart successfully"));
         } catch (RuntimeException e) {
@@ -79,8 +108,24 @@ public class CartItemController {
     @GetMapping("/items")
     @Operation(summary = "獲取購物車內容", description = "獲取用戶購物車中的所有商品")
     public ResponseEntity<?> getCartItems(@RequestParam(required = false) Integer userId) {
-        List<CartItemDTO> cartItems = cartItemService.getCartItems(userId);
-        return ResponseEntity.ok(ApiResponse.success(cartItems));
+        try {
+            if (userId == null) {
+                try {
+                    userId = securityUtils.getCurrentUserId();
+                } catch (Exception e) {
+                    return ResponseEntity.badRequest().body(ApiResponse.error("提供的客戶ID參數為空，請提供userId或確保已登錄"));
+                }
+            }
+            
+            if (userId == null) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("提供的客戶ID參數為空，請提供userId或確保已登錄"));
+            }
+            
+            List<CartItemDTO> cartItems = cartItemService.getCartItems(userId);
+            return ResponseEntity.ok(ApiResponse.success(cartItems));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
     }
 
     @DeleteMapping("/clear")
@@ -88,8 +133,17 @@ public class CartItemController {
     public ResponseEntity<?> clearCart(@RequestParam(required = false) Integer userId) {
         try {
             if (userId == null) {
-                userId = securityUtils.getCurrentUserId();
+                try {
+                    userId = securityUtils.getCurrentUserId();
+                } catch (Exception e) {
+                    return ResponseEntity.badRequest().body(ApiResponse.error("提供的客戶ID參數為空，請提供userId或確保已登錄"));
+                }
             }
+            
+            if (userId == null) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("提供的客戶ID參數為空，請提供userId或確保已登錄"));
+            }
+            
             cartItemService.clearCart(userId);
             return ResponseEntity.ok(ApiResponse.success("Cart cleared successfully"));
         } catch (RuntimeException e) {
@@ -102,8 +156,17 @@ public class CartItemController {
     public ResponseEntity<?> calculateCartTotal(@RequestParam(required = false) Integer userId) {
         try {
             if (userId == null) {
-                userId = securityUtils.getCurrentUserId();
+                try {
+                    userId = securityUtils.getCurrentUserId();
+                } catch (Exception e) {
+                    return ResponseEntity.badRequest().body(ApiResponse.error("提供的客戶ID參數為空，請提供userId或確保已登錄"));
+                }
             }
+            
+            if (userId == null) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("提供的客戶ID參數為空，請提供userId或確保已登錄"));
+            }
+            
             BigDecimal total = cartItemService.calculateCartTotal(userId);
             return ResponseEntity.ok(ApiResponse.success(total));
         } catch (RuntimeException e) {

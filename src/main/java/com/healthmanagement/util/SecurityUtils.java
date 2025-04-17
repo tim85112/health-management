@@ -1,11 +1,16 @@
 package com.healthmanagement.util;
 
+import com.healthmanagement.service.member.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 @Component
 public class SecurityUtils {
+
+    @Autowired
+    private UserService userService;
 
     /**
      * 獲取當前登錄用戶的ID
@@ -20,22 +25,14 @@ public class SecurityUtils {
 
         String currentUserEmail = authentication.getName();
         
-        // 這裡簡單實現為：從用戶郵箱提取數字作為用戶ID
-        // 實際應用中應該從數據庫查詢當前用戶的ID
         try {
-            if (currentUserEmail != null && !currentUserEmail.isEmpty()) {
-                // 假設用戶ID與用戶郵箱地址中的數字有關
-                // 例如：user1@example.com 對應 ID=1
-                String lastChar = currentUserEmail.replaceAll("[^0-9]", "");
-                if (!lastChar.isEmpty()) {
-                    return Integer.parseInt(lastChar);
-                }
-            }
+            // 從數據庫獲取用戶信息
+            return userService.findByEmail(currentUserEmail)
+                    .map(user -> user.getId())
+                    .orElseThrow(() -> new RuntimeException("找不到當前用戶"));
         } catch (Exception e) {
-            throw new RuntimeException("無法確定當前用戶ID");
+            throw new RuntimeException("無法確定當前用戶ID: " + e.getMessage());
         }
-
-        throw new RuntimeException("無法確定當前用戶ID");
     }
     
     /**

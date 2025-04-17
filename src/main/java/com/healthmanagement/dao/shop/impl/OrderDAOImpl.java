@@ -40,7 +40,7 @@ public class OrderDAOImpl implements CustomOrderDAO {
                         "VALUES (:userId, :totalAmount, :status, CURRENT_TIMESTAMP)";
             
             MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("userId", order.getUser().getUserId())
+                .addValue("userId", order.getUser().getId())
                 .addValue("totalAmount", order.getTotalAmount())
                 .addValue("status", order.getStatus());
 
@@ -69,7 +69,7 @@ public class OrderDAOImpl implements CustomOrderDAO {
             
             MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("id", order.getId())
-                .addValue("userId", order.getUser().getUserId())
+                .addValue("userId", order.getUser().getId())
                 .addValue("totalAmount", order.getTotalAmount())
                 .addValue("status", order.getStatus());
 
@@ -80,7 +80,10 @@ public class OrderDAOImpl implements CustomOrderDAO {
 
     @Override
     public Optional<Order> findById(Integer id) {
-        String sql = "SELECT * FROM [order] WHERE id = ?";
+        String sql = "SELECT o.*, u.name as user_name, u.email as user_email " +
+                   "FROM [order] o " +
+                   "LEFT JOIN [users] u ON o.user_id = u.user_id " +
+                   "WHERE o.id = ?";
         Order order;
         try {
             order = jdbcTemplate.queryForObject(sql, orderRowMapper, id);
@@ -94,13 +97,18 @@ public class OrderDAOImpl implements CustomOrderDAO {
             }
             return Optional.ofNullable(order);
         } catch (Exception e) {
+            System.err.println("查詢訂單詳情時發生錯誤: " + e.getMessage());
+            e.printStackTrace();
             return Optional.empty();
         }
     }
 
     @Override
     public List<Order> findByUserId(Integer userId) {
-        String sql = "SELECT * FROM [order] WHERE user_id = ? ORDER BY created_at DESC";
+        String sql = "SELECT o.*, u.name as user_name, u.email as user_email " +
+                   "FROM [order] o " +
+                   "LEFT JOIN [users] u ON o.user_id = u.user_id " +
+                   "WHERE o.user_id = ? ORDER BY o.created_at DESC";
         List<Order> orders = jdbcTemplate.query(sql, orderRowMapper, userId);
         
         // 為每個訂單加載訂單項目
@@ -116,7 +124,10 @@ public class OrderDAOImpl implements CustomOrderDAO {
     
     @Override
     public List<Order> findByStatus(String status) {
-        String sql = "SELECT * FROM [order] WHERE status = ? ORDER BY created_at DESC";
+        String sql = "SELECT o.*, u.name as user_name, u.email as user_email " +
+                   "FROM [order] o " +
+                   "LEFT JOIN [users] u ON o.user_id = u.user_id " +
+                   "WHERE o.status = ? ORDER BY o.created_at DESC";
         List<Order> orders = jdbcTemplate.query(sql, orderRowMapper, status);
         
         // 为每个订单加载订单项目
@@ -147,7 +158,10 @@ public class OrderDAOImpl implements CustomOrderDAO {
     
     @Override
     public List<Order> findOrdersByDateRange(Timestamp startDate, Timestamp endDate) {
-        String sql = "SELECT * FROM [order] WHERE created_at BETWEEN ? AND ? ORDER BY created_at DESC";
+        String sql = "SELECT o.*, u.name as user_name, u.email as user_email " +
+                   "FROM [order] o " +
+                   "LEFT JOIN [users] u ON o.user_id = u.user_id " +
+                   "WHERE o.created_at BETWEEN ? AND ? ORDER BY o.created_at DESC";
         List<Order> orders = jdbcTemplate.query(sql, orderRowMapper, startDate, endDate);
         
         // 为每个订单加载订单项目
@@ -163,18 +177,27 @@ public class OrderDAOImpl implements CustomOrderDAO {
     
     @Override
     public List<Order> findAll() {
-        String sql = "SELECT * FROM [order] ORDER BY created_at DESC";
-        List<Order> orders = jdbcTemplate.query(sql, orderRowMapper);
-        
-        // 为每个订单加载订单项目
-        for (Order order : orders) {
-            String itemsSql = "SELECT oi.*, p.* FROM order_item oi " +
-                            "LEFT JOIN product p ON oi.product_id = p.id " +
-                            "WHERE oi.order_id = ?";
-            List<OrderItem> items = jdbcTemplate.query(itemsSql, new OrderItemRowMapper(), order.getId());
-            order.setOrderItems(items);
+        String sql = "SELECT o.*, u.name as user_name, u.email as user_email " +
+                   "FROM [order] o " +
+                   "LEFT JOIN [users] u ON o.user_id = u.user_id " +
+                   "ORDER BY o.created_at DESC";
+        try {
+            List<Order> orders = jdbcTemplate.query(sql, orderRowMapper);
+            
+            // 为每个订单加载订单项目
+            for (Order order : orders) {
+                String itemsSql = "SELECT oi.*, p.* FROM order_item oi " +
+                                "LEFT JOIN product p ON oi.product_id = p.id " +
+                                "WHERE oi.order_id = ?";
+                List<OrderItem> items = jdbcTemplate.query(itemsSql, new OrderItemRowMapper(), order.getId());
+                order.setOrderItems(items);
+            }
+            return orders;
+        } catch (Exception e) {
+            System.err.println("查詢所有訂單時發生錯誤: " + e.getMessage());
+            e.printStackTrace();
+            return new ArrayList<>();
         }
-        return orders;
     }
     
     @Override
@@ -189,9 +212,21 @@ public class OrderDAOImpl implements CustomOrderDAO {
             Order order = new Order();
             order.setId(rs.getInt("id"));
             
-            // 创建User对象并设置ID
+            // 创建User对象并设置完整信息
             com.healthmanagement.model.member.User user = new com.healthmanagement.model.member.User();
-            user.setUserId(rs.getInt("user_id"));
+            user.setId(rs.getInt("user_id"));
+            
+            try {
+                // 嘗試獲取用戶名稱和郵箱
+                String userName = rs.getString("user_name");
+                String userEmail = rs.getString("user_email");
+                
+                user.setName(userName);
+                user.setEmail(userEmail);
+            } catch (SQLException e) {
+                // 如果列不存在，忽略錯誤
+            }
+            
             order.setUser(user);
             
             order.setTotalAmount(rs.getBigDecimal("total_amount"));

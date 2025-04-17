@@ -148,9 +148,14 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderDTO getOrderById(Integer orderId) {
-        Order order = orderDAO.findById(orderId)
-            .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
-        return convertToDTO(order);
+        try {
+            return orderDAO.findById(orderId)
+                .map(this::convertToDTO)
+                .orElse(null);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override
@@ -255,6 +260,17 @@ public class OrderServiceImpl implements OrderService {
         OrderDTO dto = new OrderDTO();
         dto.setId(order.getId());
         dto.setUserId(order.getUser().getId());
+        
+        // 優先使用用戶電子郵箱
+        if (order.getUser().getEmail() != null && !order.getUser().getEmail().isEmpty()) {
+            dto.setUserName(order.getUser().getEmail());
+        } else if (order.getUser().getName() != null && !order.getUser().getName().isEmpty()) {
+            dto.setUserName(order.getUser().getName());
+        } else {
+            // 如果沒有電子郵箱或名稱，使用ID
+            dto.setUserName("用戶" + order.getUser().getId());
+        }
+        
         dto.setTotalAmount(order.getTotalAmount());
         dto.setStatus(order.getStatus());
         dto.setCreatedAt(order.getCreatedAt().toLocalDateTime());
@@ -276,9 +292,14 @@ public class OrderServiceImpl implements OrderService {
             dto.setProductId(orderItem.getProduct().getId());
             dto.setProductName(orderItem.getProduct().getName());
             dto.setProductPrice(orderItem.getProduct().getPrice());
+            
+            // 添加商品圖片URL和類別
+            dto.setProductImageUrl(orderItem.getProduct().getImageUrl());
+            dto.setProductCategory(orderItem.getProduct().getCategory());
         }
         
-        dto.setQuantity(orderItem.getQuantity());
+        // 确保数量不为空
+        dto.setQuantity(orderItem.getQuantity() != null ? orderItem.getQuantity() : 0);
         dto.setSubtotal(orderItem.getSubtotal());
 
         return dto;

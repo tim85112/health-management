@@ -113,6 +113,10 @@ public class CartItemServiceImpl implements CartItemService {
         dto.setProductId(cartItem.getProduct().getId());
         dto.setProductName(cartItem.getProduct().getName());
         dto.setProductPrice(cartItem.getProduct().getPrice());
+        dto.setProductDescription(cartItem.getProduct().getDescription());
+        dto.setProductStockQuantity(cartItem.getProduct().getStockQuantity());
+        dto.setProductCategory(cartItem.getProduct().getCategory());
+        dto.setProductImageUrl(cartItem.getProduct().getImageUrl());
         dto.setQuantity(cartItem.getQuantity());
         dto.setSubtotal(cartItem.getProduct().getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())));
         dto.setAddedAt(cartItem.getAddedAt().toLocalDateTime());

@@ -11,9 +11,10 @@ public class CartItemDTO {
     private Integer productId;
     private String productName;
     private BigDecimal productPrice;
-    private Integer courseId;
-    private String courseName;
-    private BigDecimal coursePrice;
+    private String productDescription;
+    private Integer productStockQuantity;
+    private String productCategory;
+    private String productImageUrl;
     private Integer quantity;
     private BigDecimal subtotal;
     private LocalDateTime addedAt;
