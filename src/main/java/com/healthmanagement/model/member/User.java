@@ -49,10 +49,10 @@ public class User {
 
     @Column(name = "user_points", nullable = false)
     private Integer userPoints;
-    
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<ExerciseRecord> exerciseRecords; // 健身紀錄
-    
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<FitnessGoal> fitnessGoals; // 健身目標
 
@@ -60,21 +60,21 @@ public class User {
     private List<Achievements> achievements; // 成就
 
     @OneToMany(mappedBy = "coach", cascade = CascadeType.ALL)
-    @JsonManagedReference // 標記為正向引用，在序列化時會包含這個列表
+    @JsonManagedReference("user-courses")
     private List<Course> coursesCoached; // 教練所開的課程
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    @JsonManagedReference // 添加此注解
+    @JsonManagedReference("user-enrollments")
     private List<Enrollment> enrollments; // 使用者的報名紀錄
 
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
-    
+
     // 兼容性方法
     public Integer getUserId() {
         return this.id;
     }
-    
+
     public void setUserId(Integer userId) {
         this.id = userId;
     }
