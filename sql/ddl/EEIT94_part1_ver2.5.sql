@@ -4,6 +4,8 @@
 */
 USE HealthManagement
 
+master:sql/ddl/EEIT94_part1_ver2.5.sql
+
 -- 創建 users 表
 CREATE TABLE [users]
 (
