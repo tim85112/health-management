@@ -38,6 +38,7 @@ public class Order {
     private Timestamp createdAt;
     
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<OrderItem> orderItems = new ArrayList<>();
     
     // 便利方法，用于添加订单项
