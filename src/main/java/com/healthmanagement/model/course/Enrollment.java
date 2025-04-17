@@ -24,7 +24,7 @@ public class Enrollment {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    @JsonBackReference // 添加此注解
+    @JsonBackReference("user-enrollments")
     private User user; // 報名使用者 (關聯到 User 表格)
 
     @ManyToOne
