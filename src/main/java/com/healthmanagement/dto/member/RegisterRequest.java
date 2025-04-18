@@ -18,7 +18,8 @@ public class RegisterRequest {
     private String email;
 
     @NotBlank(message = "Password is required")
-    @Size(min = 6, message = "Password must be at least 6 characters")
+    @Size(min = 8, message = "密碼必須至少包含8個字符")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z]).*$", message = "密碼必須包含至少一個大寫和一個小寫字母")
     private String password;
 
     @Pattern(regexp = "^[MFO]$", message = "Gender must be M, F, or O")
