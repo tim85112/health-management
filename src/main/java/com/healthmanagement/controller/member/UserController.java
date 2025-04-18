@@ -49,8 +49,12 @@ public class UserController {
     @PreAuthorize("hasAuthority('admin') or @userSecurity.isCurrentUser(#userId)")
     @Operation(summary = "更新用戶", description = "更新用戶信息")
     public ResponseEntity<ApiResponse<User>> updateUser(@PathVariable Integer userId, @RequestBody User user) {
-        User updatedUser = userService.updateUser(userId, user);
-        return ResponseEntity.ok(ApiResponse.success(updatedUser));
+        try {
+            User updatedUser = userService.updateUser(userId, user);
+            return ResponseEntity.ok(ApiResponse.success(updatedUser));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
     }
 
     @DeleteMapping("/{userId}")
