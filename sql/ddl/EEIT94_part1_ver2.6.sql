@@ -28,6 +28,15 @@ CREATE TABLE [user_point]
 );
 GO
 
+CREATE TABLE reset_tokens (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    user_id INT NOT NULL,
+    token VARCHAR(255) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    CONSTRAINT FK_reset_tokens_user FOREIGN KEY (user_id)
+        REFERENCES users(user_id)
+);
+GO
 -- 創建 course 表
 CREATE TABLE [course]
 (

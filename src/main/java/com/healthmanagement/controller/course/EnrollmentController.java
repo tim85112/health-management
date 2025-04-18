@@ -35,7 +35,7 @@ public class EnrollmentController {
     }
 
     @Operation(summary = "取消報名課程")
-    @PreAuthorize("hasAuthority('admin', 'coach') or @userSecurity.isCurrentUserByEnrollmentId(#enrollmentId)")
+    @PreAuthorize("hasAnyAuthority('admin', 'coach') or @userSecurity.isCurrentUserByEnrollmentId(#enrollmentId)")
     // 只有 admin, coach, 跟特定user 可以取消
     @DeleteMapping("/{enrollmentId}")
     public ResponseEntity<Void> cancelEnrollment(@PathVariable Integer enrollmentId) {
@@ -44,7 +44,7 @@ public class EnrollmentController {
     }	
     
     @Operation(summary = "依照報名ID查詢報名資訊")
-    @PreAuthorize("hasAuthority('admin', 'coach') or @userSecurity.isCurrentUserByEnrollmentId(#enrollmentId)")
+    @PreAuthorize("hasAnyAuthority('admin', 'coach') or @userSecurity.isCurrentUserByEnrollmentId(#enrollmentId)")
     // 只有 admin, coach, 跟特定user 可以查詢
     @GetMapping("/{enrollmentId}")
     public ResponseEntity<EnrollmentDTO> getEnrollmentById(@PathVariable Integer enrollmentId) {
@@ -56,7 +56,7 @@ public class EnrollmentController {
     }
 
     @Operation(summary = "查詢特定使用者的所有報名紀錄")
-    @PreAuthorize("hasAuthority('admin', 'coach') or @userSecurity.isCurrentUser(#userId)")
+    @PreAuthorize("hasAnyAuthority('admin', 'coach') or @userSecurity.isCurrentUser(#userId)")
     // 只有 admin, coach, 跟特定user 可以查詢
     @GetMapping("/users/{userId}")
     public ResponseEntity<List<EnrollmentDTO>> getEnrollmentsByUserId(@PathVariable Integer userId) {
@@ -64,7 +64,7 @@ public class EnrollmentController {
     }
 
     @Operation(summary = "查詢特定課程的所有報名紀錄")
-    @PreAuthorize("hasAuthority('admin', 'coach')") // 只有 admin, coach 可以查詢
+    @PreAuthorize("hasAnyAuthority('admin', 'coach')") // 只有 admin, coach 可以查詢
     @GetMapping("/courses/{courseId}")
     public ResponseEntity<List<EnrollmentDTO>> getEnrollmentsByCourseId(@PathVariable Integer courseId) {
         return ResponseEntity.ok(enrollmentService.getEnrollmentsByCourseId(courseId));
@@ -77,7 +77,7 @@ public class EnrollmentController {
     }
 
     @Operation(summary = "查詢特定使用者是否已報名特定課程")
-    @PreAuthorize("hasAuthority('admin', 'coach') or @userSecurity.isCurrentUser(#userId)")
+    @PreAuthorize("hasAnyAuthority('admin', 'coach') or @userSecurity.isCurrentUser(#userId)")
     // 只有 admin, coach, 跟特定user 可以查詢
     @GetMapping("/users/{userId}/courses/{courseId}/is-enrolled")
     public ResponseEntity<Boolean> isUserEnrolled(@PathVariable Integer userId, @PathVariable Integer courseId) {
