@@ -95,23 +95,16 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/enrollments/courses/*/count").permitAll()
 
                         // EnrollmentController 的權限設定
-<<<<<<< Updated upstream
-                        .requestMatchers("/api/enrollments/users/{userId}/courses/{courseId}*").hasAuthority("user")
-                        .requestMatchers("/api/enrollments/{enrollmentId}").authenticated()
-                        .requestMatchers("/api/enrollments/users/{userId}").authenticated()
-                        .requestMatchers("/api/enrollments/courses/{courseId}").hasAnyAuthority("admin", "coach")
-                        .requestMatchers("/api/enrollments/users/{userId}/courses/{courseId}/is-enrolled").authenticated()
-                        .requestMatchers("/api/enrollments/**").authenticated() // 確保所有 /api/enrollments/** 都需要登入 (作為最後的防線)
-=======
-                        .requestMatchers(HttpMethod.POST, "/api/enrollments/users/*/courses/*").hasAuthority("user") // 報名課程
-                        .requestMatchers("/api/enrollments/{enrollmentId}").authenticated() // 取消報名、查詢報名ByID
-                        .requestMatchers("/api/enrollments/users/{userId}").authenticated() // 查詢特定使用者的所有報名紀錄
-                        .requestMatchers("/api/enrollments/courses/{courseId}").hasAnyAuthority("admin", "coach") // 查詢特定課程的所有報名紀錄
-                        .requestMatchers(HttpMethod.GET, "/api/enrollments/users/*/courses/*/is-enrolled")
-                        .authenticated() // 查詢特定使用者是否已報名特定課程
-                        .requestMatchers("/api/enrollments/**").authenticated() // 確保所有 /api/enrollments/** 都需要登入
-                                                                                // (作為最後的防線)
->>>>>>> Stashed changes
+.requestMatchers(HttpMethod.POST, "/api/enrollments/users/*/courses/*").hasAuthority("user")
+.requestMatchers(HttpMethod.GET, "/api/enrollments/users/*/courses/*/is-enrolled").authenticated()
+.requestMatchers("/api/enrollments/users/{userId}/courses/{courseId}*").hasAuthority("user")
+.requestMatchers("/api/enrollments/users/{userId}/courses/{courseId}/is-enrolled").authenticated()
+.requestMatchers("/api/enrollments/{enrollmentId}").authenticated()
+.requestMatchers("/api/enrollments/users/{userId}").authenticated()
+.requestMatchers("/api/enrollments/courses/{courseId}").hasAnyAuthority("admin", "coach")
+.requestMatchers("/api/enrollments/**").authenticated()
+
+
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
