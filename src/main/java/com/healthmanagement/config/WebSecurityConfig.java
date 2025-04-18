@@ -82,7 +82,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/users/{userId}/**").authenticated() // 用戶相關操作需要登入，具體權限在Controller中控制
                         .requestMatchers("/comments/post/**").authenticated() // 留言需登入
                         .requestMatchers("/comments/**").permitAll() // 查詢留言不用登入
-                        .requestMatchers("/posts/**").authenticated()
+                        .requestMatchers("/api/posts/**").authenticated()
                         .requestMatchers("/api/fitness/dashboard/stats").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/courses/**").permitAll() // 只開放 GET 查詢
                         .requestMatchers("/api/courses/**").hasAuthority("admin") // 其他方法（POST/PUT/DELETE）需要 admin

@@ -4,6 +4,7 @@ import com.healthmanagement.dao.social.CommentDAO;
 import com.healthmanagement.dao.social.ForumDAO;
 import com.healthmanagement.dto.social.CommentRequest;
 import com.healthmanagement.model.social.Comment;
+import com.healthmanagement.model.social.Post;
 import com.healthmanagement.service.member.UserService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,5 +90,10 @@ public class CommentServiceImpl implements CommentService {
             throw new AccessDeniedException("您無權刪除此留言！");
         }
         commentDAO.deleteById(commentId);
+    }
+    
+    @Override
+    public int countByPost(Post post) {
+        return commentDAO.findByPost_Id(post.getId()).size();
     }
 }
