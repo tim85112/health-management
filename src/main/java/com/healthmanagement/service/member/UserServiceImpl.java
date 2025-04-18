@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -19,6 +20,9 @@ public class UserServiceImpl implements UserService {
     private final ApplicationContext applicationContext;
     private PasswordEncoder passwordEncoder;
     private JwtUtil jwtUtil;
+
+    // 密碼驗證的正則表達式
+    private static final Pattern PASSWORD_PATTERN = Pattern.compile("^(?=.*[a-z])(?=.*[A-Z]).{8,}$");
 
     @Autowired
     public UserServiceImpl(UserDAO userDAO, ApplicationContext applicationContext) {
@@ -41,7 +45,17 @@ public class UserServiceImpl implements UserService {
         if (userDAO.existsByEmail(user.getEmail())) {
             throw new RuntimeException("Email already in use");
         }
-        user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
+
+        // 驗證密碼是否符合要求
+        String rawPassword = user.getPasswordHash();
+        if (rawPassword == null || rawPassword.length() < 8) {
+            throw new RuntimeException("密碼必須至少包含8個字符");
+        }
+        if (!PASSWORD_PATTERN.matcher(rawPassword).matches()) {
+            throw new RuntimeException("密碼必須包含至少一個大寫和一個小寫字母");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(rawPassword));
         if (user.getRole() == null) {
             user.setRole("user");
         }
@@ -80,6 +94,14 @@ public class UserServiceImpl implements UserService {
             user.setEmail(userDetails.getEmail());
         }
         if (userDetails.getPasswordHash() != null) {
+            // 驗證密碼是否符合要求
+            String rawPassword = userDetails.getPasswordHash();
+            if (rawPassword.length() < 8) {
+                throw new RuntimeException("密碼必須至少包含8個字符");
+            }
+            if (!PASSWORD_PATTERN.matcher(rawPassword).matches()) {
+                throw new RuntimeException("密碼必須包含至少一個大寫和一個小寫字母");
+            }
             user.setPasswordHash(passwordEncoder.encode(userDetails.getPasswordHash()));
         }
         if (userDetails.getGender() != null) {
@@ -124,7 +146,7 @@ public class UserServiceImpl implements UserService {
     public List<User> findByName(String name) {
         return userDAO.findByName(name);
     }
-    
+
     @Override
     public Optional<User> findById(Integer userId) {
         return userDAO.findById(userId);
