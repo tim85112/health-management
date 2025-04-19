@@ -56,6 +56,7 @@ public class UserController {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
     }
+    //
 
     @DeleteMapping("/{userId}")
     @PreAuthorize("hasAuthority('admin') or @userSecurity.isCurrentUser(#userId)")
