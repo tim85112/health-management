@@ -10,7 +10,7 @@
 
 - Java 17
 - Spring Boot 3.2.4
-- Spring Security + JWT (0.11.5)
+- Spring Security + JWT (0.11.5)...
 - Spring Data JPA
 - SQL Server
 - Swagger API 文檔 (Springdoc OpenAPI 2.5.0)
