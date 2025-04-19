@@ -11,5 +11,7 @@ public interface PostLikeService {
     boolean unlikePost(User user, Post post);
     boolean isLiked(User user, Post post);
     int countLikes(Post post);
+    int countLikesByPost(Post post);
     List<PostLike> getLikesForPost(Post post);
+    boolean hasUserLiked(Post post, User user);
 }

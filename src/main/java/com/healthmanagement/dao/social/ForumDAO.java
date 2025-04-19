@@ -1,5 +1,6 @@
 package com.healthmanagement.dao.social;
 
+import com.healthmanagement.model.member.User;
 import com.healthmanagement.model.social.Post;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -14,4 +15,6 @@ public interface ForumDAO extends JpaRepository<Post, Integer> {
     
     // 依照使用者查文章
     List<Post> findByUserId(Integer userId);
+    
+    List<Post> findByUser(User user);
 }
