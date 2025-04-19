@@ -1,0 +1,89 @@
+spring:
+  application:
+    name: health-management
+  datasource:
+    url: jdbc:sqlserver://localhost:1433;databaseName=HealthManagement;encrypt=false
+    username: ivan
+    password: abcd+1234
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  jpa:
+    database-platform: org.hibernate.dialect.SQLServerDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+  profiles:
+    active: dev
+  main:
+    allow-circular-references: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: yunda85112@gmail.com
+    password: kxrx zonk bkbt kwhl
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          timeout: 5000
+          connectiontimeout: 5000
+          writetimeout: 5000
+    default-encoding: UTF-8
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 1046757199383-iigi4ubp1jl9m0kukv2hrg9k3r0sg2do.apps.googleusercontent.com
+            client-secret: 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
+            redirect-uri: http://localhost:8080/login/oauth2/code/google
+            scope:
+              - email
+              - profile
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: email
+
+server:
+  port: 8080
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    tryItOutEnabled: true
+    enabled: true
+  defaultConsumesMediaType: application/json
+  defaultProducesMediaType: application/json
+  pathsToMatch: /**
+  packagesToScan: com.healthmanagement.controller
+  writer-with-default-pretty-printer: true
+
+logging:
+  level:
+    org:
+      springdoc: TRACE
+      springframework:
+        web: DEBUG
+        security: DEBUG
+    com:
+      healthmanagement: DEBUG
+
+app:
+  upload:
+    dir: ../HealthManagement-vue/public/images
+  frontend:
+    url: http://localhost:5173
