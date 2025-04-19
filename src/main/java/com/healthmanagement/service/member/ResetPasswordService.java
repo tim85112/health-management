@@ -21,7 +21,7 @@ public interface ResetPasswordService {
      * @return 是否重設成功
      */
     boolean resetPassword(String token, String newPassword);
-    
+
     /**
      * 驗證重設密碼令牌是否有效
      * 
