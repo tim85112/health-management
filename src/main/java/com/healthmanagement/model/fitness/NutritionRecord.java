@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.healthmanagement.model.member.User;
+
 @Entity
 @Table(name = "nutrition_records")
 @Data
@@ -11,33 +14,35 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class NutritionRecord {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "record_id")  
+    @Column(name = "record_id")
     private Integer recordId;
 
-    @Column(name = "user_id", nullable = false)  
-    private Integer userId;
-
-    @Column(name = "food_name", nullable = false, length = 100 , columnDefinition = "NVARCHAR(50)")  
+    @Column(name = "food_name", nullable = false, length = 100 , columnDefinition = "NVARCHAR(50)")
     private String foodName;
 
-    @Column(name = "calories")  
+    @Column(name = "calories")
     private Integer calories;
 
-    @Column(name = "protein")  
+    @Column(name = "protein")
     private Float protein;
 
-    @Column(name = "carbs")  
+    @Column(name = "carbs")
     private Float carbs;
 
-    @Column(name = "fats")  
+    @Column(name = "fats")
     private Float fats;
 
-    @Column(name = "mealtime", length = 50 , columnDefinition = "NVARCHAR(50)")  
+    @Column(name = "mealtime", length = 50 , columnDefinition = "NVARCHAR(50)")
     private String mealtime;
 
-    @Column(name = "record_date", nullable = false)  
+    @Column(name = "record_date", nullable = false)
     private LocalDateTime recordDate;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
+    private User user;
 }

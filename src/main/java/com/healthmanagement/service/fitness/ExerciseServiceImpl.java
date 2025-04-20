@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.healthmanagement.dao.fitness.BodyMetricDAO;
 import com.healthmanagement.dao.fitness.ExerciseRecordDAO;
@@ -33,145 +34,159 @@ import com.healthmanagement.service.member.UserService;
 @RequiredArgsConstructor
 public class ExerciseServiceImpl implements ExerciseService {
 
-    private final ExerciseRecordDAO exerciseRecordRepo;
-    private final BodyMetricDAO bodyMetricRepo;
-    private final ExerciseTypeCoefficientDAO exerciseTypeCoefficientRepo;
+	private final ExerciseRecordDAO exerciseRecordRepo;
+	private final BodyMetricDAO bodyMetricRepo;
+	private final ExerciseTypeCoefficientDAO exerciseTypeCoefficientRepo;
+	private final AchievementService achievementService;
+	
+	@Autowired(required = false)
+	private UserService userService;
 
-    @Autowired(required = false)
-    private UserService userService;
+	@Transactional
+	@Override
+	public ExerciseRecordDTO saveExerciseRecord(ExerciseRecordDTO exerciseRecordDTO) {
+		// 步驟 1: 從 BodyMetrics 中獲取用戶體重
+		List<BodyMetric> bodyMetrics = bodyMetricRepo.findByUserId(exerciseRecordDTO.getUserId());
+		if (bodyMetrics == null || bodyMetrics.isEmpty()) {
+			throw new EntityNotFoundException("找不到用戶的身體數據。");
+		}
+		BodyMetric bodyMetric = bodyMetrics.get(0); // 或使用排序後的第一筆最新資料
 
-    @Override
-    public ExerciseRecordDTO saveExerciseRecord(ExerciseRecordDTO exerciseRecordDTO) {
-        // 步驟 1: 從 BodyMetrics 中獲取用戶體重
-        List<BodyMetric> bodyMetrics = bodyMetricRepo.findByUserId(exerciseRecordDTO.getUserId());
-        if (bodyMetrics == null || bodyMetrics.isEmpty()) {
-            throw new EntityNotFoundException("找不到用戶的身體數據。");
-        }
-        BodyMetric bodyMetric = bodyMetrics.get(0); // 或使用排序後的第一筆最新資料
+		// 步驟 2: 根據運動類型獲取 MET 值
+		ExerciseTypeCoefficient exerciseType = exerciseTypeCoefficientRepo
+				.findByExerciseName(exerciseRecordDTO.getExerciseType())
+				.orElseThrow(() -> new EntityNotFoundException("找不到該運動類型的 MET 值。"));
 
-        // 步驟 2: 根據運動類型獲取 MET 值
-        ExerciseTypeCoefficient exerciseType = exerciseTypeCoefficientRepo
-                .findByExerciseName(exerciseRecordDTO.getExerciseType())
-                .orElseThrow(() -> new EntityNotFoundException("找不到該運動類型的 MET 值。"));
+		// 步驟 3: 計算消耗的卡路里
+		double weight = bodyMetric.getWeight(); // 用戶的體重
+		double met = exerciseType.getMet().doubleValue(); // 運動的 MET 值
+		double durationInHours = exerciseRecordDTO.getExerciseDuration() / 60.0; // 將運動時長轉換為小時
 
-        // 步驟 3: 計算消耗的卡路里
-        double weight = bodyMetric.getWeight(); // 用戶的體重
-        double met = exerciseType.getMet().doubleValue(); // 運動的 MET 值
-        double durationInHours = exerciseRecordDTO.getExerciseDuration() / 60.0; // 將運動時長轉換為小時
+		// 計算消耗的卡路里
+		double caloriesBurned = met * weight * durationInHours;
 
-        // 計算消耗的卡路里
-        double caloriesBurned = met * weight * durationInHours;
+		// 設置計算後的卡路里消耗
+		exerciseRecordDTO.setCaloriesBurned(caloriesBurned);
 
-        // 設置計算後的卡路里消耗
-        exerciseRecordDTO.setCaloriesBurned(caloriesBurned);
+		// 步驟 4: 保存運動紀錄
+		ExerciseRecord exerciseRecord = new ExerciseRecord();
+		exerciseRecord.setUserId(exerciseRecordDTO.getUserId());
+		exerciseRecord.setExerciseType(exerciseRecordDTO.getExerciseType());
+		exerciseRecord.setExerciseDuration(exerciseRecordDTO.getExerciseDuration());
+		exerciseRecord.setCaloriesBurned(caloriesBurned);
+		exerciseRecord.setExerciseDate(exerciseRecordDTO.getExerciseDate());
 
-        // 步驟 4: 保存運動紀錄
-        ExerciseRecord exerciseRecord = new ExerciseRecord();
-        exerciseRecord.setUserId(exerciseRecordDTO.getUserId());
-        exerciseRecord.setExerciseType(exerciseRecordDTO.getExerciseType());
-        exerciseRecord.setExerciseDuration(exerciseRecordDTO.getExerciseDuration());
-        exerciseRecord.setCaloriesBurned(caloriesBurned);
-        exerciseRecord.setExerciseDate(exerciseRecordDTO.getExerciseDate());
+		// 保存運動紀錄
+		ExerciseRecord savedRecord = exerciseRecordRepo.save(exerciseRecord);
 
-        // 保存運動紀錄並返回 DTO
-        ExerciseRecord savedRecord = exerciseRecordRepo.save(exerciseRecord);
-        return toDTO(savedRecord);
-    }
+		// 步驟 5: 檢查並頒發運動相關的獎章
+		Integer userId = exerciseRecordDTO.getUserId();
+		long workoutCount = exerciseRecordRepo.countByUser_UserId(userId); // 取得該使用者的運動總次數
+		achievementService.checkAndAwardAchievements(userId, "WORKOUT_CREATED", (int) workoutCount);
 
-    @Override
-    public void deleteExerciseRecord(Integer recordId) {
-        exerciseRecordRepo.deleteById(recordId);
-    }
+		// 返回 DTO
+		return toDTO(savedRecord);
+	}
 
-    @Override
-    public List<ExerciseRecordDTO> getExerciseRecordsByUserId(Integer userId) {
-        List<ExerciseRecord> exerciseRecords = exerciseRecordRepo.findByUserId(userId);
-        return exerciseRecords.stream().map(this::toDTO).collect(Collectors.toList());
-    }
+	@Override
+	public void deleteExerciseRecord(Integer recordId) {
+		exerciseRecordRepo.deleteById(recordId);
+	}
 
-    @Override
-    public ExerciseRecordDTO updateExerciseRecord(Integer recordId, ExerciseRecordDTO exerciseRecordDTO) {
-        Optional<ExerciseRecord> existingRecord = exerciseRecordRepo.findById(recordId);
-        return existingRecord.map(record -> {
-            record.setExerciseType(exerciseRecordDTO.getExerciseType());
-            record.setExerciseDuration(exerciseRecordDTO.getExerciseDuration());
-            record.setCaloriesBurned(exerciseRecordDTO.getCaloriesBurned());
-            record.setExerciseDate(exerciseRecordDTO.getExerciseDate());
-            return toDTO(exerciseRecordRepo.save(record));
-        }).orElse(null);
-    }
+	@Override
+	public List<ExerciseRecordDTO> getExerciseRecordsByUserId(Integer userId) {
+		List<ExerciseRecord> exerciseRecords = exerciseRecordRepo.findByUserId(userId);
+		return exerciseRecords.stream().map(this::toDTO).collect(Collectors.toList());
+	}
 
-    @Override
-    public List<ExerciseRecordDTO> getExerciseRecordsByUserIdAndUserName(Integer userId, String userName) {
-        Specification<ExerciseRecord> spec = (root, query, criteriaBuilder) -> {
-            Join<ExerciseRecord, User> userJoin = root.join("user"); // 假設 ExerciseRecord 有 user 欄位
-            Predicate userIdPredicate = criteriaBuilder.equal(root.get("userId"), userId);
-            Predicate userNamePredicate = criteriaBuilder.like(userJoin.get("name"), "%" + userName + "%");
-            return criteriaBuilder.and(userIdPredicate, userNamePredicate);
-        };
-        return exerciseRecordRepo.findAll(spec).stream().map(this::toDTO).collect(Collectors.toList());
-    }
+	@Override
+	public ExerciseRecordDTO updateExerciseRecord(Integer recordId, ExerciseRecordDTO exerciseRecordDTO) {
+		Optional<ExerciseRecord> existingRecord = exerciseRecordRepo.findById(recordId);
+		return existingRecord.map(record -> {
+			record.setExerciseType(exerciseRecordDTO.getExerciseType());
+			record.setExerciseDuration(exerciseRecordDTO.getExerciseDuration());
+			record.setCaloriesBurned(exerciseRecordDTO.getCaloriesBurned());
+			record.setExerciseDate(exerciseRecordDTO.getExerciseDate());
+			return toDTO(exerciseRecordRepo.save(record));
+		}).orElse(null);
+	}
 
-    @Override
-    public List<ExerciseRecordDTO> getExerciseRecordsByUserName(String userName) {
-        Specification<ExerciseRecord> spec = (root, query, criteriaBuilder) -> {
-            Join<ExerciseRecord, User> userJoin = root.join("user"); // 假設 ExerciseRecord 有 user 欄位
-            return criteriaBuilder.like(userJoin.get("name"), "%" + userName + "%");
-        };
-        return exerciseRecordRepo.findAll(spec).stream().map(this::toDTO).collect(Collectors.toList());
-    }
+	@Override
+	public List<ExerciseRecordDTO> getExerciseRecordsByUserIdAndUserName(Integer userId, String userName) {
+		Specification<ExerciseRecord> spec = (root, query, criteriaBuilder) -> {
+			Join<ExerciseRecord, User> userJoin = root.join("user"); // 假設 ExerciseRecord 有 user 欄位
+			Predicate userIdPredicate = criteriaBuilder.equal(root.get("userId"), userId);
+			Predicate userNamePredicate = criteriaBuilder.like(userJoin.get("name"), "%" + userName + "%");
+			return criteriaBuilder.and(userIdPredicate, userNamePredicate);
+		};
+		return exerciseRecordRepo.findAll(spec).stream().map(this::toDTO).collect(Collectors.toList());
+	}
 
-    @Override
-    public Page<ExerciseRecordDTO> getAllExerciseRecords(Pageable pageable, Integer userId, String userName,
-            String exerciseType, String startDate, String endDate) {
-        LocalDate startLocalDate = parseDate(startDate);
-        LocalDate endLocalDate = parseDate(endDate);
+	@Override
+	public List<ExerciseRecordDTO> getExerciseRecordsByUserName(String userName) {
+		Specification<ExerciseRecord> spec = (root, query, criteriaBuilder) -> {
+			Join<ExerciseRecord, User> userJoin = root.join("user"); // 假設 ExerciseRecord 有 user 欄位
+			return criteriaBuilder.like(userJoin.get("name"), "%" + userName + "%");
+		};
+		return exerciseRecordRepo.findAll(spec).stream().map(this::toDTO).collect(Collectors.toList());
+	}
 
-        Specification<ExerciseRecord> spec = (root, query, criteriaBuilder) -> {
-            Predicate predicate = criteriaBuilder.conjunction();
+	@Override
+	public Page<ExerciseRecordDTO> getAllExerciseRecords(Pageable pageable, Integer userId, String userName,
+			String exerciseType, String startDate, String endDate) {
+		LocalDate startLocalDate = parseDate(startDate);
+		LocalDate endLocalDate = parseDate(endDate);
 
-            if (userId != null) {
-                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("userId"), userId));
-            }
+		Specification<ExerciseRecord> spec = (root, query, criteriaBuilder) -> {
+			Predicate predicate = criteriaBuilder.conjunction();
 
-            if (userName != null && !userName.isEmpty()) {
-                // 假設 userName 儲存在 User 表中，你需要 join 查詢
-                Join<ExerciseRecord, User> userJoin = root.join("user"); // 假設 ExerciseRecord 有 user 欄位
-                predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(userJoin.get("name"), "%" + userName + "%"));
-            }
+			if (userId != null) {
+				predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("userId"), userId));
+			}
 
-            if (exerciseType != null && !exerciseType.isEmpty()) {
-                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("exerciseType"), exerciseType));
-            }
+			if (userName != null && !userName.isEmpty()) {
+				// 假設 userName 儲存在 User 表中，你需要 join 查詢
+				Join<ExerciseRecord, User> userJoin = root.join("user"); // 假設 ExerciseRecord 有 user 欄位
+				predicate = criteriaBuilder.and(predicate,
+						criteriaBuilder.like(userJoin.get("name"), "%" + userName + "%"));
+			}
 
-            if (startLocalDate != null && endLocalDate != null) {
-                predicate = criteriaBuilder.and(predicate, criteriaBuilder.between(root.get("exerciseDate"), startLocalDate, endLocalDate));
-            } else if (startLocalDate != null) {
-                predicate = criteriaBuilder.and(predicate, criteriaBuilder.greaterThanOrEqualTo(root.get("exerciseDate"), startLocalDate));
-            } else if (endLocalDate != null) {
-                predicate = criteriaBuilder.and(predicate, criteriaBuilder.lessThanOrEqualTo(root.get("exerciseDate"), endLocalDate));
-            }
+			if (exerciseType != null && !exerciseType.isEmpty()) {
+				predicate = criteriaBuilder.and(predicate,
+						criteriaBuilder.equal(root.get("exerciseType"), exerciseType));
+			}
 
-            return predicate;
-        };
+			if (startLocalDate != null && endLocalDate != null) {
+				predicate = criteriaBuilder.and(predicate,
+						criteriaBuilder.between(root.get("exerciseDate"), startLocalDate, endLocalDate));
+			} else if (startLocalDate != null) {
+				predicate = criteriaBuilder.and(predicate,
+						criteriaBuilder.greaterThanOrEqualTo(root.get("exerciseDate"), startLocalDate));
+			} else if (endLocalDate != null) {
+				predicate = criteriaBuilder.and(predicate,
+						criteriaBuilder.lessThanOrEqualTo(root.get("exerciseDate"), endLocalDate));
+			}
 
-        Page<ExerciseRecord> exerciseRecordPage = exerciseRecordRepo.findAll(spec, pageable);
-        return exerciseRecordPage.map(this::toDTO);
-    }
+			return predicate;
+		};
 
-    private LocalDate parseDate(String dateStr) {
-        if (dateStr != null && !dateStr.isEmpty()) {
-            try {
-                return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            } catch (DateTimeParseException e) {
-                System.err.println("日期格式錯誤: " + e.getMessage());
-                return null;
-            }
-        }
-        return null;
-    }
+		Page<ExerciseRecord> exerciseRecordPage = exerciseRecordRepo.findAll(spec, pageable);
+		return exerciseRecordPage.map(this::toDTO);
+	}
 
-    private ExerciseRecordDTO toDTO(ExerciseRecord exerciseRecord) {
-        return new ExerciseRecordDTO(exerciseRecord);
-    }
+	private LocalDate parseDate(String dateStr) {
+		if (dateStr != null && !dateStr.isEmpty()) {
+			try {
+				return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+			} catch (DateTimeParseException e) {
+				System.err.println("日期格式錯誤: " + e.getMessage());
+				return null;
+			}
+		}
+		return null;
+	}
+
+	private ExerciseRecordDTO toDTO(ExerciseRecord exerciseRecord) {
+		return new ExerciseRecordDTO(exerciseRecord);
+	}
 }

@@ -9,15 +9,16 @@ GO
 
 -- 創建 users 表
 CREATE TABLE [users] (
-    [user_id]       INT PRIMARY KEY IDENTITY(1, 1), -- 自動遞增主鍵
-    [name]          NVARCHAR(50) NOT NULL,          -- 使用者名稱
-    [email]         NVARCHAR(100) NOT NULL,         -- 電子郵件
-    [password_hash] VARCHAR(255) NOT NULL,          -- 密碼哈希
-    [gender]        CHAR(1),                        -- 性別，例如 'M' 或 'F'
-    [bio]           NVARCHAR(MAX),                  -- 個人簡介
-    [role]          VARCHAR(10) CHECK (role IN ('user', 'admin')), -- 角色
-    [user_points]   INT NOT NULL DEFAULT 0,         -- 使用者點數
-    [last_login]    DATETIME DEFAULT CURRENT_TIMESTAMP -- 最後登入時間
+    [user_id]               INT PRIMARY KEY IDENTITY(1, 1), -- 自動遞增主鍵
+    [name]                  NVARCHAR(50) NOT NULL,          -- 使用者名稱
+    [email]                 NVARCHAR(100) NOT NULL UNIQUE,  -- 電子郵件 (新增 UNIQUE 約束)
+    [password_hash]         VARCHAR(255) NOT NULL,          -- 密碼哈希
+    [gender]                CHAR(1),                        -- 性別，例如 'M' 或 'F'
+    [bio]                   NVARCHAR(MAX),                  -- 個人簡介
+    [role]                  VARCHAR(10) CHECK (role IN ('user', 'admin')), -- 角色
+    [user_points]           INT NOT NULL DEFAULT 0,         -- 使用者點數
+    [last_login]            DATETIME DEFAULT CURRENT_TIMESTAMP, -- 最後登入時間
+    [consecutive_login_days] INT DEFAULT 0                   -- 連續登入天數
 );
 GO
 
@@ -142,17 +143,20 @@ CREATE TABLE [nutrition_records] (
 );
 GO
 
--- 創建 fitness_goals 表
+-- 創建 fitness_goals 表 
 CREATE TABLE [fitness_goals] (
     [goal_id] INT PRIMARY KEY IDENTITY(1, 1),
     [user_id] INT NOT NULL FOREIGN KEY REFERENCES [users]([user_id]) ON DELETE CASCADE,
-    [goal_type] NVARCHAR(50) NOT NULL CHECK (goal_type IN ('減重', '增肌', '心肺健康', '其他')),
+    [goal_type] NVARCHAR(50) NOT NULL CHECK (goal_type IN ('減重', '減脂', '增肌')),
     [target_value] FLOAT NOT NULL,
     [current_progress] FLOAT DEFAULT 0,
-    [unit] NVARCHAR(20) CHECK (unit IN ('公斤', '百分比', '分鐘', '卡路里')),
+    [unit] NVARCHAR(20) CHECK (unit IN ('公斤', '%')),
     [start_date] DATE DEFAULT GETDATE(),
     [end_date] DATETIME2 NULL,
     [status] NVARCHAR(20) CHECK (status IN ('進行中', '已完成', '未達成')) DEFAULT '進行中',
+    [start_weight] FLOAT NULL,        -- 起始體重 (用於減重)
+    [start_body_fat] FLOAT NULL,     -- 起始體脂率 (用於減脂)
+    [start_muscle_mass] FLOAT NULL,  -- 起始肌肉量 (用於增肌)
     CONSTRAINT [CK_EndDate] CHECK ([end_date] IS NULL OR [end_date] >= [start_date])
 );
 GO
@@ -161,11 +165,26 @@ GO
 CREATE TABLE [achievements] (
     [achievement_id] INT PRIMARY KEY IDENTITY(1, 1),
     [user_id] INT NOT NULL FOREIGN KEY REFERENCES [users]([user_id]) ON DELETE CASCADE,
-    [achievement_type] NVARCHAR(50) CHECK (achievement_type IN ('目標達成', '一般成就')),
+    [achievement_type] NVARCHAR(50),
     [title] NVARCHAR(255) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
     [description] NVARCHAR(500),
     [achieved_date] DATE DEFAULT GETDATE(),
     CONSTRAINT [UC_UniqueAchievement] UNIQUE ([user_id], [title])
+);
+GO
+
+-- 創建 achievement_definitions 表 
+CREATE TABLE [achievement_definitions] (
+    [definition_id] INT PRIMARY KEY IDENTITY(1, 1),
+    [achievement_type] NVARCHAR(50) UNIQUE NOT NULL,
+    [title] NVARCHAR(100) NOT NULL,
+    [description] NVARCHAR(MAX) NULL,
+    [trigger_event] VARCHAR(50) NULL,
+    [trigger_condition] NVARCHAR(MAX) NULL,
+    [image_url] NVARCHAR(255) NULL,
+    [points] INT NULL,
+    [created_at] DATETIME DEFAULT GETDATE(),
+    [updated_at] DATETIME DEFAULT GETDATE()
 );
 GO
 

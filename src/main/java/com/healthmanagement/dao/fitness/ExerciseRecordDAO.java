@@ -25,4 +25,6 @@ public interface ExerciseRecordDAO extends JpaRepository<ExerciseRecord, Integer
     Page<ExerciseRecord> findByUserId(Integer userId, Pageable pageable);
     Page<ExerciseRecord> findByUserNameContaining(String userName, Pageable pageable);
     Page<ExerciseRecord> findByUserIdAndUserNameContaining(Integer userId, String userName, Pageable pageable);
+    
+    long  countByUser_UserId(Integer userId);
 }

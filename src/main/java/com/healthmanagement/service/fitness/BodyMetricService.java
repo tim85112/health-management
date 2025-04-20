@@ -1,6 +1,7 @@
 package com.healthmanagement.service.fitness;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +23,9 @@ public interface BodyMetricService {
 
 	// 根據 userId 查詢 BodyMetric
 	List<BodyMetricDTO> findByUserId(Integer userId);
+	
+	// 根據使用者 ID 查詢最近一次記錄的身體數據
+	Optional<BodyMetricDTO> findLatestByUserId(Integer userId);
 
 	// 更新身體數據
 	BodyMetricDTO updateBodyMetric(Integer bodyMetricId, BodyMetricDTO bodyMetricDTO);

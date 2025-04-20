@@ -5,6 +5,7 @@ import com.healthmanagement.dao.social.ForumDAO;
 import com.healthmanagement.dto.social.CommentRequest;
 import com.healthmanagement.model.social.Comment;
 import com.healthmanagement.service.member.UserService;
+import com.healthmanagement.service.fitness.AchievementService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
@@ -24,6 +25,10 @@ public class CommentServiceImpl implements CommentService {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private AchievementService achievementService;
+
 
     @Override
     public List<Comment> getCommentsByPostId(Integer postId) {
@@ -53,6 +58,8 @@ public class CommentServiceImpl implements CommentService {
         comment.setUser(userService.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found")));
 
+        long commentCount = commentDAO.countByUser_UserId(request.getUserId());
+        achievementService.checkAndAwardAchievements(request.getUserId(), "SOCIAL_COMMENT_CREATED", (int) commentCount);
         return commentDAO.save(comment);
     }
     @Override

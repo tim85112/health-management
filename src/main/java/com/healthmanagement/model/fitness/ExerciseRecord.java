@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.healthmanagement.model.member.User;
 
@@ -38,6 +39,6 @@ public class ExerciseRecord {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false, insertable = false, updatable = false)
-    @JsonIgnore
+    @JsonBackReference("user-exerciseRecords")
     private User user;
 }

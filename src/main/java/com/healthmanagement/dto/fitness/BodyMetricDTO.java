@@ -48,6 +48,7 @@ public class BodyMetricDTO {
 
 	@Schema(example = "用戶姓名")
 	private String userName;
+	
 
 	public static BodyMetricDTO fromEntity(BodyMetric bodyMetric, User user) {
 		return BodyMetricDTO.builder().id(bodyMetric.getId()) 
