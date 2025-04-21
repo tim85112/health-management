@@ -49,6 +49,13 @@ public class Course {
     private Integer maxCapacity; // 最大容納人數
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
-    @JsonManagedReference // 添加此注解
+    @JsonManagedReference("course-enrollments")
     private List<Enrollment> enrollments; // 課程的報名紀錄
+    
+    @Column(name = "is_trial", nullable = false)
+    @Builder.Default
+    private Boolean isTrial = false;
+
+    @Column(name = "max_trial_capacity")
+    private Integer maxTrialCapacity;
 }

@@ -87,3 +87,5 @@ app:
     dir: ../HealthManagement-vue/public/images
   frontend:
     url: http://localhost:5173
+  # 訪客使用者帳號 ID 配置
+  guest-user-id: 2

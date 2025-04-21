@@ -7,15 +7,15 @@ USE HealthManagement
 -- 創建 users 表
 CREATE TABLE [users]
 (
-    [user_id]       INT PRIMARY KEY IDENTITY (1, 1),                 -- 自動遞增主鍵
-    [name]          NVARCHAR(50)  NOT NULL,                          -- 使用者名稱
-    [email]         NVARCHAR(100) NOT NULL,                          -- 電子郵件
-    [password_hash] VARCHAR(255)  NOT NULL,                          -- 密碼哈希
-    [gender]        CHAR(1),                                         -- 性別，例如 'M' 或 'F'
-    [bio]           NVARCHAR(MAX),                                   -- 個人簡介
-    [role]          VARCHAR(10) CHECK (role IN ('user', 'admin', 'coach')),   -- 角色
-    [user_points]   INT           NOT NULL DEFAULT 0,                -- 使用者點數
-    [last_login]    DATETIME               DEFAULT CURRENT_TIMESTAMP -- 最後登入時間
+    [user_id]       INT PRIMARY KEY IDENTITY (1, 1),								-- 自動遞增主鍵
+    [name]          NVARCHAR(50)  NOT NULL,											-- 使用者名稱
+    [email]         NVARCHAR(100) NOT NULL,											-- 電子郵件
+    [password_hash] VARCHAR(255)  NOT NULL,											-- 密碼哈希
+    [gender]        CHAR(1),														-- 性別，例如 'M' 或 'F'
+    [bio]           NVARCHAR(MAX),													-- 個人簡介
+    [role]          VARCHAR(10) CHECK (role IN ('user', 'admin', 'coach', 'guest')),-- 角色
+    [user_points]   INT           NOT NULL DEFAULT 0,								-- 使用者點數
+    [last_login]    DATETIME               DEFAULT CURRENT_TIMESTAMP				-- 最後登入時間
 );
 GO
 
@@ -37,17 +37,31 @@ CREATE TABLE reset_tokens (
         REFERENCES users(user_id)
 );
 GO
--- 創建 course 表
+
+-- 創建 [course] 表
 CREATE TABLE [course]
 (
-    [id] INT PRIMARY KEY IDENTITY (1, 1),
-    [name] VARCHAR(255) NOT NULL,
-    [description] TEXT,
-    [day_of_week] INT NOT NULL, -- 0: Sunday, 1: Monday, ..., 6: Saturday
-    [start_time] TIME NOT NULL,
-    [coach_id] INT NOT NULL,
-    [duration] INT NOT NULL, -- 以分鐘為單位
-    [max_capacity] INT NOT NULL
+    [id] INT PRIMARY KEY IDENTITY (1, 1),
+    [name] VARCHAR(255) NOT NULL,
+    [description] TEXT,
+    [day_of_week] INT NOT NULL,
+    [start_time] TIME NOT NULL,
+    [coach_id] INT NOT NULL,
+    [duration] INT NOT NULL,
+    [max_capacity] INT NOT NULL,
+	[is_trial] BIT DEFAULT 0,
+    [max_trial_capacity] INT NULL,
+    -- 資料表級別的條件約束
+	CONSTRAINT [CK_DayOfWeek] CHECK ([day_of_week] BETWEEN 0 AND 6),
+	CONSTRAINT [CK_DurationPositive] CHECK ([duration] > 0),
+	CONSTRAINT [CK_MaxCapacityPositive] CHECK ([max_capacity] > 0),
+
+    -- 處理體驗課程容納人數邏輯的資料表級別約束
+    CONSTRAINT [CK_TrialCapacityLogic] CHECK
+        (
+            ([is_trial] = 0 AND [max_trial_capacity] IS NULL) OR
+            ([is_trial] = 1 AND [max_trial_capacity] IS NOT NULL AND [max_trial_capacity] > 0 AND [max_trial_capacity] <= [max_capacity])
+        )
 );
 GO
 
@@ -59,6 +73,21 @@ CREATE TABLE [enrollment]
     [course_id] INT NOT NULL,
     [enrollment_time] DATETIME DEFAULT GETDATE(),
     [status] VARCHAR(50) NOT NULL,
+	CONSTRAINT [CK_EnrollmentStatus] CHECK ([status] IN ('已報名', '已取消', '候補中', '已完成'))
+);
+GO
+
+-- 建立 trial_booking 資料表
+CREATE TABLE [trial_booking]
+(
+    [id] INT PRIMARY KEY IDENTITY (1, 1),
+    [user_id] INT,
+    [course_id] INT NOT NULL,
+    [booking_name] VARCHAR(255) NOT NULL,			-- 報名姓名
+    [booking_phone] VARCHAR(20) NOT NULL,			-- 電話號碼
+    [booking_date] DATE,							-- 預約日期
+    [booking_status] VARCHAR(50) DEFAULT '已預約',	-- 預約狀態 (例如：已預約、已取消、已完成)
+    [booked_at] DATETIME DEFAULT GETDATE(),			-- 預約建立時間
 );
 GO
 
@@ -329,8 +358,11 @@ ALTER TABLE [enrollment]
     ADD FOREIGN KEY ([user_id]) REFERENCES [users] ([user_id]);
 ALTER TABLE [enrollment]
     ADD FOREIGN KEY ([course_id]) REFERENCES [course] ([id]);
+ALTER TABLE [trial_booking]
+	ADD FOREIGN KEY ([user_id]) REFERENCES [users]([user_id]);
+ALTER TABLE [trial_booking]
+	ADD FOREIGN KEY ([course_id]) REFERENCES [course]([id]);
 GO
-
 -- 儀表板視圖
 CREATE OR ALTER VIEW dashboard_stat AS
 SELECT (SELECT COUNT(*) FROM [users] WHERE role = 'user')                             AS total_users,

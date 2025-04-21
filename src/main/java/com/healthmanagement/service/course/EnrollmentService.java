@@ -3,14 +3,31 @@ package com.healthmanagement.service.course;
 import java.util.List;
 
 import com.healthmanagement.dto.course.EnrollmentDTO;
+import com.healthmanagement.dto.course.EnrollmentStatusUpdateDTO;
+// **MODIFICATION (Service Interface): 引入新的 CourseInfoDTO**
+import com.healthmanagement.dto.course.CourseInfoDTO;
 
 public interface EnrollmentService {
+    // 常規課程報名 (已加入 24 小時限制和檢查是否為體驗課程)
     EnrollmentDTO enrollUserToCourse(Integer userId, Integer courseId);
+    // 取消常規課程報名 (已加入 24 小時限制和候補自動遞補)
     void cancelEnrollment(Integer enrollmentId);
-    EnrollmentDTO getEnrollmentById(Integer enrollmentId);
+    // 更新報名狀態 (可能用於後台或特定流程)
+    EnrollmentDTO updateEnrollmentStatus(Integer enrollmentId, EnrollmentStatusUpdateDTO updateDTO);
+    // 加入候補名單 (此方法可能已不需公共訪問，因為報名邏輯內部處理，但介面保留)
+    EnrollmentDTO addWaitlistItem(Integer userId, Integer courseId);
+    // 處理候補名單 (可能用於手動觸發或排程，自動遞補已在 cancelEnrollment 中)
+    void processWaitlist(Integer courseId);
+    // 查詢特定使用者的報名記錄
     List<EnrollmentDTO> getEnrollmentsByUserId(Integer userId);
+    // 查詢特定課程的所有報名記錄
     List<EnrollmentDTO> getEnrollmentsByCourseId(Integer courseId);
+    // 查詢特定課程是否已滿
     boolean isCourseFull(Integer courseId);
+    // 查詢特定使用者是否已有效報名或候補特定課程
     boolean isUserEnrolled(Integer userId, Integer courseId);
+    // 查詢特定課程的已報名人數
     int getEnrolledCount(Integer courseId);
+    // 查詢所有常規課程並包含使用者狀態和人數
+    List<CourseInfoDTO> getAllCoursesWithUserStatus(Integer userId);
 }
