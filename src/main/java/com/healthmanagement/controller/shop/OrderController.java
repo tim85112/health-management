@@ -50,6 +50,20 @@ public class OrderController {
         }
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> getOrdersByUserId(@PathVariable Integer userId) {
+        try {
+            if (userId == null) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("用戶ID不能為空"));
+            }
+            List<OrderDTO> orders = orderService.getOrdersByUserId(userId);
+            return ResponseEntity.ok(ApiResponse.success(orders));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(ApiResponse.error("獲取用戶訂單失敗: " + e.getMessage()));
+        }
+    }
+
     @GetMapping
     public ResponseEntity<?> getOrders(
             @RequestParam(required = false) Integer userId,
