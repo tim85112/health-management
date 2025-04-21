@@ -20,6 +20,11 @@ public class PostLikeServiceImpl implements PostLikeService {
     private UserActivityService userActivityService;
     
     @Override
+    public int countLikesByPost(Post post) {
+    	return likeRepo.countByPost(post);
+    }
+    
+    @Override
     public boolean likePost(User user, Post post) {
         if (likeRepo.existsByUserAndPost(user, post)) return false;
 
@@ -55,5 +60,10 @@ public class PostLikeServiceImpl implements PostLikeService {
     @Override
     public List<PostLike> getLikesForPost(Post post) {
         return likeRepo.findAllByPost(post);
+    }
+    
+    @Override
+    public boolean hasUserLiked(Post post, User user) {
+        return likeRepo.existsByPostAndUser(post, user);
     }
 }

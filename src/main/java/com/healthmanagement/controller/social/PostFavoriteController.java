@@ -1,6 +1,8 @@
 package com.healthmanagement.controller.social;
 
+import com.healthmanagement.dao.social.ForumDAO;
 import com.healthmanagement.dao.social.PostFavoriteRepository;
+import com.healthmanagement.model.social.Post;
 import com.healthmanagement.model.social.PostFavorite;
 import com.healthmanagement.service.member.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,6 +27,9 @@ public class PostFavoriteController {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private ForumDAO forumDAO;
 
     private Integer getLoginUserId() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -66,9 +71,17 @@ public class PostFavoriteController {
 
     @Operation(summary = "取得使用者收藏清單")
     @ApiResponse(responseCode = "200", description = "成功取得收藏清單")
-    @GetMapping
-    public ResponseEntity<List<PostFavorite>> getMyFavorites() {
+    @GetMapping("/posts")
+    public ResponseEntity<List<Post>> getMyFavoritePosts() {
         Integer userId = getLoginUserId();
-        return ResponseEntity.ok(repo.findByUserId(userId));
+        List<PostFavorite> favorites = repo.findByUserId(userId);
+
+        List<Post> posts = favorites.stream()
+            .map(fav -> forumDAO.findById(fav.getPostId()))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .toList();
+
+        return ResponseEntity.ok(posts);
     }
 }

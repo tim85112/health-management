@@ -3,16 +3,12 @@ package com.healthmanagement.controller.social;
 import com.healthmanagement.model.social.Post;
 import com.healthmanagement.model.member.User;
 import com.healthmanagement.service.social.ForumService;
-import com.healthmanagement.service.social.MediaService;
 import com.healthmanagement.service.social.PostLikeService;
-import com.healthmanagement.util.FileUploadUtil;
 import com.healthmanagement.service.member.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthmanagement.dto.social.PostRequest;
-
+import com.healthmanagement.dto.social.PostResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,10 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.bind.annotation.RequestPart;
-
-import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -41,16 +33,13 @@ public class ForumController {
     @Autowired
     private PostLikeService postLikeService;
     
-    @Autowired
-    private MediaService mediaService;
-    
     @Value("${app.upload.dir}")
     private String uploadDir;
 
     @GetMapping
     @Operation(summary = "查詢全部")
-    public ResponseEntity<List<Post>> getAllPosts() {
-        return ResponseEntity.ok(forumService.getAllPosts());
+    public ResponseEntity<List<PostResponse>> getAllPosts() {
+        return ResponseEntity.ok(forumService.getAllPostResponses());
     }
 
     @GetMapping("/{id}")
@@ -60,19 +49,8 @@ public class ForumController {
     }
 
     @Operation(summary = "發表文章")
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Post> createPost(
-    	@Parameter(
-    		        description = "文章資料 JSON 字串，例如：{\"category\":\"fitness\",\"title\":\"範例文章\",\"content\":\"這是內容\"}",
-    		        example = "{\"category\":\"fitness\",\"title\":\"範例文章\",\"content\":\"這是內容\"}"
-    		    )
-        @RequestPart("data") String data,
-        @RequestPart(value = "image", required = false) MultipartFile image
-    ) throws IOException {
-        // 轉換 JSON 成 DTO
-        ObjectMapper mapper = new ObjectMapper();
-        PostRequest postRequest = mapper.readValue(data, PostRequest.class);
-
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Post> createPost(@RequestBody PostRequest postRequest) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         User user = userService.findByEmail(email)
@@ -85,12 +63,6 @@ public class ForumController {
         post.setUser(user);
 
         Post saved = forumService.createPost(post);
-        // 儲存圖片（如有）
-        if (image != null && !image.isEmpty()) {
-            String filename = FileUploadUtil.saveFile(image, uploadDir);
-            mediaService.save(filename, "post", post.getId()); // 延後呼叫也可以放在下面
-        }
-
         return ResponseEntity.ok(saved);
     }
 
@@ -127,5 +99,14 @@ public class ForumController {
         Post post = forumService.getPostById(postId);
         boolean unliked = postLikeService.unlikePost(user, post);
         return unliked ? ResponseEntity.ok("Unliked") : ResponseEntity.badRequest().body("Not liked yet");
+    }
+    
+    @GetMapping("/user")
+    @Operation(summary = "取得目前登入使用者的所有貼文")
+    public ResponseEntity<List<PostResponse>> getCurrentUserPosts() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userService.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        List<PostResponse> userPosts = forumService.getPostsByUser(user);
+        return ResponseEntity.ok(userPosts);
     }
 }
