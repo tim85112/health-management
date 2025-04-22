@@ -26,12 +26,13 @@ public interface BodyMetricDAO extends JpaRepository<BodyMetric, Integer> {
 	List<BodyMetric> findByMultipleCriteria(@Param("userId") Integer userId, @Param("userName") String userName,
 			@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
-	@Query("SELECT bm FROM BodyMetric bm WHERE " + "(:userId IS NULL OR bm.userId = :userId) AND "
-			+ "(:userName IS NULL OR EXISTS (SELECT u FROM User u WHERE u.userId = bm.userId AND LOWER(u.name) LIKE LOWER(CONCAT('%', :userName, '%')))) AND "
-			+ "(:startDate IS NULL OR bm.dateRecorded >= :startDate) AND "
-			+ "(:endDate IS NULL OR bm.dateRecorded <= :endDate)")
-	Page<BodyMetric> findByMultipleCriteria(@Param("userId") Integer userId, @Param("userName") String userName,
+	@Query("SELECT bm FROM BodyMetric bm JOIN bm.user u " 
+			+ "WHERE (:userId IS NULL OR bm.userId = :userId) "
+			+ "AND (:userName IS NULL OR LOWER(u.name) LIKE LOWER(CONCAT('%', :userName, '%'))) "
+			+ "AND (:startDate IS NULL OR bm.dateRecorded >= :startDate) "
+			+ "AND (:endDate IS NULL OR bm.dateRecorded <= :endDate)")
+	Page<BodyMetric> findByMultipleCriteriaPage(@Param("userId") Integer userId, @Param("userName") String userName,
 			@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate, Pageable pageable);
 	
-	long  countByUser_UserId(Integer userId);
+	long countByUser_Id(Integer userId);
 }

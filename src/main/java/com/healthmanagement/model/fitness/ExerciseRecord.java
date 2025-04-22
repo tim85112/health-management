@@ -40,5 +40,6 @@ public class ExerciseRecord {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false, insertable = false, updatable = false)
     @JsonBackReference("user-exerciseRecords")
+    @JsonIgnore 
     private User user;
 }

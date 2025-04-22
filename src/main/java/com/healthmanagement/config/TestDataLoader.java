@@ -65,7 +65,7 @@ public class TestDataLoader implements CommandLineRunner {
         users.add(createUser("龍哥", "dragon@domain.com", "user123", "M", "woooooo", "user", 0));
         users.add(createUser("狗仔", "baobao@example.com", "user123", "M", "NILL", "user", 0));
         users.add(createUser("大哥2", "ivan2@example.com", "user123", "M", "NULL", "user", 0));
-
+        
         // 創建測試用戶
         for (int i = 1; i <= 16; i++) {
             users.add(createUser(
@@ -75,7 +75,20 @@ public class TestDataLoader implements CommandLineRunner {
                 i % 2 == 0 ? "M" : "F",
                 "測試用戶簡介" + i,
                 "user",
-                0
+                0 // 預設 coachId 為 0
+            ));
+        }
+
+        // 自動生成額外 5 筆教練用戶
+        for (int i = 1; i <= 5; i++) {
+            users.add(createUser(
+                "教練用戶" + (16 + i), // 延續編號，從 17 開始
+                "coach" + i + "@example.com",
+                "password123",
+                i % 2 == 0 ? "F" : "M", // 稍微調整性別分配
+                "專業教練簡介" + i,
+                "coach",
+                i // 設定 coachId，從 1 開始
             ));
         }
 
@@ -93,6 +106,7 @@ public class TestDataLoader implements CommandLineRunner {
                 .bio(bio)
                 .role(role)
                 .userPoints(points)
+                .consecutiveLoginDays(0)
                 .build();
     }
 }

@@ -1,5 +1,6 @@
 package com.healthmanagement.controller.shop;
 
+import com.healthmanagement.util.ApiResponse;
 import com.healthmanagement.dto.shop.CartItemDTO;
 import com.healthmanagement.dto.shop.CartItemRequest;
 import com.healthmanagement.service.shop.CartItemService;
@@ -29,65 +30,78 @@ public class CartItemController {
 
     @PostMapping("/items")
     @Operation(summary = "添加商品到購物車", description = "將商品添加到用戶的購物車中")
-    public ResponseEntity<?> addToCart(@RequestBody CartItemRequest request, @RequestParam(required = false) Integer userId) {
+    public ResponseEntity<?> addToCart(@RequestBody CartItemRequest request) {
         try {
-            if (userId == null) {
-                userId = securityUtils.getCurrentUserId();
+            // 如果未提供用户ID，使用当前登录用户的ID
+            if (request.getUserId() == null) {
+                try {
+                    request.setUserId(securityUtils.getCurrentUserId());
+                } catch (Exception e) {
+                    // 如果无法获取当前用户ID并且请求中没有userId
+                    return ResponseEntity.badRequest().body(ApiResponse.error("提供的客戶ID參數為空，請提供userId或確保已登錄"));
+                }
             }
-            CartItemDTO result = cartItemService.addToCart(userId, request);
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("data", result);
-            return ResponseEntity.ok(response);
+            
+            // 再次检查userId是否为空
+            if (request.getUserId() == null) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("提供的客戶ID參數為空，請提供userId或確保已登錄"));
+            }
+            
+            CartItemDTO cartItem = cartItemService.addToCart(request);
+            return ResponseEntity.ok(ApiResponse.success(cartItem));
         } catch (RuntimeException e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "error");
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
     }
 
-    @PutMapping("/items/{cartItemId}/quantity")
+    @PutMapping("/items/{id}/quantity")
     @Operation(summary = "更新購物車商品數量", description = "修改購物車中商品的數量")
-    public ResponseEntity<?> updateQuantity(
-            @Parameter(description = "購物車項目ID") @PathVariable Integer cartItemId,
-            @Parameter(description = "新的數量") @RequestParam Integer quantity,
+    public ResponseEntity<?> updateCartItemQuantity(
+            @PathVariable Integer id,
+            @RequestParam Integer quantity,
             @RequestParam(required = false) Integer userId) {
         try {
             if (userId == null) {
-                userId = securityUtils.getCurrentUserId();
+                try {
+                    userId = securityUtils.getCurrentUserId();
+                } catch (Exception e) {
+                    return ResponseEntity.badRequest().body(ApiResponse.error("提供的客戶ID參數為空，請提供userId或確保已登錄"));
+                }
             }
-            CartItemDTO result = cartItemService.updateQuantity(userId, cartItemId, quantity);
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("data", result);
-            return ResponseEntity.ok(response);
+            
+            if (userId == null) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("提供的客戶ID參數為空，請提供userId或確保已登錄"));
+            }
+            
+            CartItemDTO updatedItem = cartItemService.updateQuantity(id, quantity);
+            return ResponseEntity.ok(ApiResponse.success(updatedItem));
         } catch (RuntimeException e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "error");
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
     }
 
-    @DeleteMapping("/items/{cartItemId}")
+    @DeleteMapping("/items/{id}")
     @Operation(summary = "從購物車移除商品", description = "從購物車中移除指定商品")
     public ResponseEntity<?> removeFromCart(
-            @Parameter(description = "購物車項目ID") @PathVariable Integer cartItemId,
+            @PathVariable Integer id,
             @RequestParam(required = false) Integer userId) {
         try {
             if (userId == null) {
-                userId = securityUtils.getCurrentUserId();
+                try {
+                    userId = securityUtils.getCurrentUserId();
+                } catch (Exception e) {
+                    return ResponseEntity.badRequest().body(ApiResponse.error("提供的客戶ID參數為空，請提供userId或確保已登錄"));
+                }
             }
-            cartItemService.removeFromCart(userId, cartItemId);
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            return ResponseEntity.ok(response);
+            
+            if (userId == null) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("提供的客戶ID參數為空，請提供userId或確保已登錄"));
+            }
+            
+            cartItemService.removeFromCart(id);
+            return ResponseEntity.ok(ApiResponse.success("Item removed from cart successfully"));
         } catch (RuntimeException e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "error");
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
     }
 
@@ -96,18 +110,21 @@ public class CartItemController {
     public ResponseEntity<?> getCartItems(@RequestParam(required = false) Integer userId) {
         try {
             if (userId == null) {
-                userId = securityUtils.getCurrentUserId();
+                try {
+                    userId = securityUtils.getCurrentUserId();
+                } catch (Exception e) {
+                    return ResponseEntity.badRequest().body(ApiResponse.error("提供的客戶ID參數為空，請提供userId或確保已登錄"));
+                }
             }
-            List<CartItemDTO> items = cartItemService.getCartItems(userId);
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("data", items);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "error");
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            
+            if (userId == null) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("提供的客戶ID參數為空，請提供userId或確保已登錄"));
+            }
+            
+            List<CartItemDTO> cartItems = cartItemService.getCartItems(userId);
+            return ResponseEntity.ok(ApiResponse.success(cartItems));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
     }
 
@@ -116,37 +133,44 @@ public class CartItemController {
     public ResponseEntity<?> clearCart(@RequestParam(required = false) Integer userId) {
         try {
             if (userId == null) {
-                userId = securityUtils.getCurrentUserId();
+                try {
+                    userId = securityUtils.getCurrentUserId();
+                } catch (Exception e) {
+                    return ResponseEntity.badRequest().body(ApiResponse.error("提供的客戶ID參數為空，請提供userId或確保已登錄"));
+                }
             }
+            
+            if (userId == null) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("提供的客戶ID參數為空，請提供userId或確保已登錄"));
+            }
+            
             cartItemService.clearCart(userId);
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(ApiResponse.success("Cart cleared successfully"));
         } catch (RuntimeException e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "error");
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
     }
 
     @GetMapping("/total")
     @Operation(summary = "計算購物車總金額", description = "計算用戶購物車中所有商品的總金額")
-    public ResponseEntity<?> calculateTotal(@RequestParam(required = false) Integer userId) {
+    public ResponseEntity<?> calculateCartTotal(@RequestParam(required = false) Integer userId) {
         try {
             if (userId == null) {
-                userId = securityUtils.getCurrentUserId();
+                try {
+                    userId = securityUtils.getCurrentUserId();
+                } catch (Exception e) {
+                    return ResponseEntity.badRequest().body(ApiResponse.error("提供的客戶ID參數為空，請提供userId或確保已登錄"));
+                }
             }
-            BigDecimal total = cartItemService.calculateTotal(userId);
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("data", total);
-            return ResponseEntity.ok(response);
+            
+            if (userId == null) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("提供的客戶ID參數為空，請提供userId或確保已登錄"));
+            }
+            
+            BigDecimal total = cartItemService.calculateCartTotal(userId);
+            return ResponseEntity.ok(ApiResponse.success(total));
         } catch (RuntimeException e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "error");
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
     }
 } 

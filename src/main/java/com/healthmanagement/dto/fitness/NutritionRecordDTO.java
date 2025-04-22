@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 @Data
 @NoArgsConstructor
 @Builder
@@ -17,6 +19,7 @@ public class NutritionRecordDTO {
 	private Float carbs;
 	private Float fats;
 	private String mealtime;
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime recordDate;
 	private Integer userId;
 	private String name; 

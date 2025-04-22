@@ -56,6 +56,15 @@ public class FitnessGoalController {
         Page<FitnessGoalDTO> fitnessGoalsPage = fitnessGoalService.getAllFitnessGoalsByCriteria(userId, name, startDate, endDate, goalType, status, pageable);
         return ResponseEntity.ok(fitnessGoalsPage);
     }
+    
+    @GetMapping("/user/{userId}")
+    @Operation(summary = "根據用戶 ID 取得所有健身目標 (分頁)")
+    public ResponseEntity<Page<FitnessGoalDTO>> getAllFitnessGoalsByUserId(
+            @PathVariable @Parameter(description = "用戶 ID") Integer userId,
+            @PageableDefault(page = 0, size = 10) Pageable pageable) {
+        Page<FitnessGoalDTO> fitnessGoalsPage = fitnessGoalService.getAllFitnessGoalsByUserId(userId, pageable);
+        return ResponseEntity.ok(fitnessGoalsPage);
+    }
 
     @GetMapping("/{goalId}")
     @Operation(summary = "根據 ID 取得健身目標")

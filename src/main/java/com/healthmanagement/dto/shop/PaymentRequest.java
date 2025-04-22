@@ -8,7 +8,7 @@ public class PaymentRequest {
     private String orderId;
     private BigDecimal amount;
     private String currency = "TWD";
-    private String paymentMethod;
+    private String method;
     private String description;
     private String returnUrl;
     private String notifyUrl;

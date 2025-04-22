@@ -20,4 +20,5 @@ public interface AchievementService {
 
 	Page<AchievementDTO> searchAchievements(Integer userId, String name, String achievementType, String title,
 			String startDate, String endDate, Pageable pageable);
+
 }

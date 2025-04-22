@@ -6,10 +6,10 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public interface CartItemService {
-    CartItemDTO addToCart(Integer userId, CartItemRequest request);
-    CartItemDTO updateQuantity(Integer userId, Integer cartItemId, Integer quantity);
-    void removeFromCart(Integer userId, Integer cartItemId);
     List<CartItemDTO> getCartItems(Integer userId);
+    CartItemDTO addToCart(CartItemRequest request);
+    CartItemDTO updateQuantity(Integer cartItemId, Integer quantity);
+    void removeFromCart(Integer cartItemId);
     void clearCart(Integer userId);
-    BigDecimal calculateTotal(Integer userId);
+    BigDecimal calculateCartTotal(Integer userId);
 } 

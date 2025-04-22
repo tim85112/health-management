@@ -2,6 +2,7 @@ package com.healthmanagement.service.social;
 
 import com.healthmanagement.dto.social.CommentRequest;
 import com.healthmanagement.model.social.Comment;
+import com.healthmanagement.model.social.Post;
 
 import java.util.List;
 
@@ -18,6 +19,8 @@ public interface CommentService {
     Comment updateComment(Integer commentId, String email, CommentRequest request);
 
     void deleteComment(Integer commentId, String email);
+    
+    int countByPost(Post post);
     
     
 }

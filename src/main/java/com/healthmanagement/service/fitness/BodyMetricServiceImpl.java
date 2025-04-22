@@ -60,7 +60,7 @@ public class BodyMetricServiceImpl implements BodyMetricService {
 
 		// 檢查並頒發身體數據相關的獎章
 		Integer userId = bodyMetricDTO.getUserId();
-		long bodyDataCount = bodyMetricRepo.countByUser_UserId(userId); // 取得該使用者的身體數據記錄總數
+		long bodyDataCount = bodyMetricRepo.countByUser_Id(userId); // 取得該使用者的身體數據記錄總數
 		System.out.println("BodyMetricServiceImpl - saveBodyMetrics - 觸發獎章檢查 - 使用者 ID: " + userId
 				+ ", 事件: BODY_DATA_CREATED, 數據: " + bodyDataCount);
 		System.out.println("BodyMetricServiceImpl - saveBodyMetrics - achievementService 是否為 null: "
@@ -76,7 +76,7 @@ public class BodyMetricServiceImpl implements BodyMetricService {
 	    System.out.println("updateFitnessGoalProgress - 當前身體數據重量: " + (currentBodyData != null ? currentBodyData.getWeight() : "null"));
 
 		// 查詢用戶目前進行中的健身目標
-		List<FitnessGoal> activeGoals = fitnessGoalRepo.findByUserUserIdAndStatus(userId, "進行中");
+		List<FitnessGoal> activeGoals = fitnessGoalRepo.findByUserIdAndStatus(userId, "進行中");
 		System.out.println("updateFitnessGoalProgress - 找到 " + activeGoals.size() + " 個進行中的目標。");
 
 		for (FitnessGoal goal : activeGoals) {
@@ -249,7 +249,7 @@ public class BodyMetricServiceImpl implements BodyMetricService {
 
 		List<BodyMetric> bodyMetrics = bodyMetricRepo.findByMultipleCriteria(userId, userName, startLocalDate,
 				endLocalDate);
-		return bodyMetrics.stream().map(this::convertToDTO).collect(Collectors.toList());
+		return bodyMetrics.stream().map(bm -> convertToDTO(bm)).collect(Collectors.toList());
 	}
 
 	@Override
@@ -281,7 +281,7 @@ public class BodyMetricServiceImpl implements BodyMetricService {
 
 		}
 
-		Page<BodyMetric> bodyMetricPage = bodyMetricRepo.findByMultipleCriteria(userId, userName, startLocalDate,
+		Page<BodyMetric> bodyMetricPage = bodyMetricRepo.findByMultipleCriteriaPage(userId, userName, startLocalDate,
 				endLocalDate, pageable);
 		return bodyMetricPage.map(bodyMetric -> {
 			User user = userService.findById(bodyMetric.getUserId()).orElse(null);

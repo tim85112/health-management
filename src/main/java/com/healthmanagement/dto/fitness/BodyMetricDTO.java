@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import com.healthmanagement.model.fitness.BodyMetric;
 import com.healthmanagement.model.member.*;
@@ -44,6 +46,7 @@ public class BodyMetricDTO {
 	private Double bmi;
 
 	@Schema(example = "2025-04-08")
+	@DateTimeFormat(pattern = "yyyy-MM-dd") 
 	private LocalDate dateRecorded;
 
 	@Schema(example = "用戶姓名")

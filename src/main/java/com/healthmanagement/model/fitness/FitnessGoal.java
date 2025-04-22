@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.healthmanagement.model.member.User;
 
 @Entity
@@ -43,7 +43,7 @@ public class FitnessGoal {
 
 	@ManyToOne
 	@JoinColumn(name = "user_id", nullable = false)
-	@JsonIgnore
+	@JsonBackReference("user-fitnessGoals") 
 	private User user;
 	
 	@Column(name = "start_weight")

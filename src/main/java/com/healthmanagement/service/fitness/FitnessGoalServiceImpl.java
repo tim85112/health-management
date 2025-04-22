@@ -30,9 +30,6 @@ public class FitnessGoalServiceImpl implements FitnessGoalService {
     private final AchievementService achievementService;
     private final BodyMetricService bodyMetricService; // 注入 BodyMetricService
 
-    private Double calculateProgressPercentage(FitnessGoal goal) {
-        return goal.getCurrentProgress();
-    }
 
     @Override
     public FitnessGoalDTO createFitnessGoal(FitnessGoalDTO fitnessGoalDTO) {
@@ -82,14 +79,12 @@ public class FitnessGoalServiceImpl implements FitnessGoalService {
 
         // 檢查目標是否已完成，並頒發相關獎章
         if ("COMPLETED".equalsIgnoreCase(fitnessGoalDTO.getStatus())) {
-            long completedGoalsCount = fitnessGoalRepo.countByUserUserIdAndStatus(userId, "COMPLETED");
+            long completedGoalsCount = fitnessGoalRepo.countByUserIdAndStatus(userId, "COMPLETED");
             System.out.println("FitnessGoalServiceImpl - updateFitnessGoal - 目標狀態更新為 COMPLETED - 觸發獎章檢查 - 使用者 ID: " + userId + ", 事件: GOAL_COMPLETED, 數據: " + completedGoalsCount);
             achievementService.checkAndAwardAchievements(userId, "GOAL_COMPLETED", (int) completedGoalsCount);
         }
         return mapToDTO(updatedFitnessGoal); // 使用 mapToDTO 實時計算進度
     }
-
-  
 
     @Override
     public void deleteFitnessGoal(Integer goalId) {
@@ -105,7 +100,7 @@ public class FitnessGoalServiceImpl implements FitnessGoalService {
 
     @Override
     public Page<FitnessGoalDTO> getAllFitnessGoalsByUserId(Integer userId, Pageable pageable) {
-        Page<FitnessGoal> fitnessGoalsPage = fitnessGoalRepo.findByUserUserId(userId, pageable);
+        Page<FitnessGoal> fitnessGoalsPage = fitnessGoalRepo.findByUserId(userId, pageable);
         return fitnessGoalsPage.map(this::mapToDTO);
     }
 
@@ -117,7 +112,7 @@ public class FitnessGoalServiceImpl implements FitnessGoalService {
 
     @Override
     public Page<FitnessGoalDTO> getAllFitnessGoalsByDateRange(String startDateStr, String endDateStr,
-                                                            Pageable pageable) {
+                                                              Pageable pageable) {
         LocalDate startDate = parseDate(startDateStr);
         LocalDate endDate = parseDate(endDateStr);
         Page<FitnessGoal> fitnessGoalsPage = fitnessGoalRepo
@@ -127,11 +122,11 @@ public class FitnessGoalServiceImpl implements FitnessGoalService {
 
     @Override
     public Page<FitnessGoalDTO> getAllFitnessGoalsByUserIdAndDateRange(Integer userId, String startDateStr,
-                                                                     String endDateStr, Pageable pageable) {
+                                                                       String endDateStr, Pageable pageable) {
         LocalDate startDate = parseDate(startDateStr);
         LocalDate endDate = parseDate(endDateStr);
         Page<FitnessGoal> fitnessGoalsPage = fitnessGoalRepo
-                .findByUserUserIdAndStartDateGreaterThanEqualAndEndDateLessThanEqual(userId, startDate, endDate,
+                .findByUserIdAndStartDateGreaterThanEqualAndEndDateLessThanEqual(userId, startDate, endDate,
                         pageable);
         return fitnessGoalsPage.map(this::mapToDTO);
     }
@@ -141,15 +136,20 @@ public class FitnessGoalServiceImpl implements FitnessGoalService {
                                                              String endDateStr, String goalType, String status, Pageable pageable) {
         LocalDate startDate = parseDate(startDateStr);
         LocalDate endDate = parseDate(endDateStr);
-
+        Integer currentUserId = userId;
         return fitnessGoalRepo.findByOptionalCriteria(userId, StringUtils.hasText(name) ? "%" + name + "%" : null,
                 startDate, endDate, goalType, status, pageable).map(this::mapToDTO);
     }
-
+    
     @Override
     public List<FitnessGoalDTO> getAllGoalsWithProgress(int userId) {
-        return fitnessGoalRepo.findByUserUserId(userId).stream().map(this::mapToDTO).collect(Collectors.toList());
+        List<FitnessGoal> goals = fitnessGoalRepo.findByUserId(userId);
+        return goals.stream()
+                    .map(this::mapToDTO)
+                    .collect(Collectors.toList());
     }
+    
+
 
     @Override
     @Transactional
@@ -162,7 +162,7 @@ public class FitnessGoalServiceImpl implements FitnessGoalService {
         if (existingFitnessGoal.getTargetValue() != null && existingFitnessGoal.getCurrentProgress() >= 100 && !"COMPLETED".equalsIgnoreCase(existingFitnessGoal.getStatus())) {
             existingFitnessGoal.setStatus("COMPLETED");
             Integer userId = existingFitnessGoal.getUser().getUserId();
-            long completedGoalsCount = fitnessGoalRepo.countByUserUserIdAndStatus(userId, "COMPLETED");
+            long completedGoalsCount = fitnessGoalRepo.countByUserIdAndStatus(userId, "COMPLETED");
             System.out.println("FitnessGoalServiceImpl - updateGoalProgress - 目標 ID: " + goalId + " 已完成 - 觸發獎章檢查 - 使用者 ID: " + userId + ", 事件: GOAL_COMPLETED, 數據: " + completedGoalsCount);
             achievementService.checkAndAwardAchievements(userId, "GOAL_COMPLETED", (int) completedGoalsCount);
         } else if (existingFitnessGoal.getTargetValue() != null && existingFitnessGoal.getCurrentProgress() < 100 && "COMPLETED".equalsIgnoreCase(existingFitnessGoal.getStatus())) {
@@ -171,7 +171,7 @@ public class FitnessGoalServiceImpl implements FitnessGoalService {
         } else if (existingFitnessGoal.getTargetValue() == null && !"COMPLETED".equalsIgnoreCase(existingFitnessGoal.getStatus())) {
             existingFitnessGoal.setStatus("COMPLETED"); // 如果沒有目標值，任何進度更新都視為完成
             Integer userId = existingFitnessGoal.getUser().getUserId();
-            long completedGoalsCount = fitnessGoalRepo.countByUserUserIdAndStatus(userId, "COMPLETED");
+            long completedGoalsCount = fitnessGoalRepo.countByUserIdAndStatus(userId, "COMPLETED");
             System.out.println("FitnessGoalServiceImpl - updateGoalProgress - 目標 ID: " + goalId + " 無目標值，視為完成 - 觸發獎章檢查 - 使用者 ID: " + userId + ", 事件: GOAL_COMPLETED, 數據: " + completedGoalsCount);
             achievementService.checkAndAwardAchievements(userId, "GOAL_COMPLETED", (int) completedGoalsCount);
         }
@@ -262,6 +262,17 @@ public class FitnessGoalServiceImpl implements FitnessGoalService {
         }
         return progress;
     }
+    @Scheduled(cron = "0 0 * * * ?") // 每小時執行一次
+    public void updateGoalsProgress() {
+        // 更新目標的進度邏輯，可以是根據某些條件來更新目標
+        List<FitnessGoal> goals = fitnessGoalRepo.findAll();
+        for (FitnessGoal goal : goals) {
+            Double progress = calculateCurrentProgress(goal);
+            goal.setCurrentProgress(progress);
+            fitnessGoalRepo.save(goal);
+        }
+    }
+
 
     private FitnessGoal mapToEntity(FitnessGoalDTO dto, User user) {
         FitnessGoal entity = new FitnessGoal();
@@ -269,11 +280,10 @@ public class FitnessGoalServiceImpl implements FitnessGoalService {
         entity.setUser(user);
         entity.setGoalType(dto.getGoalType());
         entity.setTargetValue(dto.getTargetValue());
-        entity.setCurrentProgress(dto.getCurrentProgress());
         entity.setUnit(dto.getUnit());
+        entity.setStatus(dto.getStatus());
         entity.setStartDate(dto.getStartDate());
         entity.setEndDate(dto.getEndDate());
-        entity.setStatus(dto.getStatus());
         entity.setStartWeight(dto.getStartWeight());
         entity.setStartBodyFat(dto.getStartBodyFat());
         entity.setStartMuscleMass(dto.getStartMuscleMass());
@@ -281,30 +291,11 @@ public class FitnessGoalServiceImpl implements FitnessGoalService {
     }
 
     private LocalDate parseDate(String dateStr) {
-        if (StringUtils.hasText(dateStr)) {
-            try {
-                return LocalDate.parse(dateStr, DateTimeFormatter.ISO_LOCAL_DATE);
-            } catch (DateTimeParseException e) {
-                return null; // 或者拋出異常，根據您的錯誤處理策略
-            }
-        }
-        return null;
-    }
-
-    @Scheduled(cron = "0 0 * * * ?") // 每天午夜執行一次
-    @Transactional
-    public void updateStatusForExpiredGoals() {
-        LocalDate now = LocalDate.now();
-        List<FitnessGoal> inProgressGoals = fitnessGoalRepo.findByStatus("IN_PROGRESS");
-
-        for (FitnessGoal goal : inProgressGoals) {
-            if (goal.getEndDate() != null && !goal.getEndDate().isAfter(now)) {
-                goal.setStatus("COMPLETED");
-                fitnessGoalRepo.save(goal);
-                Integer userId = goal.getUser().getUserId();
-                long completedGoalsCount = fitnessGoalRepo.countByUserUserIdAndStatus(userId, "COMPLETED");
-                achievementService.checkAndAwardAchievements(userId, "GOAL_COMPLETED", (int) completedGoalsCount);
-            }
+        if (dateStr == null) return null;
+        try {
+            return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        } catch (DateTimeParseException e) {
+            return null;
         }
     }
 }

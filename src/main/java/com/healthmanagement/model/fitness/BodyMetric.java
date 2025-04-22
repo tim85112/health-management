@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.healthmanagement.model.member.User;
 
 @Entity
@@ -49,6 +50,7 @@ public class BodyMetric {
     
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false, insertable = false, updatable = false) 
+    @JsonBackReference("user-bodyMetrics")
 	private User user;
 
 }

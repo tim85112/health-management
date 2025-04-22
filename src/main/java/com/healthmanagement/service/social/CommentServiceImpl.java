@@ -4,6 +4,7 @@ import com.healthmanagement.dao.social.CommentDAO;
 import com.healthmanagement.dao.social.ForumDAO;
 import com.healthmanagement.dto.social.CommentRequest;
 import com.healthmanagement.model.social.Comment;
+import com.healthmanagement.model.social.Post;
 import com.healthmanagement.service.member.UserService;
 import com.healthmanagement.service.fitness.AchievementService;
 
@@ -37,7 +38,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<Comment> getCommentsByUserId(Integer userId) {
-        return commentDAO.findByUser_UserId(userId);
+    	return commentDAO.findByUser_Id(userId); 
     }
 
     @Override
@@ -45,7 +46,10 @@ public class CommentServiceImpl implements CommentService {
         return commentDAO.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("Comment not found"));
     }
-
+    
+    @Autowired
+    private UserActivityService userActivityService;
+    
     @Override
     public Comment createComment(Integer postId, String email, CommentRequest request) {
         Comment comment = new Comment();
@@ -58,9 +62,21 @@ public class CommentServiceImpl implements CommentService {
         comment.setUser(userService.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found")));
 
-        long commentCount = commentDAO.countByUser_UserId(request.getUserId());
-        achievementService.checkAndAwardAchievements(request.getUserId(), "SOCIAL_COMMENT_CREATED", (int) commentCount);
-        return commentDAO.save(comment);
+        Comment saved = commentDAO.save(comment);
+
+     // 成就邏輯
+     long commentCount = commentDAO.countByUser_Id(saved.getUser().getUserId());
+     achievementService.checkAndAwardAchievements(saved.getUser().getUserId(), "SOCIAL_COMMENT_CREATED", (int) commentCount);
+
+     // 動態紀錄邏輯
+     userActivityService.logActivity(
+             saved.getUser().getUserId(),// 使用者 ID
+             "comment",                     // 動作類型
+             saved.getId()                  // 留言 ID 
+     );
+
+     return saved;
+
     }
     @Override
     public Comment updateComment(Integer commentId, String email, CommentRequest request) {
@@ -84,5 +100,10 @@ public class CommentServiceImpl implements CommentService {
             throw new AccessDeniedException("您無權刪除此留言！");
         }
         commentDAO.deleteById(commentId);
+    }
+    
+    @Override
+    public int countByPost(Post post) {
+        return commentDAO.findByPost_Id(post.getId()).size();
     }
 }

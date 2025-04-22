@@ -10,9 +10,8 @@ public class OrderItemDTO {
     private Integer productId;
     private String productName;
     private BigDecimal productPrice;
-    private Integer courseId;
-    private String courseName;
-    private BigDecimal coursePrice;
+    private String productImageUrl;
+    private String productCategory;
     private Integer quantity;
     private BigDecimal subtotal;
 } 

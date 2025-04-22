@@ -27,7 +27,7 @@ public class NutritionRecordServiceImpl implements NutritionRecordService {
 	public NutritionRecordDTO addNutritionRecord(NutritionRecordDTO recordDTO) {
 		NutritionRecord record = convertToEntity(recordDTO);
 		NutritionRecord savedRecord = nutritionRecordRepo.save(record);
-		long dietLogCount = nutritionRecordRepo. countByUser_UserId(recordDTO.getUserId());
+		long dietLogCount = nutritionRecordRepo. countByUser_Id(recordDTO.getUserId());
 		achievementService.checkAndAwardAchievements(recordDTO.getUserId(), "DIET_DATA_CREATED", (int) dietLogCount);
 		return convertToDTO(savedRecord);
 
@@ -73,55 +73,54 @@ public class NutritionRecordServiceImpl implements NutritionRecordService {
 
 	@Override
 	public Page<NutritionRecordDTO> searchNutritionRecords(Integer userId, String name, LocalDateTime startDate,
-			LocalDateTime endDate, String mealtime, Pageable pageable) {
-		Page<NutritionRecord> recordsPage;
+	        LocalDateTime endDate, String mealtime, Pageable pageable) {
+	    Page<NutritionRecord> recordsPage;
 
-		if (userId != null && name != null && startDate != null && endDate != null && mealtime != null
-				&& !mealtime.isEmpty()) {
-			recordsPage = nutritionRecordRepo.findByUser_UserIdAndUser_NameContainingAndRecordDateBetweenAndMealtime(
-					userId, name, startDate, endDate, mealtime, pageable);
-		} else if (userId != null && name != null && mealtime != null && !mealtime.isEmpty()) {
-			recordsPage = nutritionRecordRepo.findByUser_UserIdAndUser_NameContainingAndMealtime(userId, name, mealtime,
-					pageable);
-		} else if (userId != null && startDate != null && endDate != null && mealtime != null && !mealtime.isEmpty()) {
-			recordsPage = nutritionRecordRepo.findByUser_UserIdAndRecordDateBetweenAndMealtime(userId, startDate,
-					endDate, mealtime, pageable);
-		} else if (name != null && startDate != null && endDate != null && mealtime != null && !mealtime.isEmpty()) {
-			recordsPage = nutritionRecordRepo.findByUser_NameContainingAndRecordDateBetweenAndMealtime(name, startDate,
-					endDate, mealtime, pageable);
-		} else if (userId != null && mealtime != null && !mealtime.isEmpty()) {
-			recordsPage = nutritionRecordRepo.findByUser_UserIdAndMealtime(userId, mealtime, pageable);
-		} else if (name != null && mealtime != null && !mealtime.isEmpty()) {
-			recordsPage = nutritionRecordRepo.findByUser_NameContainingAndMealtime(name, mealtime, pageable);
-		} else if (startDate != null && endDate != null && mealtime != null && !mealtime.isEmpty()) {
-			recordsPage = nutritionRecordRepo.findByRecordDateBetweenAndMealtime(startDate, endDate, mealtime,
-					pageable);
-		} else if (userId != null && name != null && startDate != null && endDate != null) {
-			recordsPage = nutritionRecordRepo.findByUser_UserIdAndUser_NameContainingAndRecordDateBetween(userId, name,
-					startDate, endDate, pageable);
-		} else if (userId != null && name != null) {
-			recordsPage = nutritionRecordRepo.findByUser_UserIdAndUser_NameContaining(userId, name, pageable);
-		} else if (userId != null && startDate != null && endDate != null) {
-			recordsPage = nutritionRecordRepo.findByUser_UserIdAndRecordDateBetween(userId, startDate, endDate,
-					pageable);
-		} else if (name != null && startDate != null && endDate != null) {
-			recordsPage = nutritionRecordRepo.findByUser_NameContainingAndRecordDateBetween(name, startDate, endDate,
-					pageable);
-		} else if (userId != null) {
-			recordsPage = nutritionRecordRepo.findByUser_UserId(userId, pageable);
-		} else if (name != null) {
-			recordsPage = nutritionRecordRepo.findByUser_NameContaining(name, pageable);
-		} else if (startDate != null && endDate != null) {
-			recordsPage = nutritionRecordRepo.findByRecordDateBetween(startDate, endDate, pageable);
-		} else if (mealtime != null && !mealtime.isEmpty()) {
-			recordsPage = nutritionRecordRepo.findByMealtime(mealtime, pageable);
-		} else {
-			recordsPage = nutritionRecordRepo.findAll(pageable);
-		}
+	    if (userId != null && name != null && startDate != null && endDate != null && mealtime != null
+	            && !mealtime.isEmpty()) {
+	        recordsPage = nutritionRecordRepo.findByUserIdAndUser_NameContainingAndRecordDateBetweenAndMealtime(
+	                userId, name, startDate, endDate, mealtime, pageable);
+	    } else if (userId != null && name != null && mealtime != null && !mealtime.isEmpty()) {
+	        recordsPage = nutritionRecordRepo.findByUserIdAndUser_NameContainingAndMealtime(userId, name, mealtime,
+	                pageable);
+	    } else if (userId != null && startDate != null && endDate != null && mealtime != null && !mealtime.isEmpty()) {
+	        recordsPage = nutritionRecordRepo.findByUserIdAndRecordDateBetweenAndMealtime(userId, startDate,
+	                endDate, mealtime, pageable);
+	    } else if (name != null && startDate != null && endDate != null && mealtime != null && !mealtime.isEmpty()) {
+	        recordsPage = nutritionRecordRepo.findByUser_NameContainingAndRecordDateBetweenAndMealtime(name, startDate,
+	                endDate, mealtime, pageable);
+	    } else if (userId != null && mealtime != null && !mealtime.isEmpty()) {
+	        recordsPage = nutritionRecordRepo.findByUserIdAndMealtime(userId, mealtime, pageable);
+	    } else if (name != null && mealtime != null && !mealtime.isEmpty()) {
+	        recordsPage = nutritionRecordRepo.findByUser_NameContainingAndMealtime(name, mealtime, pageable);
+	    } else if (startDate != null && endDate != null && mealtime != null && !mealtime.isEmpty()) {
+	        recordsPage = nutritionRecordRepo.findByRecordDateBetweenAndMealtime(startDate, endDate, mealtime,
+	                pageable);
+	    } else if (userId != null && name != null && startDate != null && endDate != null) {
+	        recordsPage = nutritionRecordRepo.findByUserIdAndUser_NameContainingAndRecordDateBetween(userId, name,
+	                startDate, endDate, pageable);
+	    } else if (userId != null && name != null) {
+	        recordsPage = nutritionRecordRepo.findByUserIdAndUser_NameContaining(userId, name, pageable);
+	    } else if (userId != null && startDate != null && endDate != null) {
+	        recordsPage = nutritionRecordRepo.findByUserIdAndRecordDateBetween(userId, startDate, endDate,
+	                pageable);
+	    } else if (name != null && startDate != null && endDate != null) {
+	        recordsPage = nutritionRecordRepo.findByUser_NameContainingAndRecordDateBetween(name, startDate, endDate,
+	                pageable);
+	    } else if (userId != null) {
+	        recordsPage = nutritionRecordRepo.findByUserId(userId, pageable); // 修改了這裡
+	    } else if (name != null) {
+	        recordsPage = nutritionRecordRepo.findByUser_NameContaining(name, pageable);
+	    } else if (startDate != null && endDate != null) {
+	        recordsPage = nutritionRecordRepo.findByRecordDateBetween(startDate, endDate, pageable);
+	    } else if (mealtime != null && !mealtime.isEmpty()) {
+	        recordsPage = nutritionRecordRepo.findByMealtime(mealtime, pageable);
+	    } else {
+	        recordsPage = nutritionRecordRepo.findAll(pageable);
+	    }
 
-		return recordsPage.map(this::convertToDTO);
+	    return recordsPage.map(this::convertToDTO);
 	}
-
 	private NutritionRecordDTO convertToDTO(NutritionRecord record) {
 		Integer userId = null;
 		String userName = null; // 新增姓名

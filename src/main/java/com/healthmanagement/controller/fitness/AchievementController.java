@@ -13,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/tracking/achievements") 
 @RequiredArgsConstructor
@@ -67,7 +69,17 @@ public class AchievementController {
         achievementService.deleteAchievement(achievementId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+    
 
-    // 移除內部 API 路徑，getAllAchievements 已經處理了所有獎章的獲取
-    // @GetMapping("/search") // 前台獲取用戶獎章的 API 保持不變
+    @GetMapping("/user/{userId}")
+    @Operation(summary = "根據用戶ID獲取獎章")
+    public ResponseEntity<List<AchievementDTO>> getAchievementsByUserId(@PathVariable @Parameter(description = "用戶ID") Integer userId) {
+        List<AchievementDTO> achievements = achievementService.getUserAchievements(userId);
+        if (achievements != null && !achievements.isEmpty()) {
+            return new ResponseEntity<>(achievements, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT); // 204 No Content 表示沒有找到獎章
+        }
+    }
+
 }
