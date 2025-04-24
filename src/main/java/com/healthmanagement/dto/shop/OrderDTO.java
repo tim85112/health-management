@@ -10,6 +10,8 @@ public class OrderDTO {
     private Integer id;
     private Integer userId;
     private String userName;
+    private String userEmail;
+    private String userPhone;
     private BigDecimal totalAmount;
     private String status;
     private LocalDateTime createdAt;
