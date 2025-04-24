@@ -26,4 +26,6 @@ public interface UserService {
 	Optional<User> findById(Integer userId);
 
 	List<User> findByName(String name);
+	
+	List<User> getAllCoaches();
 }

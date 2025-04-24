@@ -75,4 +75,12 @@ public class UserController {
                 .map(user -> ResponseEntity.ok(ApiResponse.success(user)))
                 .orElse(ResponseEntity.notFound().build());
     }
+    
+    @GetMapping("/coaches")
+    @PreAuthorize("hasAuthority('admin') or hasAuthority('coach')")
+    @Operation(summary = "獲取所有教練列表", description = "獲取所有教練身份用戶的列表")
+    public ResponseEntity<ApiResponse<List<User>>> getAllCoaches() {
+        List<User> coaches = userService.getAllCoaches();
+        return ResponseEntity.ok(ApiResponse.success(coaches));
+    }
 }
