@@ -323,6 +323,19 @@ CREATE TABLE [post_favorite] (
 );
 GO
 
+--訓練邀請資料表
+CREATE TABLE [friend_invitation] (
+    [id]           INT PRIMARY KEY IDENTITY(1,1),         
+    [inviter_id]   INT NOT NULL,                          
+    [invitee_id]   INT NOT NULL,                          
+    [status]       NVARCHAR(20) NOT NULL DEFAULT 'pending', 
+    [created_at]   DATETIME DEFAULT CURRENT_TIMESTAMP,    
+    CONSTRAINT FK_invitation_inviter FOREIGN KEY ([inviter_id]) REFERENCES [users]([user_id]),
+    CONSTRAINT FK_invitation_invitee FOREIGN KEY ([invitee_id]) REFERENCES [users]([user_id]),
+    CONSTRAINT UQ_invitation_pair UNIQUE ([inviter_id], [invitee_id]) 
+);
+GO
+
 
 -- 外鍵約束設定
 ALTER TABLE [user_point]
