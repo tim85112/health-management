@@ -87,3 +87,4 @@ app:
     dir: ../HealthManagement-vue/public/images
   frontend:
     url: http://localhost:5173
+  guest-user-id: 2 # 新增的匿名者使用者 ID

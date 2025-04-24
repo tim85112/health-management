@@ -151,4 +151,9 @@ public class UserServiceImpl implements UserService {
     public Optional<User> findById(Integer userId) {
         return userDAO.findById(userId);
     }
+    
+    @Override
+    public List<User> getAllCoaches() {
+        return userDAO.findByRole("coach");
+    }
 }
