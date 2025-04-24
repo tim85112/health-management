@@ -3,6 +3,7 @@ package com.healthmanagement.dao.social;
 import com.healthmanagement.model.member.User;
 import com.healthmanagement.model.social.Post;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -17,4 +18,8 @@ public interface ForumDAO extends JpaRepository<Post, Integer> {
     List<Post> findByUserId(Integer userId);
     
     List<Post> findByUser(User user);
+    
+    @Query("SELECT FORMAT(p.createdAt, 'yyyy-MM') AS month, COUNT(p) " +
+    	       "FROM Post p GROUP BY FORMAT(p.createdAt, 'yyyy-MM') ORDER BY month")
+    	List<Object[]> countPostByMonth();
 }

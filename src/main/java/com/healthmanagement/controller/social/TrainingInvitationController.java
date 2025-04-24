@@ -1,5 +1,6 @@
 package com.healthmanagement.controller.social;
 
+import com.healthmanagement.dto.social.TrainingInvitationDTO;
 import com.healthmanagement.model.social.TrainingInvitation;
 import com.healthmanagement.service.member.UserService;
 import com.healthmanagement.service.social.TrainingInvitationService;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/training")
+@RequestMapping("/api/training-invitations")
 @Tag(name = "訓練邀請", description = "訓練邀請管理API")
 public class TrainingInvitationController {
 
@@ -30,12 +31,20 @@ public class TrainingInvitationController {
         return userService.findByEmail(email).orElseThrow().getUserId();
     }
 
-    @PostMapping("/invite/{receiverId}")
+    @PostMapping("/invite")
     @Operation(summary = "訓練邀請")
-    public ResponseEntity<TrainingInvitation> sendInvitation(@PathVariable Integer receiverId,
-                                                             @RequestBody(required = false) String message) {
+    public ResponseEntity<TrainingInvitation> sendInvitation(@RequestBody TrainingInviteRequest req) {
         Integer senderId = getLoginUserId();
-        return ResponseEntity.ok(invitationService.sendInvitation(senderId, receiverId, message));
+        return ResponseEntity.ok(invitationService.sendInvitation(senderId, req.getReceiverId(), req.getMessage()));
+    }
+    
+    public static class TrainingInviteRequest {
+        private Integer receiverId;
+        private String message;
+        public Integer getReceiverId() { return receiverId; }
+        public void setReceiverId(Integer receiverId) { this.receiverId = receiverId; }
+        public String getMessage() { return message; }
+        public void setMessage(String message) { this.message = message; }
     }
 
     @PutMapping("/respond/{id}")
@@ -48,13 +57,13 @@ public class TrainingInvitationController {
 
     @GetMapping("/sent")
     @Operation(summary = "查詢ID發送邀請紀錄")
-    public ResponseEntity<List<TrainingInvitation>> mySentInvites() {
+    public ResponseEntity<List<TrainingInvitationDTO>> mySentInvites() {
         return ResponseEntity.ok(invitationService.getSentInvitations(getLoginUserId()));
     }
 
     @GetMapping("/received")
     @Operation(summary = "查詢ID收到邀請紀錄")
-    public ResponseEntity<List<TrainingInvitation>> myReceivedInvites() {
+    public ResponseEntity<List<TrainingInvitationDTO>> myReceivedInvites() {
         return ResponseEntity.ok(invitationService.getReceivedInvitations(getLoginUserId()));
     }
 }
