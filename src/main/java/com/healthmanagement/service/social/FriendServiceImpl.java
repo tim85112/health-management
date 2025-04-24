@@ -1,18 +1,25 @@
 package com.healthmanagement.service.social;
 
 import com.healthmanagement.dao.social.FriendRepository;
+import com.healthmanagement.dao.social.UserRepository;
+import com.healthmanagement.dto.social.FriendDTO;
+import com.healthmanagement.model.member.User;
 import com.healthmanagement.model.social.Friend;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class FriendServiceImpl implements FriendService {
 
     @Autowired
     private FriendRepository friendRepo;
+    
+    @Autowired
+    private UserRepository userRepo;
 
     @Override
     public boolean addFriend(Integer userId, Integer friendId) {
@@ -48,7 +55,20 @@ public class FriendServiceImpl implements FriendService {
     }
 
     @Override
-    public List<Friend> getFriends(Integer userId) {
-        return friendRepo.findAllByUserId(userId);
+    public List<FriendDTO> getFriends(Integer userId) {
+        List<Friend> rawFriends = friendRepo.findAllByUserId(userId);
+
+        return rawFriends.stream()
+                .map(f -> {
+                    User friendUser = userRepo.findById(f.getFriendId()).orElse(null);
+                    if (friendUser == null) {
+                        System.err.println("找不到使用者 ID: " + f.getFriendId());
+                    }
+                    return new FriendDTO(
+                        f.getFriendId(),
+                        friendUser != null ? friendUser.getName() : "未知使用者"
+                    );
+                })
+                .collect(Collectors.toList());
     }
 }

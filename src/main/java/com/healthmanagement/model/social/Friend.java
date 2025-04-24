@@ -2,10 +2,12 @@ package com.healthmanagement.model.social;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+@NoArgsConstructor
 @Entity
 @Getter
 @Setter
@@ -23,4 +25,10 @@ public class Friend {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+    
+    public Friend(Integer userId, Integer friendId) {
+        this.userId = userId;
+        this.friendId = friendId;
+        this.createdAt = LocalDateTime.now(); 
+    }
 }
