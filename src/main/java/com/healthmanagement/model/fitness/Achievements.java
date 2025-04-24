@@ -10,7 +10,8 @@ import com.healthmanagement.model.member.User;
 
 @Entity
 @Table(name = "achievements")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

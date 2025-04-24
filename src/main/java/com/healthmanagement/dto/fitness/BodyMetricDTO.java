@@ -2,19 +2,22 @@ package com.healthmanagement.dto.fitness;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
 import com.healthmanagement.model.fitness.BodyMetric;
 import com.healthmanagement.model.member.*;
 
 @Builder
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class BodyMetricDTO {

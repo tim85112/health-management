@@ -1,14 +1,16 @@
 package com.healthmanagement.dto.fitness;
 
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @Builder
 public class NutritionRecordDTO {

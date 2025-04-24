@@ -10,7 +10,8 @@ import com.healthmanagement.model.member.User;
 
 @Entity
 @Table(name = "body_metrics")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

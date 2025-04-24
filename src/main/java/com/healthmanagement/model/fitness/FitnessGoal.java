@@ -9,7 +9,8 @@ import com.healthmanagement.model.member.User;
 
 @Entity
 @Table(name = "fitness_goals")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

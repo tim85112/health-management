@@ -9,7 +9,8 @@ import com.healthmanagement.model.member.User;
 
 @Entity
 @Table(name = "nutrition_records")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

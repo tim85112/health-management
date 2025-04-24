@@ -311,8 +311,10 @@ public class ExerciseServiceImpl implements ExerciseService {
     }
 
     private ExerciseRecordDTO toDTO(ExerciseRecord exerciseRecord) {
-        // 這個方法現在只接收 ExerciseRecord，不再需要手動獲取 userName
-        // userName 是在 getExerciseRecordsByUserId 方法中直接賦值的
-        return new ExerciseRecordDTO(exerciseRecord, null); // userName 在查詢時已處理
+        String userName = null;
+        if (exerciseRecord.getUser() != null) {
+            userName = exerciseRecord.getUser().getName(); 
+        }
+        return new ExerciseRecordDTO(exerciseRecord, userName);
     }
 }

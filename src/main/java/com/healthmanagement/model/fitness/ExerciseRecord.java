@@ -11,7 +11,8 @@ import com.healthmanagement.model.member.User;
 
 @Entity
 @Table(name = "exercise_records")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

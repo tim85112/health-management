@@ -1,15 +1,18 @@
 package com.healthmanagement.dto.fitness;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import com.healthmanagement.model.fitness.ExerciseRecord;  
 
 import java.time.LocalDate;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExerciseRecordDTO {
