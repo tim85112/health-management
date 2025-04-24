@@ -50,6 +50,13 @@ public class BodyMetricController {
     public ResponseEntity<List<BodyMetricDTO>> getBodyMetricsByUserId(@Parameter(description = "用戶 ID") @PathVariable Integer userId) {
         return ResponseEntity.ok(bodyMetricService.findByUserId(userId));
     }
+    
+    @Operation(summary = "檢查用戶是否存在身體數據", description = "根據用戶 ID 檢查是否存在身體數據記錄")
+    @GetMapping("/user/{userId}/exists")
+    public ResponseEntity<Boolean> checkBodyMetricsExistsByUserId(@Parameter(description = "用戶 ID") @PathVariable Integer userId) {
+        return ResponseEntity.ok(bodyMetricService.existsByUserId(userId));
+    }
+
 
     @Operation(summary = "多條件查詢身體數據 (分頁)", description = "根據用戶 ID、姓名和日期範圍查詢身體數據，支援分頁")
     @GetMapping("/search")

@@ -1,6 +1,7 @@
 package com.healthmanagement.controller.fitness;
 
 import com.healthmanagement.dto.fitness.NutritionRecordDTO;
+import com.healthmanagement.dto.fitness.NutritionSummaryDTO;
 import com.healthmanagement.service.fitness.NutritionRecordService;
 import lombok.RequiredArgsConstructor;
 
@@ -76,5 +77,18 @@ public class NutritionRecordController {
     public ResponseEntity<Void> deleteNutritionRecord(@PathVariable Integer recordId) {
         nutritionRecordService.deleteNutritionRecord(recordId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+    @GetMapping("/summary/user/{userId}")
+    public ResponseEntity<?> getNutritionSummaryForUser(
+            @PathVariable Integer userId,
+            @RequestParam(required = false) LocalDateTime startDate,
+            @RequestParam(required = false) LocalDateTime endDate) {
+        try {
+            NutritionSummaryDTO summary = nutritionRecordService.getNutritionSummary(userId, startDate, endDate);
+            return ResponseEntity.ok(summary);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    
     }
 }

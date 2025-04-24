@@ -163,6 +163,11 @@ public class BodyMetricServiceImpl implements BodyMetricService {
 		bodyMetricDTO.setBmi(bmi);
 		return bodyMetricDTO;
 	}
+	
+
+    public boolean existsByUserId(Integer userId) {
+        return bodyMetricRepo.existsByUserId(userId);
+    }
 
 	@Override
 	public void deleteBodyMetric(Integer bodyMetricId) {

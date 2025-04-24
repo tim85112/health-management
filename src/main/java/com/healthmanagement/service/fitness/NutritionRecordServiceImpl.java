@@ -14,6 +14,12 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.time.LocalDate;
+import java.util.Map;
+
+import com.healthmanagement.dto.fitness.NutritionSummaryDTO;
+import com.healthmanagement.service.fitness.NutritionRecordService;
+import org.springframework.data.domain.PageRequest;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +38,19 @@ public class NutritionRecordServiceImpl implements NutritionRecordService {
 		return convertToDTO(savedRecord);
 
 	}
+	@Override
+    public List<NutritionRecordDTO> findByUserId(Integer userId) {
+        return nutritionRecordRepo.findByUserId(userId).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<NutritionRecordDTO> findByUserIdAndRecordDateBetween(Integer userId, LocalDateTime startDate, LocalDateTime endDate) {
+        return nutritionRecordRepo.findByUserIdAndRecordDateBetween(userId, startDate, endDate).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
 
 	@Override
 	public NutritionRecordDTO getNutritionRecordById(Integer recordId) {
@@ -121,6 +140,55 @@ public class NutritionRecordServiceImpl implements NutritionRecordService {
 
 	    return recordsPage.map(this::convertToDTO);
 	}
+	@Override
+	public NutritionSummaryDTO getNutritionSummary(Integer userId, LocalDateTime startDate, LocalDateTime endDate) {
+	    List<NutritionRecord> records;
+	    if (startDate != null && endDate != null) {
+	        records = nutritionRecordRepo.findByUserIdAndRecordDateBetween(userId, startDate, endDate);
+	    } else {
+	        records = nutritionRecordRepo.findByUserId(userId);
+	    }
+
+	    // 將 NutritionRecord 列表轉換為 NutritionRecordDTO 列表
+	    List<NutritionRecordDTO> recordDTOs = records.stream()
+	            .map(this::convertToDTO)
+	            .collect(Collectors.toList());
+
+	    NutritionSummaryDTO summary = new NutritionSummaryDTO();
+
+	    // 計算每日卡路里總攝取量 (使用 DTO)
+	    Map<LocalDate, Double> dailyCaloriesMap = recordDTOs.stream()
+	            .collect(Collectors.groupingBy(record -> record.getRecordDate().toLocalDate(),
+	                    Collectors.summingDouble(NutritionRecordDTO::getCalories)));
+	    summary.setDailyCalories(dailyCaloriesMap.entrySet().stream()
+	            .map(entry -> {
+	                NutritionSummaryDTO.DailyCalories dailyCalories = new NutritionSummaryDTO.DailyCalories();
+	                dailyCalories.setDate(entry.getKey().toString());
+	                dailyCalories.setCalories(entry.getValue());
+	                return dailyCalories;
+	            })
+	            .collect(Collectors.toList()));
+
+	    // 計算總營養素攝取量 (使用 DTO)
+	    double totalProtein = recordDTOs.stream().mapToDouble(NutritionRecordDTO::getProtein).sum();
+	    double totalCarbs = recordDTOs.stream().mapToDouble(NutritionRecordDTO::getCarbs).sum();
+	    double totalFats = recordDTOs.stream().mapToDouble(NutritionRecordDTO::getFats).sum();
+	    NutritionSummaryDTO.TotalMacros totalMacros = new NutritionSummaryDTO.TotalMacros();
+	    totalMacros.setProtein(totalProtein);
+	    totalMacros.setCarbs(totalCarbs);
+	    totalMacros.setFats(totalFats);
+	    summary.setTotalMacros(totalMacros);
+
+	    // 計算按餐別的卡路里總攝取量 (使用 DTO)
+	    Map<String, Double> caloriesByMealtimeMap = recordDTOs.stream()
+	            .collect(Collectors.groupingBy(NutritionRecordDTO::getMealtime,
+	                    Collectors.summingDouble(NutritionRecordDTO::getCalories)));
+	    summary.setCaloriesByMealtime(caloriesByMealtimeMap);
+
+	    return summary;
+	}
+	
+
 	private NutritionRecordDTO convertToDTO(NutritionRecord record) {
 		Integer userId = null;
 		String userName = null; // 新增姓名

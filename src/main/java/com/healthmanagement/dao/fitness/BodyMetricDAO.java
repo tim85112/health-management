@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 
+
 import com.healthmanagement.model.fitness.BodyMetric;
 
 public interface BodyMetricDAO extends JpaRepository<BodyMetric, Integer> {
@@ -35,4 +36,8 @@ public interface BodyMetricDAO extends JpaRepository<BodyMetric, Integer> {
 			@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate, Pageable pageable);
 	
 	long countByUser_Id(Integer userId);
+	
+	boolean existsByUserId(Integer userId);
+
+	    
 }

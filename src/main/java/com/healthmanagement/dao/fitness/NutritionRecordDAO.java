@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import com.healthmanagement.dto.fitness.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -41,4 +42,5 @@ public interface NutritionRecordDAO extends JpaRepository<NutritionRecord, Integ
     Page<NutritionRecord> findByUserIdAndUser_NameContainingAndRecordDateBetweenAndMealtime(Integer userId, String name, LocalDateTime startDate, LocalDateTime endDate, String mealtime, Pageable pageable);
 
     long countByUser_Id(Integer userId);
+ 
 }

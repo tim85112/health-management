@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.healthmanagement.dto.fitness.ExerciseRecordDTO;
+import com.healthmanagement.dto.fitness.OverviewDataDTO;
 import com.healthmanagement.service.fitness.ExerciseService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -87,4 +88,15 @@ public class ExerciseRecordsController {
 				exerciseType, startDate, endDate);
 		return ResponseEntity.ok(exerciseRecordPage);
 	}
+	
+	@GetMapping("/overview/user/{userId}")
+	@Operation(summary = "獲取用戶運動概覽", description = "根據用戶 ID 和時間範圍獲取運動總時間、總卡路里消耗、運動次數和連續運動天數")
+	public ResponseEntity<OverviewDataDTO> getOverviewDataForUser(
+	        @Parameter(description = "用戶 ID") @PathVariable Integer userId,
+	        @Parameter(description = "時間範圍") 
+	        @RequestParam(defaultValue = "week", required = false) String timeRange) {
+	    OverviewDataDTO overviewData = exerciseService.getOverviewDataForUser(userId, timeRange);
+	    return ResponseEntity.ok(overviewData);
+	}
+
 }

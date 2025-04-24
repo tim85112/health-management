@@ -3,6 +3,11 @@ package com.healthmanagement.service.fitness;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.Comparator;
+import java.time.DayOfWeek;
+import java.time.temporal.TemporalAdjusters;
+
+
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -24,6 +29,7 @@ import com.healthmanagement.dao.fitness.BodyMetricDAO;
 import com.healthmanagement.dao.fitness.ExerciseRecordDAO;
 import com.healthmanagement.dao.fitness.ExerciseTypeCoefficientDAO;
 import com.healthmanagement.dto.fitness.ExerciseRecordDTO;
+import com.healthmanagement.dto.fitness.OverviewDataDTO;
 import com.healthmanagement.model.fitness.BodyMetric;
 import com.healthmanagement.model.fitness.ExerciseRecord;
 import com.healthmanagement.model.fitness.ExerciseTypeCoefficient;
@@ -197,6 +203,100 @@ public class ExerciseServiceImpl implements ExerciseService {
         Page<ExerciseRecord> exerciseRecordPage = exerciseRecordRepo.findAll(spec, pageable);
         return exerciseRecordPage.map(this::toDTO);
     }
+    @Override
+    public OverviewDataDTO getOverviewDataForUser(Integer userId) {
+        return getOverviewDataForUser(userId, "week");
+    }
+
+    // 新的帶有時間範圍的方法
+    @Override
+    public OverviewDataDTO getOverviewDataForUser(Integer userId, String timeRange) {
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate;
+
+        // 根據不同的時間範圍設定起始日期
+        switch (timeRange) {
+            case "week":
+            	  startDate = endDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+                  break;
+              case "month":
+                  // 本月（從本月第一天到今天）
+                  startDate = endDate.withDayOfMonth(1);
+                  break;
+              case "quarter":
+                  // 本季（從本季第一天到今天）
+                  int currentMonth = endDate.getMonthValue();
+                  int firstMonthOfQuarter = ((currentMonth - 1) / 3) * 3 + 1;
+                  startDate = endDate.withMonth(firstMonthOfQuarter).withDayOfMonth(1);
+                  break;
+              default:
+                  startDate = endDate.minusWeeks(1);
+          }
+
+          // 調試日誌
+          System.out.println("Time Range: " + timeRange);
+          System.out.println("Start Date: " + startDate);
+          System.out.println("End Date: " + endDate);
+
+        // 使用日期範圍查詢
+        List<ExerciseRecord> userRecords = exerciseRecordRepo.findByUserIdAndExerciseDateBetween(
+            userId, 
+            startDate, 
+            endDate
+        );
+        System.out.println("Records Count: " + userRecords.size());
+        int totalWorkoutTime = userRecords.stream()
+                .mapToInt(ExerciseRecord::getExerciseDuration)
+                .sum();
+
+        double totalCaloriesBurned = userRecords.stream()
+                .mapToDouble(ExerciseRecord::getCaloriesBurned)
+                .sum();
+
+        int workoutCount = userRecords.size();
+
+        // 計算連續運動天數的改進邏輯
+        int consecutiveDays = calculateConsecutiveWorkoutDays(userRecords);
+
+        return new OverviewDataDTO(
+            totalWorkoutTime, 
+            totalCaloriesBurned, 
+            workoutCount, 
+            consecutiveDays
+        );
+    }
+
+    // 連續運動天數計算方法（之前提供的方法）
+    private int calculateConsecutiveWorkoutDays(List<ExerciseRecord> records) {
+        if (records == null || records.isEmpty()) {
+            return 0;
+        }
+
+        // 去重複並降序排序
+        List<LocalDate> sortedUniqueDates = records.stream()
+            .map(ExerciseRecord::getExerciseDate)
+            .distinct()
+            .sorted(Comparator.reverseOrder())
+            .collect(Collectors.toList());
+
+        int consecutiveDays = 0;
+        LocalDate currentDate = LocalDate.now();
+
+        for (LocalDate workoutDate : sortedUniqueDates) {
+            if (workoutDate.isEqual(currentDate)) {
+                consecutiveDays++;
+                currentDate = currentDate.minusDays(1);
+            } else if (workoutDate.isEqual(currentDate.minusDays(1))) {
+                consecutiveDays++;
+                currentDate = currentDate.minusDays(1);
+            } else {
+                break; // 如果日期不連續，則停止計算
+            }
+        }
+
+        return consecutiveDays;
+    }
+
 
     private LocalDate parseDate(String dateStr) {
         if (dateStr != null && !dateStr.isEmpty()) {

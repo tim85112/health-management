@@ -40,5 +40,7 @@ public interface BodyMetricService {
 
 	Page<BodyMetricDTO> findByMultipleCriteriaWithPagination(Integer userId, String userName, String startDate,
 			String endDate, Pageable pageable);
+	
+	 boolean existsByUserId(Integer userId);
 
 }

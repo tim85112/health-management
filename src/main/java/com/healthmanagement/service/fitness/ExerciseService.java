@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.healthmanagement.dto.fitness.ExerciseRecordDTO;
+import com.healthmanagement.dto.fitness.OverviewDataDTO;
 
 public interface ExerciseService {
 	ExerciseRecordDTO saveExerciseRecord(ExerciseRecordDTO exerciseRecordDTO);
@@ -24,5 +25,9 @@ public interface ExerciseService {
 
 	Page<ExerciseRecordDTO> getAllExerciseRecords(Pageable pageable, Integer userId, String userName,
 			String exerciseType, String startDate, String endDate);
+
+	OverviewDataDTO getOverviewDataForUser(Integer userId);
+
+	OverviewDataDTO getOverviewDataForUser(Integer userId, String timeRange);
 
 }
