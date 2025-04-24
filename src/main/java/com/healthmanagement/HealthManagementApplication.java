@@ -2,8 +2,10 @@ package com.healthmanagement;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
+@EnableScheduling // 排程任務需要
 public class HealthManagementApplication {
 
 	public static void main(String[] args) {

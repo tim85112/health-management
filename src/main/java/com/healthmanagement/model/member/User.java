@@ -5,6 +5,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.healthmanagement.model.course.Course;
 import com.healthmanagement.model.course.Enrollment;
+import com.healthmanagement.model.course.TrialBooking;
 import com.healthmanagement.model.fitness.Achievements;
 import com.healthmanagement.model.fitness.ExerciseRecord;
 import com.healthmanagement.model.fitness.FitnessGoal;
@@ -61,11 +62,15 @@ public class User {
 
     @OneToMany(mappedBy = "coach", cascade = CascadeType.ALL)
     @JsonManagedReference("user-courses")
-    private List<Course> coursesCoached; // 教練所開的課程
+    private List<Course> coursesCoached; // 課程
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @JsonManagedReference("user-enrollments")
-    private List<Enrollment> enrollments; // 使用者的報名紀錄
+    private List<Enrollment> enrollments; // 報名
+    
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonManagedReference("user-trial-bookings")
+    private List<TrialBooking> trialBookings; //預約
 
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
