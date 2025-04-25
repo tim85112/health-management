@@ -129,7 +129,7 @@ public class UserServiceImpl implements UserService {
             if (!PASSWORD_PATTERN.matcher(rawPassword).matches()) {
                 throw new RuntimeException("密碼必須包含至少一個大寫和一個小寫字母");
             }
-            user.setPasswordHash(passwordEncoder.encode(rawPassword));
+            user.setPasswordHash(passwordEncoder.encode(userDetails.getPasswordHash()));
         }
         if (userDetails.getGender() != null) {
             user.setGender(userDetails.getGender());
@@ -177,5 +177,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> findById(Integer userId) {
         return userDAO.findById(userId);
+    }
+
+    @Override
+    public List<User> getAllCoaches() {
+        return userDAO.findByRole("coach");
     }
 }

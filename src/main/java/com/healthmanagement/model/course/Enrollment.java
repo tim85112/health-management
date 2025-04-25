@@ -29,10 +29,11 @@ public class Enrollment {
 
     @ManyToOne
     @JoinColumn(name = "course_id", nullable = false)
-    @JsonBackReference("course-enrollments") // 防止序列化時無限遞迴
+    @JsonBackReference("course-enrollments")
     private Course course; // 報名課程 (關聯到 Course 表格)
 
-    private LocalDateTime enrollmentTime;
+    @Builder.Default
+    private LocalDateTime enrollmentTime = LocalDateTime.now();
 
     @Column(nullable = false, length = 50)
     private String status;

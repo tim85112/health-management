@@ -261,22 +261,45 @@ public class OrderServiceImpl implements OrderService {
         dto.setId(order.getId());
         dto.setUserId(order.getUser().getId());
         
-        // 優先使用用戶電子郵箱
-        if (order.getUser().getEmail() != null && !order.getUser().getEmail().isEmpty()) {
-            dto.setUserName(order.getUser().getEmail());
-        } else if (order.getUser().getName() != null && !order.getUser().getName().isEmpty()) {
-            dto.setUserName(order.getUser().getName());
-        } else {
-            // 如果沒有電子郵箱或名稱，使用ID
-            dto.setUserName("用戶" + order.getUser().getId());
+        // 用戶相關信息處理
+        if (order.getUser() != null) {
+            // 設置用戶名稱
+            if (order.getUser().getName() != null && !order.getUser().getName().isEmpty()) {
+                dto.setUserName(order.getUser().getName());
+            } else if (order.getUser().getEmail() != null && !order.getUser().getEmail().isEmpty()) {
+                dto.setUserName(order.getUser().getEmail());
+            } else {
+                dto.setUserName("用戶" + order.getUser().getId());
+            }
+            
+            // 設置用戶電子郵箱
+            if (order.getUser().getEmail() != null) {
+                dto.setUserEmail(order.getUser().getEmail());
+            }
+            
+            // 設置用戶電話 (假設User類有getPhone方法)
+            try {
+                java.lang.reflect.Method getPhoneMethod = order.getUser().getClass().getMethod("getPhone");
+                if (getPhoneMethod != null) {
+                    Object phoneValue = getPhoneMethod.invoke(order.getUser());
+                    if (phoneValue != null) {
+                        dto.setUserPhone(phoneValue.toString());
+                    }
+                }
+            } catch (Exception e) {
+                // 忽略這個異常，表示User類沒有phone屬性
+                System.out.println("Info: User類沒有phone屬性或獲取失敗: " + e.getMessage());
+            }
         }
         
         dto.setTotalAmount(order.getTotalAmount());
         dto.setStatus(order.getStatus());
-        dto.setCreatedAt(order.getCreatedAt().toLocalDateTime());
+        if (order.getCreatedAt() != null) {
+            dto.setCreatedAt(order.getCreatedAt().toLocalDateTime());
+        }
         
         List<OrderItemDTO> itemDTOs = order.getOrderItems().stream()
-                .<OrderItemDTO>map(this::convertToOrderItemDTO)
+                .map(this::convertToOrderItemDTO)
                 .collect(Collectors.toList());
         dto.setOrderItems(itemDTOs);
         

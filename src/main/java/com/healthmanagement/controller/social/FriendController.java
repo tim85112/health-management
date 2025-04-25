@@ -1,6 +1,6 @@
 package com.healthmanagement.controller.social;
 
-import com.healthmanagement.model.social.Friend;
+import com.healthmanagement.dto.social.FriendDTO;
 import com.healthmanagement.service.member.UserService;
 import com.healthmanagement.service.social.FriendService;
 
@@ -12,7 +12,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/friends")
@@ -50,8 +53,18 @@ public class FriendController {
 
     @GetMapping
     @Operation(summary = "顯示全部好友")
-    public ResponseEntity<List<Friend>> getFriends() {
+    public ResponseEntity<List<Map<String, Object>>> getFriends() {
         Integer myId = getLoginUserId();
-        return ResponseEntity.ok(friendService.getFriends(myId));
+        List<FriendDTO> friends = friendService.getFriends(myId);
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (FriendDTO f : friends) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("friendId", f.getFriendId());
+            map.put("friendName", f.getName()); 
+            result.add(map);
+        }
+
+        return ResponseEntity.ok(result);
     }
 }

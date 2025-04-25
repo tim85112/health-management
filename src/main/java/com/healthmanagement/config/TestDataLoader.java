@@ -61,6 +61,9 @@ public class TestDataLoader implements CommandLineRunner {
         // 創建管理員
         users.add(createUser("阿達", "ivan@example.com", "admin123", "M", "肌肉狂魔", "admin", 0));
 
+        // 創建匿名登入者
+        users.add(createUser("Guest", "guest@example.com", "guest123", "M", "匿名ABC", "guest", 0));
+
         // 創建一般使用者
         users.add(createUser("龍哥", "dragon@domain.com", "user123", "M", "woooooo", "user", 0));
         users.add(createUser("狗仔", "baobao@example.com", "user123", "M", "NILL", "user", 0));
@@ -79,8 +82,8 @@ public class TestDataLoader implements CommandLineRunner {
             ));
         }
 
-        // 自動生成額外 5 筆教練用戶
-        for (int i = 1; i <= 5; i++) {
+        // 自動生成額外 10 筆教練用戶
+        for (int i = 1; i <= 10; i++) {
             users.add(createUser(
                 "教練用戶" + (16 + i), // 延續編號，從 17 開始
                 "coach" + i + "@example.com",

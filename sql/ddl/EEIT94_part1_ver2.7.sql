@@ -38,17 +38,24 @@ CREATE TABLE reset_tokens (
         REFERENCES users(user_id)
 );
 GO
--- 創建 course 表
+
+-- 創建 [course] 表
 CREATE TABLE [course]
 (
-    [id] INT PRIMARY KEY IDENTITY (1, 1),
-    [name] VARCHAR(255) NOT NULL,
-    [description] TEXT,
-    [day_of_week] INT NOT NULL, -- 0: Sunday, 1: Monday, ..., 6: Saturday
-    [start_time] TIME NOT NULL,
-    [coach_id] INT NOT NULL,
-    [duration] INT NOT NULL, -- 以分鐘為單位
-    [max_capacity] INT NOT NULL
+    [id] INT PRIMARY KEY IDENTITY (1, 1),
+    [name] VARCHAR(255) NOT NULL,
+    [description] TEXT,
+    [day_of_week] INT NOT NULL,
+    [start_time] TIME NOT NULL,
+    [coach_id] INT NOT NULL,
+    [duration] INT NOT NULL,
+    [max_capacity] INT NOT NULL,
+	[offers_trial_option] BIT DEFAULT 0,
+    [max_trial_capacity] INT NULL,
+    -- 資料表級別的條件約束
+	CONSTRAINT [CK_DayOfWeek] CHECK ([day_of_week] BETWEEN 0 AND 6),
+	CONSTRAINT [CK_DurationPositive] CHECK ([duration] > 0),
+	CONSTRAINT [CK_MaxCapacityPositive] CHECK ([max_capacity] > 0),
 );
 GO
 
@@ -60,6 +67,21 @@ CREATE TABLE [enrollment]
     [course_id] INT NOT NULL,
     [enrollment_time] DATETIME DEFAULT GETDATE(),
     [status] VARCHAR(50) NOT NULL,
+	CONSTRAINT [CK_EnrollmentStatus] CHECK ([status] IN ('已報名', '已取消', '候補中', '已完成'))
+);
+GO
+
+-- 建立 trial_booking 資料表
+CREATE TABLE [trial_booking]
+(
+    [id] INT PRIMARY KEY IDENTITY (1, 1),
+    [user_id] INT,
+    [course_id] INT NOT NULL,
+    [booking_name] VARCHAR(255) NOT NULL,			-- 報名姓名
+    [booking_phone] VARCHAR(20) NOT NULL,			-- 電話號碼
+    [booking_date] DATE,							-- 預約日期
+    [booking_status] VARCHAR(50) DEFAULT '已預約',	-- 預約狀態 (例如：已預約、已取消、已完成)
+    [booked_at] DATETIME DEFAULT GETDATE(),			-- 預約建立時間
 );
 GO
 
@@ -128,54 +150,58 @@ CREATE TABLE [payment]
 GO
 
 -- 創建 exercise_type_coefficients 表
-CREATE TABLE [exercise_type_coefficients] (
-    [exercise_type_id] INT PRIMARY KEY IDENTITY(1, 1),
-    [exercise_name] NVARCHAR(50) NOT NULL,
-    [met] FLOAT NOT NULL
+CREATE TABLE [exercise_type_coefficients]
+(
+    [exercise_type_id] INT PRIMARY KEY IDENTITY (1, 1),
+    [exercise_name]    NVARCHAR(50) NOT NULL,
+    [met]              FLOAT        NOT NULL
 );
 GO
 
 -- 創建 body_metrics 表
-CREATE TABLE [body_metrics] (
-    [id] INT PRIMARY KEY IDENTITY(1, 1),
-    [user_id] INT NOT NULL FOREIGN KEY REFERENCES [users]([user_id]) ON DELETE CASCADE,
-    [weight] FLOAT NOT NULL,
-    [body_fat] FLOAT,
-    [muscle_mass] FLOAT,
+CREATE TABLE [body_metrics]
+(
+    [id]                  INT PRIMARY KEY IDENTITY (1, 1),
+    [user_id]             INT   NOT NULL FOREIGN KEY REFERENCES [users] ([user_id]) ON DELETE CASCADE,
+    [weight]              FLOAT NOT NULL,
+    [body_fat]            FLOAT,
+    [muscle_mass]         FLOAT,
     [waist_circumference] FLOAT,
-    [hip_circumference] FLOAT,
-    [height] FLOAT,
-    [bmi] FLOAT,
-    [date_recorded] DATE DEFAULT GETDATE()
+    [hip_circumference]   FLOAT,
+    [height]              FLOAT,
+    [bmi]                 FLOAT,
+    [date_recorded]       DATE DEFAULT GETDATE()
 );
 GO
 
 -- 創建 exercise_records 表
-CREATE TABLE [exercise_records] (
-    [record_id] INT PRIMARY KEY IDENTITY(1, 1),
-    [user_id] INT NOT NULL FOREIGN KEY REFERENCES [users]([user_id]) ON DELETE CASCADE,
-    [exercise_type] NVARCHAR(50) NOT NULL,
-    [exercise_duration] INT NOT NULL,
-    [calories_burned] FLOAT NOT NULL,
-    [exercise_date] DATE NOT NULL
+CREATE TABLE [exercise_records]
+(
+    [record_id]         INT PRIMARY KEY IDENTITY (1, 1),
+    [user_id]           INT          NOT NULL FOREIGN KEY REFERENCES [users] ([user_id]) ON DELETE CASCADE,
+    [exercise_type]     NVARCHAR(50) NOT NULL,
+    [exercise_duration] INT          NOT NULL,
+    [calories_burned]   FLOAT        NOT NULL,
+    [exercise_date]     DATE         NOT NULL
 );
 GO
 
 -- 創建 nutrition_records 表
-CREATE TABLE [nutrition_records] (
-    [record_id] INT PRIMARY KEY IDENTITY(1, 1),
-    [user_id] INT FOREIGN KEY REFERENCES [users]([user_id]) ON DELETE CASCADE,
-    [food_name] NVARCHAR(255) NOT NULL,
-    [calories] INT NOT NULL,
-    [protein] FLOAT NOT NULL,
-    [carbs] FLOAT NOT NULL,
-    [fats] FLOAT NOT NULL,
-    [mealtime] NVARCHAR(50) CHECK (mealtime IN ('早餐', '午餐', '晚餐', '點心')),
+CREATE TABLE [nutrition_records]
+(
+    [record_id]   INT PRIMARY KEY IDENTITY (1, 1),
+    [user_id]     INT FOREIGN KEY REFERENCES [users] ([user_id]) ON DELETE CASCADE,
+    [food_name]   NVARCHAR(255) NOT NULL,
+    [calories]    INT           NOT NULL,
+    [protein]     FLOAT         NOT NULL,
+    [carbs]       FLOAT         NOT NULL,
+    [fats]        FLOAT         NOT NULL,
+    [mealtime]    NVARCHAR(50) CHECK (mealtime IN ('早餐', '午餐', '晚餐', '點心')),
     [record_date] DATETIME2 DEFAULT GETDATE()
 );
 GO
 
--- 創建 fitness_goals 表 
+-- 創建 fitness_goals 表
 CREATE TABLE [fitness_goals] (
     [goal_id] INT PRIMARY KEY IDENTITY(1, 1),
     [user_id] INT NOT NULL FOREIGN KEY REFERENCES [users]([user_id]) ON DELETE CASCADE,
@@ -194,18 +220,19 @@ CREATE TABLE [fitness_goals] (
 GO
 
 -- 創建 achievements 表
-CREATE TABLE [achievements] (
-    [achievement_id] INT PRIMARY KEY IDENTITY(1, 1),
-    [user_id] INT NOT NULL FOREIGN KEY REFERENCES [users]([user_id]) ON DELETE CASCADE,
-    [achievement_type] NVARCHAR(50),
-    [title] NVARCHAR(255) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
-    [description] NVARCHAR(500),
-    [achieved_date] DATE DEFAULT GETDATE(),
+CREATE TABLE [achievements]
+(
+    [achievement_id]   INT PRIMARY KEY IDENTITY (1, 1),
+    [user_id]          INT                                                NOT NULL FOREIGN KEY REFERENCES [users] ([user_id]) ON DELETE CASCADE,
+    [achievement_type] NVARCHAR(50) ,
+    [title]            NVARCHAR(255) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+    [description]      NVARCHAR(500),
+    [achieved_date]    DATE DEFAULT GETDATE(),
     CONSTRAINT [UC_UniqueAchievement] UNIQUE ([user_id], [title])
 );
 GO
 
--- 創建 achievement_definitions 表 
+-- 創建 achievement_definitions 表
 CREATE TABLE [achievement_definitions] (
     [definition_id] INT PRIMARY KEY IDENTITY(1, 1),
     [achievement_type] NVARCHAR(50) UNIQUE NOT NULL,
@@ -314,6 +341,19 @@ CREATE TABLE [post_favorite] (
 );
 GO
 
+--訓練邀請資料表
+CREATE TABLE [friend_invitation] (
+    [id]           INT PRIMARY KEY IDENTITY(1,1),
+    [inviter_id]   INT NOT NULL,
+    [invitee_id]   INT NOT NULL,
+    [status]       NVARCHAR(20) NOT NULL DEFAULT 'pending',
+    [created_at]   DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT FK_invitation_inviter FOREIGN KEY ([inviter_id]) REFERENCES [users]([user_id]),
+    CONSTRAINT FK_invitation_invitee FOREIGN KEY ([invitee_id]) REFERENCES [users]([user_id]),
+    CONSTRAINT UQ_invitation_pair UNIQUE ([inviter_id], [invitee_id])
+);
+GO
+
 
 -- 外鍵約束設定
 ALTER TABLE [user_point]
@@ -342,6 +382,10 @@ ALTER TABLE [enrollment]
     ADD FOREIGN KEY ([user_id]) REFERENCES [users] ([user_id]);
 ALTER TABLE [enrollment]
     ADD FOREIGN KEY ([course_id]) REFERENCES [course] ([id]);
+ALTER TABLE [trial_booking]
+	ADD FOREIGN KEY ([user_id]) REFERENCES [users]([user_id]);
+ALTER TABLE [trial_booking]
+	ADD FOREIGN KEY ([course_id]) REFERENCES [course]([id]);
 GO
 
 -- 儀表板視圖
