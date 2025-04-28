@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.healthmanagement.dao.social.FriendInvitationRepository;
 import com.healthmanagement.dao.social.FriendRepository;
+import com.healthmanagement.dto.social.FriendInvitationDTO;
 import com.healthmanagement.model.social.Friend;
 import com.healthmanagement.model.social.FriendInvitation;
 import com.healthmanagement.service.member.UserService;
@@ -79,9 +80,24 @@ public class FriendInvitationController {
 
     // 查看我的邀請列表
     @GetMapping("/received")
-    public ResponseEntity<List<FriendInvitation>> getReceivedInvites() {
+    public ResponseEntity<List<FriendInvitationDTO>> getReceivedInvites() {
         Integer userId = getLoginUserId();
-        return ResponseEntity.ok(repo.findByInviteeIdAndStatus(userId, "PENDING"));
+        List<FriendInvitation> invitations = repo.findByInviteeIdAndStatus(userId, "PENDING");
+
+        List<FriendInvitationDTO> result = invitations.stream().map(invite -> {
+            FriendInvitationDTO dto = new FriendInvitationDTO();
+            dto.setId(invite.getId());
+            dto.setInviterId(invite.getInviterId());
+            dto.setStatus(invite.getStatus());
+
+            // 加入邀請者名稱
+            userService.findById(invite.getInviterId())
+                .ifPresent(user -> dto.setInviterName(user.getName()));
+
+            return dto;
+        }).toList();
+
+        return ResponseEntity.ok(result);
     }
 }
 
