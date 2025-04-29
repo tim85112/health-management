@@ -43,7 +43,7 @@ CREATE TABLE [course]
 (
     [id] INT PRIMARY KEY IDENTITY (1, 1),
     [name] VARCHAR(255) NOT NULL,
-    [description] TEXT,
+    [description] TEXT,
     [day_of_week] INT NOT NULL,
     [start_time] TIME NOT NULL,
     [coach_id] INT NOT NULL,
@@ -66,7 +66,7 @@ CREATE TABLE [enrollment]
     [course_id] INT NOT NULL,
     [enrollment_time] DATETIME DEFAULT GETDATE(),
     [status] VARCHAR(50) NOT NULL,
-	CONSTRAINT [CK_EnrollmentStatus] CHECK ([status] IN ('已報名', '已取消', '候補中', '已完成'))
+	CONSTRAINT [CK_EnrollmentStatus] CHECK ([status] IN ('已報名', '已取消', '候補中', '已完成', '未到場'))
 );
 GO
 
@@ -77,6 +77,7 @@ CREATE TABLE [trial_booking]
     [user_id] INT,
     [course_id] INT NOT NULL,
     [booking_name] VARCHAR(255) NOT NULL,			-- 報名姓名
+	[booking_email] VARCHAR(255) NOT NULL,
     [booking_phone] VARCHAR(20) NOT NULL,			-- 電話號碼
     [booking_date] DATE,							-- 預約日期
     [booking_status] VARCHAR(50) DEFAULT '已預約',	-- 預約狀態 (例如：已預約、已取消、已完成)

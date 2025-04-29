@@ -1,6 +1,7 @@
 package com.healthmanagement.service.member;
 
 import com.healthmanagement.dao.member.UserDAO;
+import com.healthmanagement.dto.member.UserDTO;
 import com.healthmanagement.model.member.User;
 import com.healthmanagement.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,7 +9,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import com.healthmanagement.service.fitness.AchievementService;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.LocalDate;
@@ -16,6 +17,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -155,10 +157,26 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> getAllUsers() {
-        return userDAO.findAll();
-    }
+	@Transactional(readOnly = true)
+	public List<UserDTO> getAllUsers() {
+        List<User> users = userDAO.findAll();
 
+        return users.stream()
+                    .map(this::mapUserToUserDTO)
+                    .collect(Collectors.toList());
+	}
+    private UserDTO mapUserToUserDTO(User user) {
+    	UserDTO userDTO = new UserDTO();
+
+    	userDTO.setUserId(user.getId());
+    	userDTO.setName(user.getName());
+    	userDTO.setEmail(user.getEmail());
+    	userDTO.setGender(user.getGender());
+    	userDTO.setBio(user.getBio());
+    	userDTO.setRole(user.getRole());
+    	userDTO.setUserPoints(user.getUserPoints());
+        return userDTO;
+    }
     @Override
     public boolean existsByEmail(String email) {
         return userDAO.existsByEmail(email);

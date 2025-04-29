@@ -1,10 +1,14 @@
 package com.healthmanagement.service.course;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest; // 引入 PageRequest
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl; // 如果需要手動構建 Page
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.healthmanagement.dao.course.CourseDAO;
 import com.healthmanagement.dao.course.EnrollmentDAO;
@@ -28,6 +32,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -266,7 +271,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     public List<EnrollmentDTO> getEnrollmentsByUserId(Integer userId) {
         logger.info("查詢使用者 ID {} 的所有常規報名記錄...", userId);
         User user = userDAO.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+                .orElseThrow(() -> new EntityNotFoundException("查無此會員編號"));
         // 這裡不需要根據 offersTrialOption 過濾，因為 Enrollment 記錄本身就是常規報名記錄
         List<Enrollment> userEnrollments = enrollmentDAO.findByUser(user);
         logger.info("找到使用者 ID {} 的 {} 條報名記錄。", userId, userEnrollments.size());
@@ -281,7 +286,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     public List<EnrollmentDTO> getEnrollmentsByCourseId(Integer courseId) {
         logger.info("查詢常規課程 ID {} 的所有報名記錄...", courseId);
         Course course = courseDAO.findById(courseId)
-                .orElseThrow(() -> new EntityNotFoundException("Course not found with id: " + courseId));
+                .orElseThrow(() -> new EntityNotFoundException("查無此課程編號"));
 
         // 移除對 offersTrialOption 的檢查，一個課程即使提供體驗選項，也可能有常規報名記錄
 
@@ -312,7 +317,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     public boolean isUserEnrolled(Integer userId, Integer courseId) {
         logger.info("檢查使用者 ID {} 是否已有效報名或候補常規課程 ID: {}", userId, courseId);
         User user = userDAO.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+                .orElseThrow(() -> new EntityNotFoundException("查無此會員編號"));
         Course course = courseDAO.findById(courseId)
                 .orElseThrow(() -> new EntityNotFoundException("Course not found with id: " + courseId));
         // 移除對 offersTrialOption 的檢查，isUserEnrolled 判斷只關乎常規報名表 Enrollment
@@ -347,57 +352,92 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         return hasActive;
     }
 
-
- // 查詢所有課程並包含當前使用者的報名狀態和人數 (常規和體驗)
-    // 這個方法被大幅修改以整合常規和體驗資訊
+		
     @Override
-    public List<CourseInfoDTO> getAllCoursesWithUserStatus(Integer userId) {
-        logger.info("查詢所有課程並包含使用者 {} 的常規報名和體驗預約狀態及人數...", userId != null ? userId : "匿名");
+    @Transactional(readOnly = true) // 標記為只讀事務
+    public Page<CourseInfoDTO> getAllCoursesWithUserStatus(Integer userId, Integer page, Integer size, Boolean offersTrialOption, Integer dayOfWeek, String fullnessStatus) { // 新增 fullnessStatus 參數
+        logger.info("查詢課程列表並包含使用者 {} 的狀態，頁碼: {}, 每頁: {}, 體驗課過濾: {}, 星期幾過濾: {}, 滿額狀態過濾: {}...", // 更新日誌
+                    userId != null ? userId : "匿名", page, size, offersTrialOption != null ? offersTrialOption : "無過濾", dayOfWeek != null ? dayOfWeek : "無過濾", fullnessStatus != null ? fullnessStatus : "無過濾");
 
-        // 1. 獲取所有課程
-        List<Course> allCourses = courseDAO.findAll();
-        if (allCourses.isEmpty()) {
-            logger.info("沒有找到任何課程。");
-            return Collections.emptyList();
+        // 1. 創建分頁請求
+        Pageable pageable = PageRequest.of(page, size);
+
+        // 2. 將 String fullnessStatus 轉換為 Boolean isFullForDao
+        Boolean isFullForDao = null;
+        if ("full".equals(fullnessStatus)) {
+            isFullForDao = Boolean.TRUE;
+             logger.debug("滿額狀態過濾轉換為 Boolean: TRUE");
+        } else if ("notFull".equals(fullnessStatus)) {
+            isFullForDao = Boolean.FALSE;
+             logger.debug("滿額狀態過濾轉換為 Boolean: FALSE");
+        } else {
+             logger.debug("無滿額狀態過濾，Boolean 參數為 NULL");
         }
-        logger.info("找到 {} 條課程記錄。", allCourses.size());
+
+
+        // 3. 呼叫 CourseDAO 中新添加的 findCoursesWithFilters 方法，將所有篩選條件和分頁傳入
+        // 這個方法能夠同時處理 offersTrialOption, dayOfWeek, isFull 和 Pageable
+        Page<Course> coursePage = courseDAO.findCoursesWithFilters(
+            pageable,
+            offersTrialOption,  // 體驗課過濾參數
+            dayOfWeek,          // 星期幾過濾參數
+            isFullForDao        // 滿額狀態過濾參數 (Boolean 類型)
+        );
+
+
+        // 4. 獲取符合篩選條件的課程列表 (當前頁的數據) 和總數
+        List<Course> courses = coursePage.getContent();
+        long totalElements = coursePage.getTotalElements(); // <-- 這裡獲取的是經過後端篩選後的總數
+
+        if (courses.isEmpty()) {
+            logger.info("在當前篩選和分頁條件下，沒有找到任何課程。");
+            return new PageImpl<>(Collections.emptyList(), pageable, totalElements); // 返回空分頁結果
+        }
+        logger.debug("找到 {} 條課程記錄 (當前頁)，總數 {}。", courses.size(), totalElements);
+
+
+        // ... 後續的獲取使用者報名/預約狀態、組裝 CourseInfoDTO 的邏輯保持不變 ...
+        // 這部分邏輯是基於 coursePage.getContent() 返回的當前頁數據進行的，所以不需要修改。
 
         final User finalUser = (userId != null) ? userDAO.findById(userId).orElse(null) : null;
         if (userId != null && finalUser == null) {
             logger.warn("傳入的使用者 ID {} 未找到對應的 User 實體，將無法查詢個人狀態。", userId);
         }
 
-        // 2. 獲取常規報名相關數據 (已報名和候補人數，以及當前使用者的常規報名狀態)
-        // 獲取所有課程中已報名和候補的記錄
-        List<Enrollment> allRegisteredEnrollments = enrollmentDAO.findByStatus(REGISTERED_STATUS); // 查找所有已報名記錄
-        List<Enrollment> allWaitingEnrollments = enrollmentDAO.findByStatus(WAITING_STATUS); // 查找所有候補中記錄
+        // 4. 獲取常規報名相關數據 (已報名和候補人數，以及當前使用者的常規報名狀態)
+        // 為了效率，我們只查詢當前頁課程的報名記錄
+        List<Integer> currentCourseIds = courses.stream().map(Course::getId).collect(Collectors.toList());
 
-        // 將常規報名記錄按課程 ID 分組計數
-        final Map<Integer, Long> registeredCountsMap = allRegisteredEnrollments.stream()
+        List<Enrollment> currentCoursesRegisteredEnrollments = enrollmentDAO.findByCourseIdInAndStatus(currentCourseIds, REGISTERED_STATUS);
+        List<Enrollment> currentCoursesWaitingEnrollments = enrollmentDAO.findByCourseIdInAndStatus(currentCourseIds, WAITING_STATUS);
+
+        final Map<Integer, Long> registeredCountsMap = currentCoursesRegisteredEnrollments.stream()
                 .filter(e -> e.getCourse() != null)
                 .collect(Collectors.groupingBy(e -> e.getCourse().getId(), Collectors.counting()));
 
-        final Map<Integer, Long> waitlistCountsMap = allWaitingEnrollments.stream()
+        final Map<Integer, Long> waitlistCountsMap = currentCoursesWaitingEnrollments.stream()
                 .filter(e -> e.getCourse() != null)
                 .collect(Collectors.groupingBy(e -> e.getCourse().getId(), Collectors.counting()));
 
-        // 如果有登入使用者，獲取其所有活躍常規報名記錄 (狀態不在非活躍列表中的)
-        // 使用 EnrollmentDAO 中新添加的 findByUserAndStatusNotIn 方法
         final Map<Integer, Enrollment> userActiveEnrollmentsMap = (finalUser != null) ?
-                enrollmentDAO.findByUserAndStatusNotIn(finalUser, INACTIVE_ENROLLMENT_STATUSES).stream()
+                // *** 呼叫 EnrollmentDAO 中根據使用者、課程 ID 列表和狀態列表查詢的方法 ***
+                // 這個方法需要在 EnrollmentDAO 介面中定義
+                enrollmentDAO.findByUserAndCourseIdInAndStatusNotIn(finalUser, currentCourseIds, INACTIVE_ENROLLMENT_STATUSES).stream()
                         .filter(e -> e.getCourse() != null)
                         .collect(Collectors.toMap(e -> e.getCourse().getId(), Function.identity())) :
                 Collections.emptyMap();
 
+        logger.debug("獲取了當前頁課程的常規報名計數和使用者狀態。");
 
-        // 3. 獲取體驗預約相關數據 (下一個排程的已預約體驗人數，以及當前使用者的體驗預約狀態)
-        // 獲取所有提供體驗選項的課程
-        List<Course> coursesOfferingTrial = allCourses.stream()
+
+        // 5. 獲取體驗預約相關數據 (下一個排程的已預約體驗人數，以及當前使用者的體驗預約狀態)
+        // 過濾出當前頁提供體驗選項的課程
+        List<Course> currentCoursesOfferingTrial = courses.stream()
                 .filter(course -> course.getOffersTrialOption() != null && course.getOffersTrialOption())
                 .collect(Collectors.toList());
 
         // 計算這些課程的下一個排程日期和時間
-        Map<Integer, LocalDateTime> nextOccurrenceTimes = coursesOfferingTrial.stream()
+        Map<Integer, LocalDateTime> nextOccurrenceTimes = currentCoursesOfferingTrial.stream()
                 .collect(Collectors.toMap(
                         Course::getId,
                         this::calculateNextCourseOccurrenceTime // 使用輔助方法計算下一次排程時間
@@ -410,74 +450,68 @@ public class EnrollmentServiceImpl implements EnrollmentService {
                 .collect(Collectors.toList());
 
         // 批量獲取這些課程的下一個排程的已預約體驗人數
-        Map<Integer, Integer> bookedTrialCountsMap = new java.util.HashMap<>(); // 初始化為空 Map
+        Map<Integer, Integer> bookedTrialCountsMap = new java.util.HashMap<>();
         if (!courseIdsForTrialCountQuery.isEmpty()) {
-             // 遍歷調用單個計數方法 (使用 TrialBookingDAO 中已有的 countTrialBookingsByCourseDateActualStartTimeAndStatusNotInNative)
              for (Integer courseId : courseIdsForTrialCountQuery) {
                  LocalDateTime nextTime = nextOccurrenceTimes.get(courseId);
-                 if (nextTime != null) { // 再次確認，以防萬一
+                 if (nextTime != null) {
                      int count = trialBookingDAO.countTrialBookingsByCourseDateActualStartTimeAndStatusNotInNative(
                          courseId,
                          nextTime.toLocalDate(),
-                         nextTime.toLocalTime(), // 注意這裡需要 LocalTime
+                         nextTime.toLocalTime(),
                          INACTIVE_TRIAL_STATUSES
                      );
                      bookedTrialCountsMap.put(courseId, count);
                  }
              }
-             logger.info("獲取了 {} 個提供體驗選項課程的下一個排程體驗預約計數。", bookedTrialCountsMap.size());
+             logger.debug("獲取了當前頁提供體驗選項課程的下一個排程體驗預約計數。");
         } else {
-            logger.info("沒有提供體驗選項的課程，或者無法計算下一個排程時間，跳過體驗預約計數查詢。");
+            logger.debug("當前頁沒有提供體驗選項的課程，跳過體驗預約計數查詢。");
         }
 
      // 如果有登入使用者，獲取其對這些提供體驗選項課程的活躍體驗預約記錄
-     // 使用 TrialBookingDAO 中能夠批量查詢使用者活躍體驗預約的方法 (findByUserAndCourseIdInAndBookingStatusNotInAndBookingDateGreaterThanEqual)
-     // 修正 effectively final 錯誤，將變數在 if/else 中都初始化
-     final Map<Integer, TrialBooking> userActiveTrialBookingsMap; // 宣告為 final
+     final Map<Integer, TrialBooking> userActiveTrialBookingsMap;
 
-     if (finalUser != null && !coursesOfferingTrial.isEmpty()) {
-         // MODIFICATION: 從課程列表中提取 ID 列表
-         List<Integer> courseIdsForUserTrialQuery = coursesOfferingTrial.stream()
-                                                       .map(Course::getId) // 提取課程 ID
+     if (finalUser != null && !currentCoursesOfferingTrial.isEmpty()) {
+         List<Integer> courseIdsForUserTrialQuery = currentCoursesOfferingTrial.stream()
+                                                       .map(Course::getId)
                                                        .collect(Collectors.toList());
-         // 只有在有課程需要查詢時才執行 DAO 查詢
          if (!courseIdsForUserTrialQuery.isEmpty()) {
-             // 調用新的 DAO 方法
+             // *** 呼叫 TrialBookingDAO 中根據使用者、課程 ID 列表和狀態列表查詢的方法 ***
+             // 這個方法需要在 TrialBookingDAO 介面中定義
              List<TrialBooking> userBookingsForCourses = trialBookingDAO.findByUserAndCourseIdInAndBookingStatusNotInAndBookingDateGreaterThanEqual(
                  finalUser,
-                 courseIdsForUserTrialQuery, // 傳入課程 ID 列表
+                 courseIdsForUserTrialQuery,
                  INACTIVE_TRIAL_STATUSES,
-                 LocalDate.now() // 查詢從今天開始的預約
+                 LocalDate.now()
              );
-              // 在 if 塊中初始化 final 變數
              userActiveTrialBookingsMap = userBookingsForCourses.stream()
-                  .filter(tb -> tb.getCourse() != null) // 確保 course 不為 null
+                  .filter(tb -> tb.getCourse() != null)
                   .collect(Collectors.toMap(tb -> tb.getCourse().getId(), Function.identity()));
-
-             logger.info("找到使用者 {} 對 {} 個課程的活躍體驗預約記錄。", userId, userActiveTrialBookingsMap.size());
+             logger.debug("找到使用者 {} 對當前頁 {} 個課程的活躍體驗預約記錄。", userId, userActiveTrialBookingsMap.size());
          } else {
-             // 如果 coursesOfferingTrial 是空的，courseIdsForUserTrialQuery 也是空的，userBookingsForCourses 會是空列表，這裡可以簡單初始化為空 Map
              userActiveTrialBookingsMap = Collections.emptyMap();
-             logger.info("使用者 {} 沒有提供體驗選項的課程，跳過體驗預約記錄查詢。", userId);
+             logger.debug("使用者 {} 對當前頁沒有提供體驗選項的課程，跳過體驗預約記錄查詢。", userId);
          }
-
      } else {
-          // 在 else 塊中初始化 final 變數為空 Map
           userActiveTrialBookingsMap = Collections.emptyMap();
-          if (finalUser != null) { // 登入使用者但沒有體驗課
-              logger.info("使用者 {} 沒有活躍體驗預約記錄。", userId);
-          } else { // 未登入使用者
-              logger.info("使用者未登入，跳過體驗預約記錄查詢。", userId);
-          }
+          logger.debug("使用者未登入或當前頁沒有提供體驗選項的課程，跳過體驗預約記錄查詢。");
      }
 
 
-        // 4. 將所有數據組裝到 CourseInfoDTO 列表中
-        return allCourses.stream().map(course -> {
-            // 常規報名數據
-            long registeredCount = registeredCountsMap.getOrDefault(course.getId(), 0L);
-            long waitlistCount = waitlistCountsMap.getOrDefault(course.getId(), 0L);
+        // 6. 將所有數據組裝到 CourseInfoDTO 列表中
+     // 注意：isFull 和 isTrialFull 的計算仍然在這裡完成，即使數據已經被後端根據滿額狀態過濾過
+     List<CourseInfoDTO> courseInfoDTOs = courses.stream().map(course -> {
+         // 常規報名數據
+         long registeredCount = registeredCountsMap.getOrDefault(course.getId(), 0L);
+         long waitlistCount = waitlistCountsMap.getOrDefault(course.getId(), 0L);
 
+         // 計算 isFull (這仍然需要，以便前端正確顯示狀態標籤)
+         boolean isCourseActuallyFull = false;
+         Integer maxCapacity = course.getMaxCapacity(); // 使用局部變數方便日誌
+         if (maxCapacity != null && maxCapacity > 0) {
+              isCourseActuallyFull = registeredCount >= maxCapacity;
+         }
             // 使用者常規報名狀態和 ID
             String userStatus = "未報名"; // 預設狀態
             Integer userEnrollmentId = null;
@@ -490,48 +524,59 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             }
 
             // 體驗預約數據 (只針對提供體驗選項的課程)
-            Boolean offersTrialOption = course.getOffersTrialOption() != null ? course.getOffersTrialOption() : false;
+            // 直接使用 course.getOffersTrialOption() 的值，避免重新宣告同名變數
+            Boolean courseOffersTrialOption = course.getOffersTrialOption() != null ? course.getOffersTrialOption() : false;
             Integer maxTrialCapacity = course.getMaxTrialCapacity();
-            // 從 Map 中獲取體驗預約計數，如果課程不提供體驗或無法計算時間，則為 0
             Integer bookedTrialCount = bookedTrialCountsMap.getOrDefault(course.getId(), 0);
 
+            // 計算 isTrialFull (這仍然需要，以便前端正確顯示狀態標籤)
+            boolean isCourseTrialActuallyFull = false;
+            if (courseOffersTrialOption && maxTrialCapacity != null && maxTrialCapacity > 0) {
+                 isCourseTrialActuallyFull = bookedTrialCount >= maxTrialCapacity;
+            }
             // 使用者體驗預約狀態和 ID
             String userTrialBookingStatus = "未預約"; // 預設狀態
             Integer userTrialBookingId = null;
-            // 只有登入用戶且課程提供體驗選項才檢查體驗預約狀態
-            // 這裡使用 final 的 userActiveTrialBookingsMap
-            if (finalUser != null && offersTrialOption) {
+            // 使用 courseOffersTrialOption 劉進行判斷
+            if (finalUser != null && courseOffersTrialOption) {
                  TrialBooking currentUserTrialBooking = userActiveTrialBookingsMap.get(course.getId());
                  if (currentUserTrialBooking != null) {
-                      userTrialBookingStatus = currentUserTrialBooking.getBookingStatus(); // 例如 "已預約"
+                      userTrialBookingStatus = currentUserTrialBooking.getBookingStatus();
                       userTrialBookingId = currentUserTrialBooking.getId();
                  }
             }
 
+            User coach = course.getCoach();
+            Integer coachId = (coach != null) ? coach.getId() : null;
+            String coachName = (coach != null) ? coach.getName() : "N/A";
 
             return CourseInfoDTO.builder()
                     .id(course.getId())
                     .name(course.getName())
                     .description(course.getDescription())
-                    .dayOfWeek(course.getDayOfWeek())
-                    .startTime(course.getStartTime())
-                    .duration(course.getDuration())
-                    .maxCapacity(course.getMaxCapacity())
-                    // 常規報名數據
-                    .registeredCount((int) registeredCount)
-                    .waitlistCount((int) waitlistCount)
-                    // 使用者常規報名狀態和 ID
-                    .userStatus(userStatus)
-                    .userEnrollmentId(userEnrollmentId)
-                    // 體驗預約數據
-                    .offersTrialOption(offersTrialOption)
+                    // 使用 courseOffersTrialOption
+                    .offersTrialOption(courseOffersTrialOption)
                     .maxTrialCapacity(maxTrialCapacity)
                     .bookedTrialCount(bookedTrialCount)
-                    // 使用者體驗預約狀態和 ID
                     .userTrialBookingStatus(userTrialBookingStatus)
                     .userTrialBookingId(userTrialBookingId)
+                    .coachId(coachId) // 新增 coachId
+                    .coachName(coachName) // 新增 coachName
+                    .dayOfWeek(course.getDayOfWeek()) // 新增 dayOfWeek
+                    .startTime(course.getStartTime()) // 新增 startTime
+                    .duration(course.getDuration()) // 新增 duration
+                    .maxCapacity(course.getMaxCapacity()) // 新增 maxCapacity
+                    .registeredCount((int) registeredCount) // 新增 registeredCount
+                    .waitlistCount((int) waitlistCount) // 新增 waitlistCount
+                    .userStatus(userStatus) // 新增 userStatus
+                    .userEnrollmentId(userEnrollmentId) // 新增 userEnrollmentId
+                    .isFull(isCourseActuallyFull) // 保留 isFull
+                    .isTrialFull(isCourseTrialActuallyFull) // 保留 isTrialFull
                     .build();
         }).collect(Collectors.toList());
+
+        // 7. 返回 Page<CourseInfoDTO>
+        return new PageImpl<>(courseInfoDTOs, pageable, totalElements);
     }
 
 
@@ -768,56 +813,202 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         logger.info("Finished processing past due enrollments. Updated: {}", updatedCount);
     }
     
- // 實現 getNextOccurrenceBookedTrialCounts 方法 - 目前是臨時實現
-    @Override
-    @Transactional(readOnly = true)
+    @Override // 確保這個方法正確實現了 EnrollmentService 介面中的方法
+    @Transactional(readOnly = true) // 查詢操作使用只讀事務
     public Map<Integer, Integer> getNextOccurrenceBookedTrialCounts(List<Course> courses) {
-        logger.warn("EnrollmentService.getNextOccurrenceBookedTrialCounts 尚未實現具體邏輯，臨時返回空 Map。");
+        logger.info("正在為 {} 個課程獲取下一個排程的體驗預約計數...", courses.size());
 
-        // TODO: 在這裡實現真正的業務邏輯：
-        // 這個方法的目標是計算 courses 列表中「每個課程」相對於「當前時間」的下一個排程日期時間點，
-        // 然後查詢 TrialBookingDAO 獲取那個特定日期時間點的體驗預約人數。
+        Map<Integer, Integer> countsMap = new HashMap<>();
+        // LocalDateTime now = LocalDateTime.now(); // 如果計算下一個排程時間需要當前時間，可以這樣獲取
 
-        // 具體步驟可能包括：
-        // 1. 創建一個空的 Map 來存放結果 (Map<Integer, Integer> bookedCountsMap = new HashMap<>();)
-        // 2. 遍歷傳入的 List<Course> courses
-        // 3. 對於每一個 Course，計算它相對於 LocalDateTime.now() 的下一個發生日期時間點。這需要類似 calculateNextCourseOccurrenceTime 的輔助方法。
-        // 4. 如果成功計算出下一個發生時間點 (nextOccurrenceDateTime) 且不為 null：
-        //    a. 使用 trialBookingDAO.countTrialBookingsByCourseDateActualStartTimeAndStatusNotInNative
-        //       方法，傳入 course.getId()，nextOccurrenceDateTime.toLocalDate()，
-        //       nextOccurrenceDateTime.toLocalTime()，以及 INACTIVE_TRIAL_STATUSES。
-        //    b. 將返回的 count 放入 bookedCountsMap，鍵為 course.getId()。
-        // 5. 返回 bookedCountsMap。
 
-        // 臨時返回空 Map，讓程式碼可以編譯
-        return Collections.emptyMap();
+        if (courses == null || courses.isEmpty()) {
+            logger.warn("傳入的課程列表為空或 null，返回空 Map。");
+            return countsMap; // 返回空的 Map
+        }
+
+        for (Course course : courses) {
+            // 只為提供體驗選項且最大體驗容量大於 0 的課程計算計數
+            if (course.getOffersTrialOption() != null && course.getOffersTrialOption() &&
+                course.getMaxTrialCapacity() != null && course.getMaxTrialCapacity() > 0) {
+
+                try {
+                    // 1. 計算當前課程的下一個排程時間
+                    // *** 請呼叫您現有的輔助方法 calculateNextCourseOccurrenceTime(course) ***
+                    // *** 這個方法需要根據 course 的 dayOfWeek 和 startTime 計算下一個未來時間 ***
+                    LocalDateTime nextOccurrenceTime = calculateNextCourseOccurrenceTime(course); // <-- 假設這個方法存在且正確實現
+
+
+                    // *** 添加日誌：打印計算出的下一個排程時間 (除錯用) ***
+                    logger.info("課程 ID {} ({} {}) 的下一個排程時間計算為: {}", course.getId(), course.getDayOfWeek(), course.getStartTime(), nextOccurrenceTime);
+
+
+                    if (nextOccurrenceTime != null) {
+                        // 2. 查詢該課程在該下一個排程時間的活躍體驗預約人數
+                        // *** 請呼叫您的 TrialBookingDAO 中相應的查詢方法 ***
+                        // *** 例如 countTrialBookingsByCourseDateActualStartTimeAndStatusNotInNative 或類似方法 ***
+                        int bookedTrialCount = trialBookingDAO.countTrialBookingsByCourseDateActualStartTimeAndStatusNotInNative(
+                            course.getId(),
+                            nextOccurrenceTime.toLocalDate(), // 傳遞日期部分
+                            nextOccurrenceTime.toLocalTime(), // 傳遞時間部分
+                            INACTIVE_TRIAL_STATUSES // 傳遞非活躍狀態列表 (請確保 INACTIVE_TRIAL_STATUSES 已定義)
+                        );
+
+                        // *** 添加日誌：打印從 DAO 查詢到的體驗預約人數 (除錯用) ***
+                        logger.info("課程 ID {} 在 {} 體驗預約計數查詢結果: {}", course.getId(), nextOccurrenceTime, bookedTrialCount);
+
+                        // 3. 將計數存入 Map
+                        countsMap.put(course.getId(), bookedTrialCount);
+
+                    } else {
+                        // 如果無法計算下一個排程時間 (例如課程時間設置有問題)，將計數設為 0
+                        logger.warn("無法計算課程 ID {} 的下一個排程時間，將其體驗預約計數設為 0。", course.getId());
+                        countsMap.put(course.getId(), 0); // 確保 Map 中有該課程的鍵，避免前端獲取時報錯
+                    }
+                } catch (Exception e) {
+                    // 處理計算或 DAO 呼叫過程中可能發生的異常
+                    logger.error("處理課程 ID {} 的體驗預約計數時發生錯誤，將其計數設為 0。", course.getId(), e);
+                    countsMap.put(course.getId(), 0); // 確保異常情況下也有計數
+                }
+
+            } else {
+                // 如果課程不提供體驗選項或最大體驗容量為 0，計數就是 0
+                countsMap.put(course.getId(), 0);
+                // logger.debug("課程 ID {} 不提供體驗或最大體驗容量為 0，體驗預約計數設為 0。", course.getId()); // 可選的調試日誌
+            }
+        }
+
+        logger.info("完成獲取體驗預約計數，返回 Map 大小: {}", countsMap.size());
+        return countsMap; // 返回包含所有課程體驗預約計數的 Map
     }
+    
+    // **MODIFICATION (Service Implementation): 實現支援分頁的查詢方法**
+    @Override // 實現 EnrollmentService 介面中的方法
+    public Page<EnrollmentDTO> findEnrollmentsPaginated(int page, int pageSize, String status) { // <-- 接收 status 參數
+        // Spring Data JPA 的頁碼從 0 開始 (0 是第一頁)
+        // 我們 Controller 傳來的 page 參數已經根據前端做了調整 (如果前端從 1 開始的話)
+        int backendPage = page;
+         if (backendPage < 0) {
+            backendPage = 0;
+        }
 
-    // 你可能需要一個輔助方法來計算下一個發生時間點，類似於 EnrollmentServiceImpl 中可能已經有的 calculateNextCourseOccurrenceTime
-    // 如果 EnrollmentServiceImpl 中沒有這個方法，或者它不是 public 的，你可能需要將其添加到這裡。
-    /*
-     private LocalDateTime calculateNextCourseOccurrenceTime(Course course) {
-         if (course == null || course.getDayOfWeek() == null || course.getStartTime() == null) {
-             return null;
-         }
-         LocalDateTime now = LocalDateTime.now();
-         LocalDate today = now.toLocalDate();
+        logger.info("Service 查詢報名紀錄分頁與篩選 - 頁碼 (後端): {}, 每頁筆數: {}, 篩選狀態: {}", backendPage, pageSize, status);
 
-         DayOfWeek courseDayOfWeek;
-         try {
-             courseDayOfWeek = DayOfWeek.of(course.getDayOfWeek()); // 假設 1-7 對應 DayOfWeek
-         } catch (Exception e) {
-             logger.warn("課程 ID {} 的星期幾值無效: {}。", course.getId(), course.getDayOfWeek());
-             return null;
-         }
+        // 創建一個 Pageable 物件，用於傳給 Repository
+        Pageable pageable = PageRequest.of(backendPage, pageSize);
 
-         LocalDate nextDate = today.with(TemporalAdjusters.nextOrSame(courseDayOfWeek));
-         LocalDateTime nextOccurrence = LocalDateTime.of(nextDate, course.getStartTime());
+        // **根據 status 是否為空來決定呼叫哪個 DAO 方法或使用哪個查詢**
+        Page<Enrollment> enrollmentPage;
+        if (status != null && !status.trim().isEmpty()) {
+            // 如果 status 不為空，呼叫 DAO 中支援按狀態和分頁查詢的方法
+            // TODO: 你需要在 EnrollmentDAO 中新增一個方法來支援這個查詢
+            enrollmentPage = enrollmentDAO.findByStatus(status, pageable); // <-- 呼叫新的 DAO 方法
+            logger.info("使用狀態 {} 進行篩選和分頁查詢。", status);
+        } else {
+            // 如果 status 為空，表示不篩選，只進行分頁查詢
+            enrollmentPage = enrollmentDAO.findAll(pageable); // 呼叫 JpaRepository 內建的分頁查詢
+             logger.info("不使用狀態篩選，只進行分頁查詢。");
+        }
 
-         if (nextOccurrence.isBefore(now)) {
-             nextOccurrence = nextOccurrence.plusWeeks(1);
-         }
-         return nextOccurrence;
-     }
-     */
+
+        logger.info("DAO 查詢完成，總筆數 (篩選後): {}", enrollmentPage.getTotalElements());
+
+        // 將查詢到的 Page<Enrollment> 映射為 Page<EnrollmentDTO>
+        Page<EnrollmentDTO> enrollmentDTOPage = enrollmentPage.map(enrollment -> {
+            EnrollmentDTO dto = new EnrollmentDTO();
+            dto.setId(enrollment.getId());
+            // TODO: 在實際應用中，請確保 enrollment.getCourse() 和 enrollment.getUser() 不為 null，
+            // 否則這裡可能會拋出 NullPointerException。
+            // 可以使用 JOIN FETCH 在 Repository 查詢時一起載入，或在這裡增加 null 檢查。
+             if (enrollment.getCourse() != null) {
+                 dto.setCourseId(enrollment.getCourse().getId());
+                 dto.setCourseName(enrollment.getCourse().getName());
+             } else {
+                 dto.setCourseId(null);
+                 dto.setCourseName("未知課程");
+             }
+             if (enrollment.getUser() != null) {
+                 dto.setUserId(enrollment.getUser().getId());
+                 dto.setUserName(enrollment.getUser().getName());
+             } else {
+                 dto.setUserId(null);
+                 dto.setUserName("未知使用者");
+             }
+            dto.setStatus(enrollment.getStatus());
+            dto.setEnrollmentTime(enrollment.getEnrollmentTime());
+            
+            logger.info("Created EnrollmentDTO: {}", dto); // Log the fully populated DTO
+            return dto;
+        });
+        return enrollmentDTOPage; // 回傳包含 DTO 和分頁資訊的 Page 物件
+    }
+    
+	// 實現根據 ID 查找單個報名記錄的方法
+    @Override // 確保這是對介面方法的實現
+    public Optional<EnrollmentDTO> findEnrollmentById(Integer id) { // <-- 實現方法
+        logger.info("Service: 根據 ID 查找報名記錄，ID: {}", id);
+        // 使用 JpaRepository 提供的 findById 方法來查詢
+        Optional<Enrollment> enrollmentOptional = enrollmentDAO.findById(id);
+
+        // 將 Optional<Enrollment> 映射為 Optional<EnrollmentDTO>
+        return enrollmentOptional.map(enrollment -> {
+            EnrollmentDTO dto = new EnrollmentDTO();
+            dto.setId(enrollment.getId());
+            // TODO: 在實際應用中，請確保 enrollment.getCourse() 和 enrollment.getUser() 不為 null，
+            // 否則這裡可能會拋出 NullPointerException。
+            // 可以在這裡增加 null 檢查，或者在 DAO 層使用 JOIN FETCH
+             if (enrollment.getCourse() != null) {
+                 dto.setCourseId(enrollment.getCourse().getId());
+                 dto.setCourseName(enrollment.getCourse().getName());
+             } else {
+                 dto.setCourseId(null);
+                 dto.setCourseName("未知課程");
+             }
+             if (enrollment.getUser() != null) {
+                 dto.setUserId(enrollment.getUser().getId());
+                 dto.setUserName(enrollment.getUser().getName());
+             } else {
+                 dto.setUserId(null);
+                 dto.setUserName("未知使用者");
+             }
+            dto.setStatus(enrollment.getStatus());
+            dto.setEnrollmentTime(enrollment.getEnrollmentTime());
+            
+            logger.info("Created EnrollmentDTO: {}", dto);
+            // TODO: 根據你的 Enrollment 實體和 DTO 定義，填充其他字段
+            // 例如：
+            // dto.setEnrollmentTime(enrollment.getEnrollmentTime());
+            // dto.setCheckinTime(enrollment.getCheckinTime());
+            // ... 等等 ...
+
+            return dto; // 返回轉換後的 DTO
+        });
+    }
+    
+	// 實現依會員名稱查詢報名記錄的方法
+    @Override // 確保這是對介面方法的實現
+    public List<EnrollmentDTO> searchEnrollmentsByUserName(String userName) { // <-- 實現方法
+        logger.info("Service: 依會員名稱查找報名記錄，名稱: {}", userName);
+
+        // 檢查輸入名稱是否有效
+        if (!StringUtils.hasText(userName)) {
+             logger.warn("Service: 查詢會員名稱為空或只包含空格，返回空列表。");
+             return List.of(); // 返回空列表，而不是拋異常
+        }
+
+        // 1. 呼叫 DAO 層方法根據會員名稱查詢報名記錄
+        // 我們假設你的 Enrollment 實體有關聯到 User 實體 (會員)，
+        // 並且 User 實體有 'name' 字段。
+        // DAO 層方法將根據 User 的 name 字段進行查詢。
+        // 使用 containsIgnoreCase 進行不區分大小寫的模糊查詢
+        List<Enrollment> enrollments = enrollmentDAO.findByUser_NameContainingIgnoreCase(userName.trim()); // <-- 假設你有這個 DAO 方法
+
+        logger.info("Service: 依會員名稱 '{}' 查詢，找到 {} 條報名記錄。", userName, enrollments.size());
+
+        // 2. 將 Enrollment 實體列表轉換為 EnrollmentDTO 列表
+        // 這裡使用你現有的轉換器進行轉換
+        return enrollments.stream()
+                .map(convertToDTOConverter::convertToEnrollmentDTO)
+                .collect(Collectors.toList()); // 收集為列表
+    }
 }

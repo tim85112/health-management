@@ -16,7 +16,9 @@ public class EnrollmentDTO {
 
     private Integer id;
     private Integer userId;
+    private String userName;
     private Integer courseId;
+    private String coachName;
     private LocalDateTime enrollmentTime;
     private String status;
     private Integer dayOfWeek;
