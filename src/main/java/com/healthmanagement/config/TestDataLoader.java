@@ -58,6 +58,7 @@ public class TestDataLoader implements CommandLineRunner {
 
         // 創建管理員
         users.add(createUser("YunDa", "yunda85112@gmail.com", "AAaa1234", "M", "健康管理系統管理員", "admin", 10000));
+        users.add(createUser("Guest", "guest@example.com", "guest123", "M", "匿名ABC", "guest", 0));
         users.add(createUser("HuangJiaWei", "jiawei@health.com", "AAaa1234", "F", "營運經理", "admin", 0));
         users.add(createUser("王建國", "tech@health.com", "Tech@123", "M", "技術總監", "admin", 0));
         users.add(createUser("陳雅婷", "hr@health.com", "Hr@123", "F", "人力資源主管", "admin", 0));
