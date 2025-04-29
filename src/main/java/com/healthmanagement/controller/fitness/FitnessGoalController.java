@@ -1,84 +1,84 @@
 package com.healthmanagement.controller.fitness;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import com.healthmanagement.dto.fitness.FitnessGoalDTO;
+import com.healthmanagement.dto.fitness.FitnessProgressUpdateDTO;
 import com.healthmanagement.service.fitness.FitnessGoalService;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/tracking/fitnessgoals")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5174")
 @Tag(name = "Fitness Tracking", description = "健身追蹤管理 API")
 public class FitnessGoalController {
 
     private final FitnessGoalService fitnessGoalService;
 
-    @Operation(summary = "建立健身目標", description = "建立新的健身目標資料")
     @PostMapping
-    public ResponseEntity<FitnessGoalDTO> createFitnessGoal(
-            @RequestBody FitnessGoalDTO fitnessGoalDTO) {
+    @Operation(summary = "建立健身目標")
+    public ResponseEntity<FitnessGoalDTO> createFitnessGoal(@RequestBody FitnessGoalDTO fitnessGoalDTO) {
         FitnessGoalDTO createdGoal = fitnessGoalService.createFitnessGoal(fitnessGoalDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdGoal);
     }
 
-    @Operation(summary = "更新健身目標", description = "根據目標 ID 更新指定的健身目標資料")
     @PutMapping("/{goalId}")
-    public ResponseEntity<FitnessGoalDTO> updateFitnessGoal(
-            @Parameter(description = "健身目標 ID") @PathVariable Integer goalId,
-            @RequestBody FitnessGoalDTO fitnessGoalDTO) {
+    @Operation(summary = "更新健身目標")
+    public ResponseEntity<FitnessGoalDTO> updateFitnessGoal(@PathVariable Integer goalId, @RequestBody FitnessGoalDTO fitnessGoalDTO) {
         FitnessGoalDTO updatedGoal = fitnessGoalService.updateFitnessGoal(goalId, fitnessGoalDTO);
         return ResponseEntity.ok(updatedGoal);
     }
 
-    @Operation(summary = "刪除健身目標", description = "根據目標 ID 刪除健身目標資料")
     @DeleteMapping("/{goalId}")
-    public ResponseEntity<Void> deleteFitnessGoal(
-            @Parameter(description = "健身目標 ID") @PathVariable Integer goalId) {
+    @Operation(summary = "刪除健身目標")
+    public ResponseEntity<Void> deleteFitnessGoal(@PathVariable Integer goalId) {
         fitnessGoalService.deleteFitnessGoal(goalId);
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "取得用戶的所有健身目標", description = "根據用戶 ID 取得所有健身目標資料")
+    @GetMapping
+    @Operation(summary = "根據條件查詢健身目標 (分頁)")
+    public ResponseEntity<Page<FitnessGoalDTO>> getAllFitnessGoalsByCriteria(
+            @RequestParam(required = false) @Parameter(description = "用戶 ID") Integer userId,
+            @RequestParam(required = false) @Parameter(description = "用戶姓名 (模糊查詢)") String name,
+            @RequestParam(required = false) @Parameter(description = "開始日期 (YYYY-MM-DD)") String startDate,
+            @RequestParam(required = false) @Parameter(description = "結束日期 (YYYY-MM-DD)") String endDate,
+            @RequestParam(required = false) @Parameter(description = "目標類型") String goalType,
+            @RequestParam(required = false) @Parameter(description = "狀態") String status,
+            @PageableDefault(page = 0, size = 10) Pageable pageable) {
+        Page<FitnessGoalDTO> fitnessGoalsPage = fitnessGoalService.getAllFitnessGoalsByCriteria(userId, name, startDate, endDate, goalType, status, pageable);
+        return ResponseEntity.ok(fitnessGoalsPage);
+    }
+    
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<FitnessGoalDTO>> getAllFitnessGoalsByUserId(
-            @Parameter(description = "用戶 ID") @PathVariable Integer userId) {
-        List<FitnessGoalDTO> fitnessGoals = fitnessGoalService.getAllFitnessGoalsByUserId(userId);
-        return ResponseEntity.ok(fitnessGoals);
+    @Operation(summary = "根據用戶 ID 取得所有健身目標 (分頁)")
+    public ResponseEntity<Page<FitnessGoalDTO>> getAllFitnessGoalsByUserId(
+            @PathVariable @Parameter(description = "用戶 ID") Integer userId,
+            @PageableDefault(page = 0, size = 10) Pageable pageable) {
+        Page<FitnessGoalDTO> fitnessGoalsPage = fitnessGoalService.getAllFitnessGoalsByUserId(userId, pageable);
+        return ResponseEntity.ok(fitnessGoalsPage);
     }
-    
-    @Operation(summary = "根據姓名取得健身目標", description = "根據用戶姓名取得所有健身目標資料")
-    @GetMapping("/user/by-name")
-    public ResponseEntity<List<FitnessGoalDTO>> getAllFitnessGoalsByUserName(
-            @Parameter(description = "用戶姓名") @RequestParam String name) {
-        List<FitnessGoalDTO> fitnessGoals = fitnessGoalService.getAllFitnessGoalsByUserName(name);
-        return ResponseEntity.ok(fitnessGoals);
+
+    @GetMapping("/{goalId}")
+    @Operation(summary = "根據 ID 取得健身目標")
+    public ResponseEntity<FitnessGoalDTO> getFitnessGoalById(@PathVariable Integer goalId) {
+        FitnessGoalDTO fitnessGoal = fitnessGoalService.getFitnessGoalById(goalId);
+        return ResponseEntity.ok(fitnessGoal);
     }
-    
-    @Operation(summary = "根據日期範圍取得健身目標", description = "根據開始日期和結束日期取得所有健身目標資料")
-    @GetMapping("/by-date-range")
-    public ResponseEntity<List<FitnessGoalDTO>> getAllFitnessGoalsByDateRange(
-            @Parameter(description = "開始日期 (YYYY-MM-DD)") @RequestParam(required = false) String startDate,
-            @Parameter(description = "結束日期 (YYYY-MM-DD)") @RequestParam(required = false) String endDate) {
-        List<FitnessGoalDTO> fitnessGoals = fitnessGoalService.getAllFitnessGoalsByDateRange(startDate, endDate);
-        return ResponseEntity.ok(fitnessGoals);
-    }
-    @Operation(summary = "根據用戶 ID 和日期範圍取得健身目標", description = "根據用戶 ID、開始日期和結束日期取得所有健身目標資料")
-    @GetMapping("/user/{userId}/by-date-range")
-    public ResponseEntity<List<FitnessGoalDTO>> getAllFitnessGoalsByUserIdAndDateRange(
-            @Parameter(description = "用戶 ID") @PathVariable Integer userId,
-            @Parameter(description = "開始日期 (YYYY-MM-DD)") @RequestParam(required = false) String startDate,
-            @Parameter(description = "結束日期 (YYYY-MM-DD)") @RequestParam(required = false) String endDate) {
-        List<FitnessGoalDTO> fitnessGoals = fitnessGoalService.getAllFitnessGoalsByUserIdAndDateRange(userId, startDate, endDate);
-        return ResponseEntity.ok(fitnessGoals);
+    @PostMapping("/progress")
+    @Operation(summary = "更新健身目標的目前進度")
+    public ResponseEntity<FitnessGoalDTO> updateGoalProgress(@RequestBody FitnessProgressUpdateDTO progressUpdateDTO) {
+        FitnessGoalDTO updatedGoal = fitnessGoalService.updateGoalProgress(
+                progressUpdateDTO.getGoalId(),
+                progressUpdateDTO.getProgressValue()
+        );
+        return ResponseEntity.ok(updatedGoal);
     }
 }

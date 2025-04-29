@@ -6,6 +6,7 @@ import com.healthmanagement.dto.social.CommentRequest;
 import com.healthmanagement.model.social.Comment;
 import com.healthmanagement.model.social.Post;
 import com.healthmanagement.service.member.UserService;
+import com.healthmanagement.service.fitness.AchievementService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
@@ -26,6 +27,10 @@ public class CommentServiceImpl implements CommentService {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private AchievementService achievementService;
+
+
     @Override
     public List<Comment> getCommentsByPostId(Integer postId) {
         return commentDAO.findByPost_Id(postId);
@@ -33,7 +38,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<Comment> getCommentsByUserId(Integer userId) {
-        return commentDAO.findByUserId(userId);
+    	return commentDAO.findByUser_Id(userId); 
     }
 
     @Override
@@ -59,14 +64,19 @@ public class CommentServiceImpl implements CommentService {
 
         Comment saved = commentDAO.save(comment);
 
-        // 記錄留言動態
-        userActivityService.logActivity(
-                saved.getUser().getUserId(),   // 使用者 ID
-                "comment",                     // 動作類型
-                saved.getId()                  // 留言 ID
-        );
+     // 成就邏輯
+     long commentCount = commentDAO.countByUser_Id(saved.getUser().getUserId());
+     achievementService.checkAndAwardAchievements(saved.getUser().getUserId(), "SOCIAL_COMMENT_CREATED", (int) commentCount);
 
-        return saved;
+     // 動態紀錄邏輯
+     userActivityService.logActivity(
+             saved.getUser().getUserId(),// 使用者 ID
+             "comment",                     // 動作類型
+             saved.getId()                  // 留言 ID 
+     );
+
+     return saved;
+
     }
     @Override
     public Comment updateComment(Integer commentId, String email, CommentRequest request) {

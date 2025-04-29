@@ -205,13 +205,16 @@ CREATE TABLE [fitness_goals]
 (
     [goal_id]          INT PRIMARY KEY IDENTITY (1, 1),
     [user_id]          INT          NOT NULL FOREIGN KEY REFERENCES [users] ([user_id]) ON DELETE CASCADE,
-    [goal_type]        NVARCHAR(50) NOT NULL CHECK (goal_type IN ('減重', '增肌', '心肺健康', '其他')),
+    [goal_type]        NVARCHAR(50) NOT NULL CHECK (goal_type IN ('減重', '增肌', '減脂')),
     [target_value]     FLOAT        NOT NULL,
     [current_progress] FLOAT                                                         DEFAULT 0,
-    [unit]             NVARCHAR(20) CHECK (unit IN ('公斤', '百分比', '分鐘', '卡路里')),
+    [unit]             NVARCHAR(20) CHECK (unit IN ('公斤', '%',)),
     [start_date]       DATE                                                          DEFAULT GETDATE(),
     [end_date]         DATETIME2    NULL,
     [status]           NVARCHAR(20) CHECK (status IN ('進行中', '已完成', '未達成')) DEFAULT '進行中',
+    [start_weight] FLOAT NULL,        -- 起始體重 (用於減重)
+    [start_body_fat] FLOAT NULL,     -- 起始體脂率 (用於減脂)
+    [start_muscle_mass] FLOAT NULL,  -- 起始肌肉量 (用於增肌)
     CONSTRAINT [CK_EndDate] CHECK ([end_date] IS NULL OR [end_date] >= [start_date])
 );
 GO
@@ -221,12 +224,26 @@ CREATE TABLE [achievements]
 (
     [achievement_id]   INT PRIMARY KEY IDENTITY (1, 1),
     [user_id]          INT                                                NOT NULL FOREIGN KEY REFERENCES [users] ([user_id]) ON DELETE CASCADE,
-    [achievement_type] NVARCHAR(50) CHECK (achievement_type IN ('目標達成', '一般成就')),
+    [achievement_type] NVARCHAR(50) ,
     [title]            NVARCHAR(255) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
     [description]      NVARCHAR(500),
     [achieved_date]    DATE DEFAULT GETDATE(),
     CONSTRAINT [UC_UniqueAchievement] UNIQUE ([user_id], [title])
 );
+GO
+-- 創建 achievement_definitions 表
+CREATE TABLE [achievement_definitions] (
+    [definition_id] INT PRIMARY KEY IDENTITY(1, 1),
+    [achievement_type] NVARCHAR(50) UNIQUE NOT NULL,
+    [title] NVARCHAR(100) NOT NULL,
+    [description] NVARCHAR(MAX) NULL,
+    [trigger_event] VARCHAR(50) NULL,
+    [trigger_condition] NVARCHAR(MAX) NULL,
+    [image_url] NVARCHAR(255) NULL,
+    [points] INT NULL,
+    [created_at] DATETIME DEFAULT GETDATE(),
+    [updated_at] DATETIME DEFAULT GETDATE()
+    );
 GO
 
 -- 創建 social_post 表

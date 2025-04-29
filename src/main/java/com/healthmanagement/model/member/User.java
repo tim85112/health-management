@@ -1,6 +1,7 @@
 package com.healthmanagement.model.member;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.healthmanagement.model.course.Course;
@@ -9,15 +10,18 @@ import com.healthmanagement.model.course.TrialBooking;
 import com.healthmanagement.model.fitness.Achievements;
 import com.healthmanagement.model.fitness.ExerciseRecord;
 import com.healthmanagement.model.fitness.FitnessGoal;
+import com.healthmanagement.model.fitness.BodyMetric;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "[users]")
 @Builder
@@ -67,7 +71,7 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @JsonManagedReference("user-enrollments")
     private List<Enrollment> enrollments; // 報名
-    
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @JsonManagedReference("user-trial-bookings")
     private List<TrialBooking> trialBookings; //預約
@@ -75,10 +79,13 @@ public class User {
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
-    // 兼容性方法
-    public Integer getUserId() {
-        return this.id;
-    }
+	@Column(name = "consecutive_login_days")
+	private Integer consecutiveLoginDays;
+
+	// 兼容性方法
+	public Integer getUserId() {
+		return this.id;
+	}
 
     public void setUserId(Integer userId) {
         this.id = userId;

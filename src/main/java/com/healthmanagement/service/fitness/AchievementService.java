@@ -1,17 +1,24 @@
 package com.healthmanagement.service.fitness;
 
+import com.healthmanagement.dto.fitness.AchievementDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
-import com.healthmanagement.dto.fitness.AchievementDTO;
-
 public interface AchievementService {
-	AchievementDTO createAchievement(AchievementDTO achievementDTO);
+	List<AchievementDTO> getUserAchievements(Integer userId);
 
-	AchievementDTO updateAchievement(Integer achievementId, AchievementDTO achievementDTO);
+	void checkAndAwardAchievements(Integer userId, String triggerEvent, Object data);
 
-	void deleteAchievement(Integer achievementId);
+	AchievementDTO addAchievement(Integer userId, String achievementType, String title, String description);
+
+	Page<AchievementDTO> getAllAchievements(Pageable pageable); // 修改為分頁
 
 	AchievementDTO getAchievementById(Integer achievementId);
 
-	List<AchievementDTO> getAllAchievementsByUserId(Integer userId);
+	void deleteAchievement(Integer achievementId);
+
+	Page<AchievementDTO> searchAchievements(Integer userId, String name, String achievementType, String title,
+			String startDate, String endDate, Pageable pageable);
+
 }

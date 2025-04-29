@@ -7,10 +7,13 @@ import com.healthmanagement.dto.social.PostResponse;
 import com.healthmanagement.model.member.User;
 import com.healthmanagement.model.social.Post;
 import com.healthmanagement.service.member.UserService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -40,6 +43,9 @@ public class ForumServiceImpl implements ForumService {
     
     @Autowired
     private PostFavoriteRepository postFavoriteRepository;
+    
+    @PersistenceContext
+    private EntityManager entityManager;
     
  // ✅ 新增方法：回傳 PostResponse（含留言數、按讚數）
     @Override
@@ -100,8 +106,28 @@ public class ForumServiceImpl implements ForumService {
         return forumDAO.save(existingPost);
     }
 
+    @Transactional
     @Override
     public void deletePost(Integer id) {
+        // 1. 防呆：避免文章不存在時還繼續執行
+        Post post = getPostById(id); // 必須保留
+
+        // 2. 刪除留言
+        entityManager.createQuery("DELETE FROM Comment c WHERE c.post.id = :postId")
+            .setParameter("postId", id)
+            .executeUpdate();
+
+        // 3. 刪除按讚
+        entityManager.createQuery("DELETE FROM PostLike l WHERE l.post.id = :postId")
+            .setParameter("postId", id)
+            .executeUpdate();
+
+        // 4. 刪除收藏
+        entityManager.createQuery("DELETE FROM PostFavorite f WHERE f.postId = :postId")
+        .setParameter("postId", id)
+        .executeUpdate();
+
+        // 5. 刪除文章本體
         forumDAO.deleteById(id);
     }
     

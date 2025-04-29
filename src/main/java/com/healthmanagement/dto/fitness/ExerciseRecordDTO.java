@@ -1,15 +1,18 @@
 package com.healthmanagement.dto.fitness;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import com.healthmanagement.model.fitness.ExerciseRecord;  
 
 import java.time.LocalDate;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExerciseRecordDTO {
@@ -36,16 +39,14 @@ public class ExerciseRecordDTO {
 
     
     
-    public ExerciseRecordDTO(ExerciseRecord exerciseRecord) {
+    public ExerciseRecordDTO(ExerciseRecord exerciseRecord, String userName) {
         this.recordId = exerciseRecord.getRecordId();
         this.userId = exerciseRecord.getUserId();
         this.exerciseType = exerciseRecord.getExerciseType();
         this.exerciseDuration = exerciseRecord.getExerciseDuration();
         this.caloriesBurned = exerciseRecord.getCaloriesBurned();
         this.exerciseDate = exerciseRecord.getExerciseDate();
-        if (exerciseRecord.getUser() != null) {
-            this.userName = exerciseRecord.getUser().getName(); // 從關聯的 User 取得姓名
-        }
+        this.userName = userName; // 直接賦值使用者姓名
     }
 
 }
