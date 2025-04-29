@@ -97,6 +97,13 @@ public class FitnessGoalServiceImpl implements FitnessGoalService {
                 .orElseThrow(() -> new IllegalArgumentException("目標ID不存在"));
         return mapToDTO(fitnessGoal);
     }
+    @Override
+    public List<FitnessGoalDTO> getAllFitnessGoalsByUserIdWithoutPagination(Integer userId) {
+        List<FitnessGoal> fitnessGoals = fitnessGoalRepo.findByUserId(userId);
+        return fitnessGoals.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
 
     @Override
     public Page<FitnessGoalDTO> getAllFitnessGoalsByUserId(Integer userId, Pageable pageable) {

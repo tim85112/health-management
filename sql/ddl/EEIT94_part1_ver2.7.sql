@@ -388,11 +388,19 @@ ALTER TABLE [trial_booking]
 	ADD FOREIGN KEY ([course_id]) REFERENCES [course]([id]);
 GO
 
--- 儀表板視圖
+
 CREATE OR ALTER VIEW dashboard_stat AS
 SELECT (SELECT COUNT(*) FROM [users] WHERE role = 'user')                             AS total_users,
-       (SELECT COUNT(*) FROM [exercise_records])                                      AS total_workouts,
-       (SELECT SUM([exercise_duration]) FROM [exercise_records])                      AS total_workout_minutes,
-       (SELECT SUM([calories_burned]) FROM [exercise_records])                        AS total_calories_burned,
-       (SELECT COUNT(*) FROM [users] WHERE DATEDIFF(DAY, last_login, GETDATE()) <= 7) AS active_users_this_week;
+                                         (SELECT COUNT(*) FROM [exercise_records])                                      AS total_workouts,
+    (SELECT SUM([exercise_duration]) FROM [exercise_records])                      AS total_workout_minutes,
+    (SELECT SUM([calories_burned]) FROM [exercise_records])                        AS total_calories_burned,
+    (SELECT COUNT(*) FROM [users] WHERE DATEDIFF(DAY, last_login, GETDATE()) <= 7) AS active_users_this_week,
+                                      (SELECT COUNT(DISTINCT [user_id])
+FROM [users]
+WHERE YEAR(last_login) = YEAR(GETDATE())
+  AND MONTH(last_login) = MONTH(GETDATE()))                                 AS active_users_this_month,
+    (SELECT COUNT(DISTINCT [user_id])
+FROM [users]
+WHERE YEAR(last_login) = YEAR(GETDATE()))                                    AS active_users_this_year
+FROM (SELECT 1) AS dummy; -- 需要一個假的 FROM 子句來允許子查詢
 GO

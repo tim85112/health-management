@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -61,8 +62,8 @@ public class NutritionRecordController {
     @GetMapping("/user/{userId}/date-range")
     public ResponseEntity<List<NutritionRecordDTO>> getNutritionRecordsByUserAndDateRange(
             @PathVariable Integer userId,
-            @RequestParam LocalDateTime startDate,
-            @RequestParam LocalDateTime endDate) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDateTime startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDateTime endDate) {
         List<NutritionRecordDTO> records = nutritionRecordService.getNutritionRecordsByUserAndDateRange(userId, startDate, endDate);
         return ResponseEntity.ok(records);
     }
