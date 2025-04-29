@@ -18,4 +18,5 @@ public interface FitnessGoalService {
     Page<FitnessGoalDTO> getAllFitnessGoalsByCriteria(Integer userId, String name, String startDate, String endDate, String goalType, String status, Pageable pageable);
     List<FitnessGoalDTO> getAllGoalsWithProgress(int userId);
     FitnessGoalDTO updateGoalProgress(Integer goalId, Double progressValue);
+    List<FitnessGoalDTO> getAllFitnessGoalsByUserIdWithoutPagination(Integer userId);
 }
