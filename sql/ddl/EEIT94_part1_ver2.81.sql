@@ -398,5 +398,6 @@ SELECT (SELECT COUNT(*) FROM [users] WHERE role = 'user')                       
        (SELECT COUNT(DISTINCT [user_id])
         FROM [users]
         WHERE YEAR(last_login) = YEAR(GETDATE()))                                    AS active_users_this_year
-FROM (SELECT 1) AS dummy; -- 需要一個假的 FROM 子句來允許子查詢
+
+FROM (SELECT 1 AS dummy) AS dummy; -- 需要一個假的 FROM 子句來允許子查詢
 GO
