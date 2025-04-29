@@ -30,7 +30,8 @@ public class UserServiceImpl implements UserService {
     private static final Pattern PASSWORD_PATTERN = Pattern.compile("^(?=.*[a-z])(?=.*[A-Z]).{8,}$");
 
     @Autowired
-    public UserServiceImpl(UserDAO userDAO, ApplicationContext applicationContext, AchievementService achievementService) {
+    public UserServiceImpl(UserDAO userDAO, ApplicationContext applicationContext,
+            AchievementService achievementService) {
         this.userDAO = userDAO;
         this.applicationContext = applicationContext;
         this.achievementService = achievementService;

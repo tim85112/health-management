@@ -22,10 +22,10 @@ public interface UserService {
 	boolean existsByEmail(String email);
 
 	Optional<User> findByEmail(String email);
-	
+
 	Optional<User> findById(Integer userId);
 
 	List<User> findByName(String name);
-	
+
 	List<User> getAllCoaches();
 }
