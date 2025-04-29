@@ -1,5 +1,7 @@
 package com.healthmanagement.dao.course;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -52,4 +54,17 @@ public interface EnrollmentDAO extends JpaRepository<Enrollment, Integer> {
     
 	// 查找特定用戶狀態不在指定列表中的所有報名記錄
     List<Enrollment> findByUserAndStatusNotIn(User user, Collection<String> statuses);
+    
+    // 查找特定課程 ID 列表中，狀態為指定狀態的報名記錄
+    // 這個方法是為了解決您遇到的編譯錯誤而添加的
+    List<Enrollment> findByCourseIdInAndStatus(List<Integer> courseIds, String status);
+    
+	// 查找特定使用者對特定課程 ID 列表中，狀態不在指定列表中的活躍報名記錄
+    // 這個方法是為了解決您遇到的編譯錯誤而添加的
+    List<Enrollment> findByUserAndCourseIdInAndStatusNotIn(User user, List<Integer> courseIds, List<String> statuses);
+    
+    // 查找特定狀態的報名記錄並支援分頁
+    Page<Enrollment> findByStatus(String status, Pageable pageable);
+    
+    List<Enrollment> findByUser_NameContainingIgnoreCase(String userName);
 }

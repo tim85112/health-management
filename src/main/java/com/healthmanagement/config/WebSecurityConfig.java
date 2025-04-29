@@ -111,19 +111,29 @@ public class WebSecurityConfig {
                         // 常規課程報名記錄管理權限
                         .requestMatchers(HttpMethod.POST, "/api/enrollments/courses/*").hasAuthority("user") // 報名課程
                         .requestMatchers(HttpMethod.GET, "/api/enrollments/users/{userId}").authenticated() // 查詢特定使用者所有報名
-                        .requestMatchers(HttpMethod.GET, "/api/enrollments/courses/{courseId}").hasAnyAuthority("admin", "coach") // 查詢特定課程所有報名
-                        .requestMatchers(HttpMethod.GET, "/api/enrollments/users/*/courses/*/is-enrolled").authenticated() // 查詢是否已報名
+                        .requestMatchers(HttpMethod.GET, "/api/enrollments/courses/{courseId}")
+                        .hasAnyAuthority("admin", "coach") // 查詢特定課程所有報名
+                        .requestMatchers(HttpMethod.GET, "/api/enrollments/users/*/courses/*/is-enrolled")
+                        .authenticated() // 查詢是否已報名
                         .requestMatchers(HttpMethod.DELETE, "/api/enrollments/*").authenticated() // 取消報名
                         .requestMatchers(HttpMethod.PUT, "/api/enrollments/*/status").hasAnyAuthority("admin", "coach")
+                        .requestMatchers(HttpMethod.GET, "/api/enrollments").hasAnyAuthority("admin", "coach")
+                        .requestMatchers(HttpMethod.GET, "/api/enrollments/search/by-user-name")
+                        .hasAnyAuthority("admin", "coach")
                         .requestMatchers("/api/enrollments/**").authenticated() // 可以保留作為安全網，如果還有其他未列出的 enrollment 端點
                         // 預約體驗的權限設定
                         .requestMatchers(HttpMethod.POST, "/api/trial-bookings/book").hasAnyAuthority("user", "guest")
                         // 其他體驗預約相關操作需要認證或特定權限
-                        .requestMatchers(HttpMethod.GET, "/api/trial-bookings/courses/{courseId}").hasAnyAuthority("admin", "coach") // 查詢特定課程所有預約
+                        .requestMatchers(HttpMethod.GET, "/api/trial-bookings/courses/{courseId}")
+                        .hasAnyAuthority("admin", "coach") // 查詢特定課程所有預約
+                        .requestMatchers(HttpMethod.GET, "/api/trial-bookings//search/by-user-name")
+                        .hasAnyAuthority("admin", "coach")
                         .requestMatchers(HttpMethod.GET, "/api/trial-bookings/users/{userId}").authenticated() // 查詢特定使用者所有預約
                         .requestMatchers(HttpMethod.GET, "/api/trial-bookings/{bookingId}").authenticated() // 查詢單個預約詳情
-                        .requestMatchers(HttpMethod.DELETE, "/api/trial-bookings/{bookingId}").authenticated() // 取消預約 DELETE
-                        .requestMatchers(HttpMethod.PUT, "/api/trial-bookings/{bookingId}/status").hasAnyAuthority("admin", "coach") // 更新狀態
+                        .requestMatchers(HttpMethod.DELETE, "/api/trial-bookings/{bookingId}").authenticated() // 取消預約
+                                                                                                               // DELETE
+                        .requestMatchers(HttpMethod.PUT, "/api/trial-bookings/{bookingId}/status")
+                        .hasAnyAuthority("admin", "coach") // 更新狀態
                         .requestMatchers("/api/trial-bookings/**").authenticated() // 可以保留作為安全網
                         .anyRequest().authenticated())
                         .sessionManagement(session -> session

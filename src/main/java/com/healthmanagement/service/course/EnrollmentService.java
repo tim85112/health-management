@@ -2,11 +2,14 @@ package com.healthmanagement.service.course;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.data.domain.Page; // 引入 Page 類別
 
 import com.healthmanagement.dto.course.EnrollmentDTO;
 import com.healthmanagement.dto.course.EnrollmentStatusUpdateDTO;
 import com.healthmanagement.model.course.Course;
-// **MODIFICATION (Service Interface): 引入新的 CourseInfoDTO**
+// 引入新的 CourseInfoDTO
 import com.healthmanagement.dto.course.CourseInfoDTO;
 
 public interface EnrollmentService {
@@ -30,10 +33,21 @@ public interface EnrollmentService {
     boolean isUserEnrolled(Integer userId, Integer courseId);
     // 查詢特定課程的已報名人數
     int getEnrolledCount(Integer courseId);
-    // 查詢所有常規課程並包含使用者狀態和人數
-    List<CourseInfoDTO> getAllCoursesWithUserStatus(Integer userId);
+
+    // 修改方法簽名以支援分頁和篩選
+    // 查詢課程列表，包含使用者的報名/預約狀態和人數，並支援分頁及體驗課、星期幾篩選
+    Page<CourseInfoDTO> getAllCoursesWithUserStatus(Integer userId, Integer page, Integer size, Boolean offersTrialOption, Integer dayOfWeek, String fullnessStatus);
+    
 	// 檢查特定課程是否存在活躍的常規報名記錄 (新增用於 CourseService 刪除檢查)
     boolean hasActiveEnrollmentsForCourse(Integer courseId);
     // 獲取給定課程列表中，每個課程的「下一個排程」的體驗預約人數。
     Map<Integer, Integer> getNextOccurrenceBookedTrialCounts(List<Course> courses);
+
+    // 查詢報名紀錄並支援分頁。
+    // 這個方法是查詢報名記錄 (Enrollment)，不是課程 (Course)
+    Page<EnrollmentDTO> findEnrollmentsPaginated(int page, int pageSize, String status);
+    
+    Optional<EnrollmentDTO> findEnrollmentById(Integer id);
+    
+    List<EnrollmentDTO> searchEnrollmentsByUserName(String userName);
 }

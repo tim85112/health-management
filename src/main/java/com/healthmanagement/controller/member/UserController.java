@@ -1,5 +1,6 @@
 package com.healthmanagement.controller.member;
 
+import com.healthmanagement.dto.member.UserDTO;
 import com.healthmanagement.model.member.User;
 import com.healthmanagement.service.member.UserService;
 import com.healthmanagement.util.ApiResponse;
@@ -31,9 +32,9 @@ public class UserController {
     @GetMapping
     @PreAuthorize("hasAuthority('admin')")
     @Operation(summary = "獲取所有用戶", description = "獲取所有用戶的列表")
-    public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
-        List<User> users = userService.getAllUsers();
-        return ResponseEntity.ok(ApiResponse.success(users));
+    public ResponseEntity<ApiResponse<List<UserDTO>>> getAllUsers() {
+    	List<UserDTO> userDTO = userService.getAllUsers();
+    	return ResponseEntity.ok(ApiResponse.success(userDTO));
     }
 
     @GetMapping("/{userId}")

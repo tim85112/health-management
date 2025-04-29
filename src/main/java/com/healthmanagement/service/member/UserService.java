@@ -1,5 +1,6 @@
 package com.healthmanagement.service.member;
 
+import com.healthmanagement.dto.member.UserDTO;
 import com.healthmanagement.model.member.User;
 
 import java.util.List;
@@ -17,7 +18,7 @@ public interface UserService {
 
 	void deleteUser(Integer userId);
 
-	List<User> getAllUsers();
+	List<UserDTO> getAllUsers();
 
 	boolean existsByEmail(String email);
 
