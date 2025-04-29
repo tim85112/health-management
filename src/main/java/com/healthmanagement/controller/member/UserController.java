@@ -1,5 +1,7 @@
 package com.healthmanagement.controller.member;
 
+import com.healthmanagement.dto.member.AdminUpdateUserDTO;
+import com.healthmanagement.dto.member.UpdateProfileDTO;
 import com.healthmanagement.dto.member.UserDTO;
 import com.healthmanagement.model.member.User;
 import com.healthmanagement.service.member.UserService;
@@ -33,8 +35,8 @@ public class UserController {
     @PreAuthorize("hasAuthority('admin')")
     @Operation(summary = "獲取所有用戶", description = "獲取所有用戶的列表")
     public ResponseEntity<ApiResponse<List<UserDTO>>> getAllUsers() {
-    	List<UserDTO> userDTO = userService.getAllUsers();
-    	return ResponseEntity.ok(ApiResponse.success(userDTO));
+        List<UserDTO> userDTO = userService.getAllUsers();
+        return ResponseEntity.ok(ApiResponse.success(userDTO));
     }
 
     @GetMapping("/{userId}")
@@ -57,7 +59,6 @@ public class UserController {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
     }
-    //
 
     @DeleteMapping("/{userId}")
     @PreAuthorize("hasAuthority('admin') or @userSecurity.isCurrentUser(#userId)")
@@ -83,5 +84,46 @@ public class UserController {
     public ResponseEntity<ApiResponse<List<User>>> getAllCoaches() {
         List<User> coaches = userService.getAllCoaches();
         return ResponseEntity.ok(ApiResponse.success(coaches));
+    }
+
+    /**
+     * 更新個人資料專用接口
+     * 僅允許更新姓名、性別、個人簡介和密碼
+     * 此版本不需要身份驗證，直接從請求體中獲取郵箱
+     */
+    @PutMapping("/profile")
+    @Operation(summary = "更新個人資料", description = "更新用戶的個人資料（姓名、性別、個人簡介和密碼）")
+    public ResponseEntity<ApiResponse<UserDTO>> updateProfile(
+            @RequestBody UpdateProfileDTO updateProfileDTO) {
+        try {
+            // 從updateProfileDTO中獲取email (需要更新UpdateProfileDTO類)
+            String email = updateProfileDTO.getEmail();
+            if (email == null || email.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("郵箱不能為空"));
+            }
+
+            UserDTO updatedUser = userService.updateUserProfile(email, updateProfileDTO);
+            return ResponseEntity.ok(ApiResponse.success(updatedUser));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    /**
+     * 管理員更新用戶資料專用接口
+     * 使用DTO避免反序列化問題
+     */
+    @PutMapping("/admin/{userId}")
+    @PreAuthorize("hasAuthority('admin') or @userSecurity.isCurrentUser(#userId)")
+    @Operation(summary = "管理員更新用戶", description = "更新指定用戶的資料(僅限管理員或用戶本人)")
+    public ResponseEntity<ApiResponse<UserDTO>> adminUpdateUser(
+            @PathVariable Integer userId,
+            @RequestBody AdminUpdateUserDTO updateUserDTO) {
+        try {
+            UserDTO updatedUser = userService.adminUpdateUser(userId, updateUserDTO);
+            return ResponseEntity.ok(ApiResponse.success(updatedUser));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
     }
 }

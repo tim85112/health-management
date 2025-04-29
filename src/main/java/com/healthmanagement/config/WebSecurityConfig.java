@@ -92,12 +92,14 @@ public class WebSecurityConfig {
                                 "/api/orders/*/payment/**",
                                 "/users/**",
                                 "/static-images/**",
+                                "/api/users/profile",
                                 "/login/oauth2/code/google", // 添加 OAuth2 重定向 URI
                                 "/error")
                         .permitAll()
                         .requestMatchers("/api/users").hasAuthority("admin") // 獲取所有用戶僅限管理員
                         .requestMatchers("/api/users/{userId}").authenticated() // 獲取特定用戶需要登入，具體權限在Controller中控制
                         .requestMatchers("/api/users/{userId}/**").authenticated() // 用戶相關操作需要登入，具體權限在Controller中控制
+                        .requestMatchers("/api/users/admin/{userId}").authenticated() // 管理員更新用戶端點，權限在Controller中控制
                         .requestMatchers("/comments/post/**").authenticated() // 留言需登入
                         .requestMatchers("/comments/**").permitAll() // 查詢留言不用登入
                         .requestMatchers("/api/posts/**").authenticated()
@@ -136,21 +138,20 @@ public class WebSecurityConfig {
                         .hasAnyAuthority("admin", "coach") // 更新狀態
                         .requestMatchers("/api/trial-bookings/**").authenticated() // 可以保留作為安全網
                         .anyRequest().authenticated())
-                        .sessionManagement(session -> session
+                .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                        // 配置匿名認證
-                        .anonymous(anonymous -> anonymous
+                // 配置匿名認證
+                .anonymous(anonymous -> anonymous
                         .authorities(List.of(new SimpleGrantedAuthority("guest")))) // 給予匿名用戶 'guest' 權限
 
-                        // 配置 OAuth2 登入
-                        .oauth2Login(oauth2 -> oauth2
+                // 配置 OAuth2 登入
+                .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo
-                        .userService(customOAuth2UserService))
+                                .userService(customOAuth2UserService))
                         .successHandler(oAuth2AuthenticationSuccessHandler)
-                        // 移除或註釋掉這一行
-                        // .defaultSuccessUrl("http://localhost:5173/", true)
-                        );
-
+                // 移除或註釋掉這一行
+                // .defaultSuccessUrl("http://localhost:5173/", true)
+                );
 
         // 啟用 JWT 過濾器
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
