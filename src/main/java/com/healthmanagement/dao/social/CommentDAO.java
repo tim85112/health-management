@@ -17,13 +17,15 @@ public interface CommentDAO extends JpaRepository<Comment, Integer> {
     // 查詢某位使用者的所有留言
     List<Comment> findByUserId(Integer userId);
 
-<<<<<<< Updated upstream
-=======
+    
+    // 查詢某位使用者的所有留言(透過user_id欄位)
+    List<Comment> findByUser_Id(Integer userId);
+
     @Query("SELECT FORMAT(c.createdAt, 'yyyy-MM') AS month, COUNT(c) " +
             "FROM Comment c GROUP BY FORMAT(c.createdAt, 'yyyy-MM') ORDER BY month")
     List<Object[]> countCommentByMonth();
 
->>>>>>> Stashed changes
+  
     // 計算某位使用者的留言總數
     long countByUser_Id(Integer userId);
 }
