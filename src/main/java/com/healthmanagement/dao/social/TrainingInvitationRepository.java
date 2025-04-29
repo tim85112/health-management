@@ -8,4 +8,6 @@ import java.util.List;
 public interface TrainingInvitationRepository extends JpaRepository<TrainingInvitation, Integer> {
     List<TrainingInvitation> findByReceiverId(Integer receiverId);
     List<TrainingInvitation> findBySenderId(Integer senderId);
+    List<TrainingInvitation> findByReceiverIdAndStatus(Integer receiverId, String status);
+    long countByStatus(String status);
 }

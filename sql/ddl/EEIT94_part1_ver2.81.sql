@@ -43,7 +43,7 @@ CREATE TABLE [course]
 (
     [id] INT PRIMARY KEY IDENTITY (1, 1),
     [name] VARCHAR(255) NOT NULL,
-    [description] TEXT,
+    [description] TEXT,
     [day_of_week] INT NOT NULL,
     [start_time] TIME NOT NULL,
     [coach_id] INT NOT NULL,
@@ -208,7 +208,7 @@ CREATE TABLE [fitness_goals]
     [goal_type]        NVARCHAR(50) NOT NULL CHECK (goal_type IN ('減重', '增肌', '減脂')),
     [target_value]     FLOAT        NOT NULL,
     [current_progress] FLOAT                                                         DEFAULT 0,
-    [unit]             NVARCHAR(20) CHECK (unit IN ('公斤', '%',)),
+    [unit]             NVARCHAR(20) CHECK (unit IN ('公斤', '%')),
     [start_date]       DATE                                                          DEFAULT GETDATE(),
     [end_date]         DATETIME2    NULL,
     [status]           NVARCHAR(20) CHECK (status IN ('進行中', '已完成', '未達成')) DEFAULT '進行中',
