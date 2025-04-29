@@ -7,7 +7,7 @@ public interface AnalyticsService {
     MonthlyStatDTO getMonthlyCommentStats();
     RankingStatDTO getTopLikedPosts();
     RankingStatDTO getTopFavoritedPosts();
-    RankingStatDTO getTopActiveUsers();
     RankingStatDTO getTopFriendUsers();
     TrainingStatDTO getTrainingInvitationStats();
+    RankingStatDTO getTopPostUsers();
 }

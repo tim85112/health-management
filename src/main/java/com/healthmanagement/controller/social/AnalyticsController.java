@@ -31,10 +31,10 @@ public class AnalyticsController {
     public RankingStatDTO getTopFavoritedPosts() {
         return analyticsService.getTopFavoritedPosts();
     }
-
+    
     @GetMapping("/users/top-posts")
     public RankingStatDTO getTopPostUsers() {
-        return analyticsService.getTopActiveUsers();
+        return analyticsService.getTopPostUsers();
     }
 
     @GetMapping("/users/top-friends")
