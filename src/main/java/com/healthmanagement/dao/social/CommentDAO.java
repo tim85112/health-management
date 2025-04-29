@@ -13,6 +13,7 @@ public interface CommentDAO extends JpaRepository<Comment, Integer> {
     // 查詢某篇文章底下的留言
     List<Comment> findByPost_Id(Integer postId);
 
+
     // 查詢某位使用者的所有留言
     List<Comment> findByUserId(Integer userId);
     
@@ -21,3 +22,6 @@ public interface CommentDAO extends JpaRepository<Comment, Integer> {
     List<Object[]> countCommentByMonth();
 }
 
+    // 計算某位使用者的留言總數
+    long countByUser_Id(Integer userId);
+}

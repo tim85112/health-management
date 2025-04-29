@@ -1,6 +1,5 @@
 package com.healthmanagement.dto.member;
 
-import com.healthmanagement.model.member.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,11 +9,16 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class LoginResponse {
     private String token;
+    private Integer userId;
+    private String name;
+    private String email;
     private String role;
-    private User user;
-    
-    public LoginResponse(String token, String role) {
+
+    public LoginResponse(String token, String role, Integer userId, String name, String email) {
         this.token = token;
         this.role = role;
+        this.userId = userId;
+        this.name = name;
+        this.email = email;
     }
 }

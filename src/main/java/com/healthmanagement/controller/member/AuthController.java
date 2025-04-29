@@ -60,12 +60,20 @@ public class AuthController {
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest loginRequest) {
         String token = userService.loginUser(loginRequest.getEmail(), loginRequest.getPassword());
 
-        // 從數據庫獲取用戶角色和用户信息
+        // 從數據庫獲取用戶角色和基本信息
         User user = userService.findByEmail(loginRequest.getEmail()).orElse(null);
-        String role = user != null ? user.getRole() : "user";
-
-        LoginResponse loginResponse = new LoginResponse(token, role, user);
-        return ResponseEntity.ok(ApiResponse.success(loginResponse));
+        if (user != null) {
+            LoginResponse loginResponse = new LoginResponse(
+                    token,
+                    user.getRole(),
+                    user.getUserId(),
+                    user.getName(),
+                    user.getEmail()
+            );
+            return ResponseEntity.ok(ApiResponse.success(loginResponse));
+        } else {
+            return ResponseEntity.status(401).body(ApiResponse.error("Invalid credentials"));
+        }
     }
 
     /**

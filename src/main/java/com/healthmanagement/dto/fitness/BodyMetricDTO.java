@@ -2,17 +2,22 @@ package com.healthmanagement.dto.fitness;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 import io.swagger.v3.oas.annotations.media.Schema;
+
 import com.healthmanagement.model.fitness.BodyMetric;
 import com.healthmanagement.model.member.*;
 
 @Builder
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class BodyMetricDTO {
@@ -44,10 +49,12 @@ public class BodyMetricDTO {
 	private Double bmi;
 
 	@Schema(example = "2025-04-08")
+	@DateTimeFormat(pattern = "yyyy-MM-dd") 
 	private LocalDate dateRecorded;
 
 	@Schema(example = "用戶姓名")
 	private String userName;
+	
 
 	public static BodyMetricDTO fromEntity(BodyMetric bodyMetric, User user) {
 		return BodyMetricDTO.builder().id(bodyMetric.getId()) 

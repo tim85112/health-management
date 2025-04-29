@@ -8,7 +8,11 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.healthmanagement.service.fitness.AchievementService;
 
+import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -18,6 +22,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserDAO userDAO;
     private final ApplicationContext applicationContext;
+    private final AchievementService achievementService;
     private PasswordEncoder passwordEncoder;
     private JwtUtil jwtUtil;
 
@@ -25,9 +30,10 @@ public class UserServiceImpl implements UserService {
     private static final Pattern PASSWORD_PATTERN = Pattern.compile("^(?=.*[a-z])(?=.*[A-Z]).{8,}$");
 
     @Autowired
-    public UserServiceImpl(UserDAO userDAO, ApplicationContext applicationContext) {
+    public UserServiceImpl(UserDAO userDAO, ApplicationContext applicationContext, AchievementService achievementService) {
         this.userDAO = userDAO;
         this.applicationContext = applicationContext;
+        this.achievementService = achievementService;
     }
 
     @Autowired
@@ -72,6 +78,27 @@ public class UserServiceImpl implements UserService {
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
             throw new BadCredentialsException("Invalid email or password");
         }
+
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Taipei"));
+        LocalDate today = now.toLocalDate();
+        LocalDate lastLoginDate = user.getLastLogin() != null ? user.getLastLogin().toLocalDate() : null;
+
+        Integer consecutiveLoginDays = user.getConsecutiveLoginDays();
+        if (consecutiveLoginDays == null) {
+            consecutiveLoginDays = 0;
+        }
+
+        if (lastLoginDate != null && lastLoginDate.plusDays(1).isEqual(today)) {
+            user.setConsecutiveLoginDays(consecutiveLoginDays + 1);
+        } else {
+            user.setConsecutiveLoginDays(1);
+        }
+        user.setLastLogin(now);
+        userDAO.save(user);
+
+        achievementService.checkAndAwardAchievements(user.getUserId(), "USER_LOGGED_IN",
+                user.getConsecutiveLoginDays());
+
         return jwtUtil.generateToken(user.getEmail(), user.getRole());
     }
 
@@ -151,7 +178,7 @@ public class UserServiceImpl implements UserService {
     public Optional<User> findById(Integer userId) {
         return userDAO.findById(userId);
     }
-    
+
     @Override
     public List<User> getAllCoaches() {
         return userDAO.findByRole("coach");

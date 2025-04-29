@@ -109,6 +109,7 @@ public class TestDataLoader implements CommandLineRunner {
                 .bio(bio)
                 .role(role)
                 .userPoints(points)
+                .consecutiveLoginDays(0)
                 .build();
     }
 }

@@ -91,6 +91,7 @@ public class WebSecurityConfig {
                                 "/api/order/**",
                                 "/api/orders/*/payment/**",
                                 "/users/**",
+                                "/static-images/**",
                                 "/login/oauth2/code/google", // 添加 OAuth2 重定向 URI
                                 "/error")
                         .permitAll()
@@ -130,7 +131,7 @@ public class WebSecurityConfig {
                         // 配置匿名認證
                         .anonymous(anonymous -> anonymous
                         .authorities(List.of(new SimpleGrantedAuthority("guest")))) // 給予匿名用戶 'guest' 權限
-                        
+
                         // 配置 OAuth2 登入
                         .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo
@@ -139,7 +140,7 @@ public class WebSecurityConfig {
                         // 移除或註釋掉這一行
                         // .defaultSuccessUrl("http://localhost:5173/", true)
                         );
-                
+
 
         // 啟用 JWT 過濾器
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

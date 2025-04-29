@@ -51,7 +51,7 @@ public class Course {
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
     @JsonManagedReference("course-enrollments")
     private List<Enrollment> enrollments; // 課程的報名紀錄
-    
+
     @Column(name = "offers_trial_option", nullable = false)
     private Boolean offersTrialOption;
 
