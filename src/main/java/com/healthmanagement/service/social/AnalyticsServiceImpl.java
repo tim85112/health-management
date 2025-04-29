@@ -1,8 +1,13 @@
 package com.healthmanagement.service.social;
 
 import com.healthmanagement.dto.social.*;
+import com.healthmanagement.dao.social.CommentDAO;
 import com.healthmanagement.dao.social.ForumDAO;
+import com.healthmanagement.dao.social.FriendRepository;
+import com.healthmanagement.dao.social.PostFavoriteRepository;
 import com.healthmanagement.dao.social.PostLikeRepository;
+import com.healthmanagement.dao.social.TrainingInvitationRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +22,18 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
     @Autowired
     private PostLikeRepository postLikeRepository;
+    
+    @Autowired
+    private CommentDAO commentDAO;
+
+    @Autowired
+    private PostFavoriteRepository postFavoriteRepository;
+    
+    @Autowired
+    private FriendRepository friendRepository;
+
+    @Autowired
+    private TrainingInvitationRepository trainingInvitationRepository;
 
     @Override
     public MonthlyStatDTO getMonthlyPostStats() {
@@ -32,10 +49,14 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
     @Override
     public MonthlyStatDTO getMonthlyCommentStats() {
-        return new MonthlyStatDTO(
-                List.of("1月", "2月", "3月", "4月"),
-                List.of(34, 47, 50, 42)
-        );
+        List<Object[]> result = commentDAO.countCommentByMonth();
+        List<String> months = new ArrayList<>();
+        List<Integer> counts = new ArrayList<>();
+        for (Object[] row : result) {
+            months.add((String) row[0]);
+            counts.add(((Number) row[1]).intValue());
+        }
+        return new MonthlyStatDTO(months, counts);
     }
 
     @Override
@@ -52,30 +73,49 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
     @Override
     public RankingStatDTO getTopFavoritedPosts() {
-        return new RankingStatDTO(
-                List.of("文章X", "文章Y", "文章Z", "文章W", "文章Q"),
-                List.of(22, 21, 18, 15, 13)
-        );
+        List<Object[]> result = postFavoriteRepository.findTopFavoritedPosts();
+        List<String> titles = new ArrayList<>();
+        List<Integer> counts = new ArrayList<>();
+        for (Object[] row : result) {
+            titles.add((String) row[0]);
+            counts.add(((Number) row[1]).intValue());
+        }
+        return new RankingStatDTO(titles, counts);
     }
 
     @Override
-    public RankingStatDTO getTopActiveUsers() {
-        return new RankingStatDTO(
-                List.of("Amy", "John", "Lisa", "Tom", "Kevin"),
-                List.of(20, 18, 16, 14, 12)
-        );
+    public RankingStatDTO getTopPostUsers() {
+        List<Object[]> result = forumDAO.countPostsByUser();
+        List<String> names = new ArrayList<>();
+        List<Integer> counts = new ArrayList<>();
+        int limit = Math.min(5, result.size());
+        for (int i = 0; i < limit; i++) {
+            Object[] row = result.get(i);
+            names.add((String) row[0]);
+            counts.add(((Number) row[1]).intValue());
+        }
+        return new RankingStatDTO(names, counts);
     }
-
+    
     @Override
     public RankingStatDTO getTopFriendUsers() {
-        return new RankingStatDTO(
-                List.of("Amy", "Kevin", "John", "Sara", "Chris"),
-                List.of(10, 9, 9, 8, 7)
-        );
+        List<Object[]> result = friendRepository.countFriendsByUser();
+        List<String> names = new ArrayList<>();
+        List<Integer> counts = new ArrayList<>();
+        int limit = Math.min(5, result.size());
+        for (int i = 0; i < limit; i++) {
+            Object[] row = result.get(i);
+            names.add(row[0].toString()); // 這邊是 userId，要看你要不要再轉成名字
+            counts.add(((Number) row[1]).intValue());
+        }
+        return new RankingStatDTO(names, counts);
     }
 
     @Override
     public TrainingStatDTO getTrainingInvitationStats() {
-        return new TrainingStatDTO(18, 7, 10);
+        long accepted = trainingInvitationRepository.countByStatus("accepted");
+        long rejected = trainingInvitationRepository.countByStatus("rejected");
+        long pending = trainingInvitationRepository.countByStatus("pending");
+        return new TrainingStatDTO((int) accepted, (int) rejected, (int) pending);
     }
 }
