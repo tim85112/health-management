@@ -95,6 +95,17 @@ public class TestDataLoader implements CommandLineRunner {
         users.add(createUser("張教練", "coach.zhang@health.com", "Coach@123", "F", "體態雕塑教練，專長：核心訓練", "coach", 4));
         users.add(createUser("王教練", "coach.wang@health.com", "Coach@123", "M", "功能性訓練教練，專長：運動表現提升", "coach", 5));
 
+        users.add(createUser("陳教練", "coach.chen@health.com", "Coach@123", "M", "拳擊教練，專長：搏擊技巧", "coach", 6));
+        users.add(createUser("李教練", "coach.li@health.com", "Coach@123", "F", "舞蹈教練，專長：韻律舞蹈", "coach", 7));
+        users.add(createUser("吳教練", "coach.wu@health.com", "Coach@123", "M", "游泳教練，專長：自由式", "coach", 8));
+        users.add(createUser("郭教練", "coach.guo@health.com", "Coach@123", "F", "皮拉提斯教練，專長：核心強化", "coach", 9));
+        users.add(createUser("趙教練", "coach.zhao@health.com", "Coach@123", "M", "跑步教練，專長：長跑技巧", "coach", 10));
+        users.add(createUser("沈教練", "coach.shen@health.com", "Coach@123", "F", "伸展教練，專長：柔韌度訓練", "coach", 11));
+        users.add(createUser("楊教練", "coach.yang@health.com", "Coach@123", "M", "力量教練，專長：Olympic舉重", "coach", 12));
+        users.add(createUser("徐教練", "coach.xu@health.com", "Coach@123", "F", "TRX懸吊訓練教練，專長：平衡訓練", "coach", 13));
+        users.add(createUser("孫教練", "coach.sun@health.com", "Coach@123", "M", "籃球教練，專長：投籃技巧", "coach", 14));
+        users.add(createUser("馬教練", "coach.ma@health.com", "Coach@123", "F", "營養教練，專長：飲食規劃", "coach", 15));
+
         return users;
     }
 
