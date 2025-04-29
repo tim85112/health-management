@@ -78,7 +78,7 @@ public class TrainingInvitationServiceImpl implements TrainingInvitationService 
 
     @Override
     public List<TrainingInvitationDTO> getReceivedInvitations(Integer receiverId) {
-        List<TrainingInvitation> invitations = repo.findByReceiverId(receiverId);
+    	List<TrainingInvitation> invitations = repo.findByReceiverIdAndStatus(receiverId, "pending");
         return invitations.stream().map(invite -> {
             TrainingInvitationDTO dto = new TrainingInvitationDTO();
             dto.setId(invite.getId());

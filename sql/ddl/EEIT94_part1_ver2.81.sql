@@ -7,16 +7,15 @@ USE HealthManagement
 -- 創建 users 表
 CREATE TABLE [users]
 (
-    [user_id]               INT PRIMARY KEY IDENTITY (1, 1),                 -- 自動遞增主鍵
-    [name]                  NVARCHAR(50)  NOT NULL,                          -- 使用者名稱
-    [email]                 NVARCHAR(100) NOT NULL,                          -- 電子郵件
-    [password_hash]         VARCHAR(255)  NOT NULL,                          -- 密碼哈希
-    [gender]                CHAR(1),                                         -- 性別，例如 'M' 或 'F'
-    [bio]                   NVARCHAR(MAX),                                   -- 個人簡介
-    [role]                  VARCHAR(10) CHECK (role IN ('user', 'admin', 'coach')),   -- 角色
-    [user_points]           INT           NOT NULL DEFAULT 0,                -- 使用者點數
-    [last_login]            DATETIME               DEFAULT CURRENT_TIMESTAMP, -- 最後登入時間
-    [consecutive_login_days] INT           NOT NULL DEFAULT 0                 -- 連續登入天數
+    [user_id]       INT PRIMARY KEY IDENTITY (1, 1),								-- 自動遞增主鍵
+    [name]          NVARCHAR(50)  NOT NULL,											-- 使用者名稱
+    [email]         NVARCHAR(100) NOT NULL,											-- 電子郵件
+    [password_hash] VARCHAR(255)  NOT NULL,											-- 密碼哈希
+    [gender]        CHAR(1),														-- 性別，例如 'M' 或 'F'
+    [bio]           NVARCHAR(MAX),													-- 個人簡介
+    [role]          VARCHAR(10) CHECK (role IN ('user', 'admin', 'coach', 'guest')),-- 角色
+    [user_points]   INT           NOT NULL DEFAULT 0,								-- 使用者點數
+    [last_login]    DATETIME               DEFAULT CURRENT_TIMESTAMP				-- 最後登入時間
 );
 GO
 
@@ -44,7 +43,7 @@ CREATE TABLE [course]
 (
     [id] INT PRIMARY KEY IDENTITY (1, 1),
     [name] VARCHAR(255) NOT NULL,
-    [description] TEXT,
+    [description] TEXT,
     [day_of_week] INT NOT NULL,
     [start_time] TIME NOT NULL,
     [coach_id] INT NOT NULL,
@@ -202,16 +201,17 @@ CREATE TABLE [nutrition_records]
 GO
 
 -- 創建 fitness_goals 表
-CREATE TABLE [fitness_goals] (
-    [goal_id] INT PRIMARY KEY IDENTITY(1, 1),
-    [user_id] INT NOT NULL FOREIGN KEY REFERENCES [users]([user_id]) ON DELETE CASCADE,
-    [goal_type] NVARCHAR(50) NOT NULL CHECK (goal_type IN ('減重', '減脂', '增肌')),
-    [target_value] FLOAT NOT NULL,
-    [current_progress] FLOAT DEFAULT 0,
-    [unit] NVARCHAR(20) CHECK (unit IN ('公斤', '%')),
-    [start_date] DATE DEFAULT GETDATE(),
-    [end_date] DATETIME2 NULL,
-    [status] NVARCHAR(20) CHECK (status IN ('進行中', '已完成', '未達成')) DEFAULT '進行中',
+CREATE TABLE [fitness_goals]
+(
+    [goal_id]          INT PRIMARY KEY IDENTITY (1, 1),
+    [user_id]          INT          NOT NULL FOREIGN KEY REFERENCES [users] ([user_id]) ON DELETE CASCADE,
+    [goal_type]        NVARCHAR(50) NOT NULL CHECK (goal_type IN ('減重', '增肌', '減脂')),
+    [target_value]     FLOAT        NOT NULL,
+    [current_progress] FLOAT                                                         DEFAULT 0,
+    [unit]             NVARCHAR(20) CHECK (unit IN ('公斤', '%')),
+    [start_date]       DATE                                                          DEFAULT GETDATE(),
+    [end_date]         DATETIME2    NULL,
+    [status]           NVARCHAR(20) CHECK (status IN ('進行中', '已完成', '未達成')) DEFAULT '進行中',
     [start_weight] FLOAT NULL,        -- 起始體重 (用於減重)
     [start_body_fat] FLOAT NULL,     -- 起始體脂率 (用於減脂)
     [start_muscle_mass] FLOAT NULL,  -- 起始肌肉量 (用於增肌)
@@ -231,7 +231,6 @@ CREATE TABLE [achievements]
     CONSTRAINT [UC_UniqueAchievement] UNIQUE ([user_id], [title])
 );
 GO
-
 -- 創建 achievement_definitions 表
 CREATE TABLE [achievement_definitions] (
     [definition_id] INT PRIMARY KEY IDENTITY(1, 1),
@@ -244,7 +243,7 @@ CREATE TABLE [achievement_definitions] (
     [points] INT NULL,
     [created_at] DATETIME DEFAULT GETDATE(),
     [updated_at] DATETIME DEFAULT GETDATE()
-);
+    );
 GO
 
 -- 創建 social_post 表
@@ -340,20 +339,17 @@ CREATE TABLE [post_favorite] (
     CONSTRAINT UQ_user_post UNIQUE ([user_id], [post_id]) -- 同一文章不可重複收藏
 );
 GO
-
---訓練邀請資料表
 CREATE TABLE [friend_invitation] (
-    [id]           INT PRIMARY KEY IDENTITY(1,1),
-    [inviter_id]   INT NOT NULL,
-    [invitee_id]   INT NOT NULL,
-    [status]       NVARCHAR(20) NOT NULL DEFAULT 'pending',
-    [created_at]   DATETIME DEFAULT CURRENT_TIMESTAMP,
+    [id]           INT PRIMARY KEY IDENTITY(1,1),         -- 邀請編號
+    [inviter_id]   INT NOT NULL,                          -- 發出邀請的使用者
+    [invitee_id]   INT NOT NULL,                          -- 接收邀請的使用者
+    [status]       NVARCHAR(20) NOT NULL DEFAULT 'pending', -- 邀請狀態：pending、accepted、rejected
+    [created_at]   DATETIME DEFAULT CURRENT_TIMESTAMP,    -- 邀請時間
     CONSTRAINT FK_invitation_inviter FOREIGN KEY ([inviter_id]) REFERENCES [users]([user_id]),
     CONSTRAINT FK_invitation_invitee FOREIGN KEY ([invitee_id]) REFERENCES [users]([user_id]),
-    CONSTRAINT UQ_invitation_pair UNIQUE ([inviter_id], [invitee_id])
+    CONSTRAINT UQ_invitation_pair UNIQUE ([inviter_id], [invitee_id]) -- 不可重複邀請
 );
 GO
-
 
 -- 外鍵約束設定
 ALTER TABLE [user_point]
@@ -391,16 +387,16 @@ GO
 
 CREATE OR ALTER VIEW dashboard_stat AS
 SELECT (SELECT COUNT(*) FROM [users] WHERE role = 'user')                             AS total_users,
-                                         (SELECT COUNT(*) FROM [exercise_records])                                      AS total_workouts,
-    (SELECT SUM([exercise_duration]) FROM [exercise_records])                      AS total_workout_minutes,
-    (SELECT SUM([calories_burned]) FROM [exercise_records])                        AS total_calories_burned,
-    (SELECT COUNT(*) FROM [users] WHERE DATEDIFF(DAY, last_login, GETDATE()) <= 7) AS active_users_this_week,
-                                      (SELECT COUNT(DISTINCT [user_id])
-FROM [users]
-WHERE YEAR(last_login) = YEAR(GETDATE())
-  AND MONTH(last_login) = MONTH(GETDATE()))                                 AS active_users_this_month,
-    (SELECT COUNT(DISTINCT [user_id])
-FROM [users]
-WHERE YEAR(last_login) = YEAR(GETDATE()))                                    AS active_users_this_year
+       (SELECT COUNT(*) FROM [exercise_records])                                      AS total_workouts,
+       (SELECT SUM([exercise_duration]) FROM [exercise_records])                      AS total_workout_minutes,
+       (SELECT SUM([calories_burned]) FROM [exercise_records])                        AS total_calories_burned,
+       (SELECT COUNT(*) FROM [users] WHERE DATEDIFF(DAY, last_login, GETDATE()) <= 7) AS active_users_this_week,
+       (SELECT COUNT(DISTINCT [user_id])
+        FROM [users]
+        WHERE YEAR(last_login) = YEAR(GETDATE())
+        AND MONTH(last_login) = MONTH(GETDATE()))                                 AS active_users_this_month,
+       (SELECT COUNT(DISTINCT [user_id])
+        FROM [users]
+        WHERE YEAR(last_login) = YEAR(GETDATE()))                                    AS active_users_this_year
 FROM (SELECT 1) AS dummy; -- 需要一個假的 FROM 子句來允許子查詢
 GO

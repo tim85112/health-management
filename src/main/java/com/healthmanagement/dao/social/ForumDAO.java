@@ -21,5 +21,8 @@ public interface ForumDAO extends JpaRepository<Post, Integer> {
     
     @Query("SELECT FORMAT(p.createdAt, 'yyyy-MM') AS month, COUNT(p) " +
     	       "FROM Post p GROUP BY FORMAT(p.createdAt, 'yyyy-MM') ORDER BY month")
-    	List<Object[]> countPostByMonth();
+	List<Object[]> countPostByMonth();
+    	
+	@Query("SELECT p.user.name, COUNT(p) FROM Post p GROUP BY p.user.name ORDER BY COUNT(p) DESC")
+	List<Object[]> countPostsByUser();	
 }
