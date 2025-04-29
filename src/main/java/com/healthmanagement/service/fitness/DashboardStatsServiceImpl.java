@@ -28,6 +28,8 @@ public class DashboardStatsServiceImpl implements DashboardStatsService {
             stats.setTotalWorkoutMinutes(((Number) row[2]).intValue());
             stats.setTotalCaloriesBurned(((Number) row[3]).doubleValue()); 
             stats.setActiveUsersThisWeek(((Number) row[4]).intValue());
+            stats.setActiveUsersThisMonth(((Number) row[5]).intValue());
+            stats.setActiveUsersThisYear(((Number) row[6]).intValue());
             return stats;
         }
         return null; // 或者拋出異常
