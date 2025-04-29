@@ -13,6 +13,8 @@ import com.healthmanagement.model.course.TrialBooking;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -171,26 +173,86 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     @Transactional(readOnly = true)
-    public  CourseResponse getCourseById(Integer id) { // 返回  CourseResponse
+    public  CourseResponse getCourseById(Integer id) { // 返回包含完整數據的 CourseResponse
         logger.info("獲取課程 ID: {}", id);
         Optional<Course> optional = courseDAO.findById(id);
         if (optional.isEmpty()) {
             logger.warn("找不到課程 ID: {}", id);
-            // return null; // 不應該返回 null，應該拋出例外
             throw new EntityNotFoundException("找不到課程 ID: " + id);
         }
         Course course = optional.get();
 
+        // 獲取常規課程的已報名人數 (假設 enrollmentService.getEnrolledCount 工作正常)
+        int registeredCount = enrollmentService.getEnrolledCount(course.getId());
+        logger.info("課程 ID {} 的常規已報名人數為: {}", course.getId(), registeredCount); // *** 添加日誌：常規人數 ***
+
+
         // 獲取單個課程的下一個排程的 bookedTrialCount (如果提供體驗選項)
         Integer bookedTrialCount = 0;
-        if (course.getOffersTrialOption() != null && course.getOffersTrialOption()) {
-            // 創建一個單元素的列表來調用 getNextOccurrenceBookedTrialCounts
+        boolean courseOffersTrial = course.getOffersTrialOption() != null && course.getOffersTrialOption();
+        if (courseOffersTrial) { // 如果提供體驗
+            // 使用您現有的方法獲取體驗預約人數
             List<Course> singleCourseList = Collections.singletonList(course);
-            Map<Integer, Integer> countsMap = getNextOccurrenceBookedTrialCounts(singleCourseList);
-            bookedTrialCount = countsMap.getOrDefault(course.getId(), 0);
-        }
 
-        return convertToCourseResponse(course, bookedTrialCount); // 傳入計數
+            // *** 添加日誌：準備呼叫獲取體驗人數的方法 ***
+            logger.info("課程 ID {} 提供體驗，準備呼叫 enrollmentService.getNextOccurrenceBookedTrialCounts 獲取體驗人數，傳遞列表大小: {}", course.getId(), singleCourseList.size());
+
+
+            // 這裡假設 getNextOccurrenceBookedTrialCounts 是在 EnrollmentService 中定義並由 enrollmentService 物件呼叫
+            Map<Integer, Integer> countsMap = enrollmentService.getNextOccurrenceBookedTrialCounts(singleCourseList);
+
+            // *** 添加日誌：打印從 getNextOccurrenceBookedTrialCounts 返回的 Map ***
+            logger.info("課程 ID {} 呼叫 enrollmentService.getNextOccurrenceBookedTrialCounts 返回的 countsMap: {}", course.getId(), countsMap);
+
+            bookedTrialCount = countsMap.getOrDefault(course.getId(), 0);
+
+            // 驗證：如果 bookedTrialCount 為 null (雖然 getOrDefault 應該能處理)，確保設為 0
+             if (bookedTrialCount == null) {
+                 bookedTrialCount = 0;
+             }
+        }
+        // *** 添加日誌：打印在 getCourseById 中獲取的最終 bookedTrialCount ***
+        logger.info("課程 ID {} 在 getCourseById 中獲取的最終 bookedTrialCount 為: {}", course.getId(), bookedTrialCount);
+
+
+        // 計算常規額滿狀態
+        boolean isCourseActuallyFull = course.getMaxCapacity() != null && course.getMaxCapacity() > 0 && registeredCount >= course.getMaxCapacity();
+        logger.info("課程 ID {} 的常規額滿狀態 (full) 計算為: {}", course.getId(), isCourseActuallyFull); // *** 添加日誌：常規額滿狀態 ***
+
+
+        // 計算體驗額滿狀態
+        boolean isCourseTrialActuallyFull = courseOffersTrial && // 必須提供體驗選項
+                                            course.getMaxTrialCapacity() != null && course.getMaxTrialCapacity() > 0 && // 必須有最大體驗容量且大於 0
+                                            bookedTrialCount >= course.getMaxTrialCapacity(); // 已預約人數達到或超過最大容量
+        logger.info("課程 ID {} 的體驗額滿狀態 (trialFull) 計算為: {}", course.getId(), isCourseTrialActuallyFull); // *** 添加日誌：體驗額滿狀態 ***
+
+
+        // *** 使用 Builder 模式構建 CourseResponse DTO，包含所有需要的數據 ***
+        // ... builder code ...
+
+        CourseResponse response = CourseResponse.builder()
+            .id(course.getId())
+            .name(course.getName())
+            .description(course.getDescription())
+            .coachId(course.getCoach() != null ? course.getCoach().getId() : null)
+            .coachName(course.getCoach() != null ? course.getCoach().getName() : null)
+            .dayOfWeek(course.getDayOfWeek())
+            .startTime(course.getStartTime())
+            .duration(course.getDuration())
+            .maxCapacity(course.getMaxCapacity())
+            .offersTrialOption(course.getOffersTrialOption())
+            .maxTrialCapacity(course.getMaxTrialCapacity())
+            .registeredCount(registeredCount)
+            .bookedTrialCount(bookedTrialCount)
+            .full(isCourseActuallyFull)
+            .trialFull(isCourseTrialActuallyFull)
+            .build();
+
+        // *** 添加日誌：打印最終構建的 CourseResponse DTO (或部分關鍵欄位) ***
+        logger.info("課程 ID {} 的 CourseResponse DTO 構建完成: {}", course.getId(), response);
+
+
+        return response;
     }
 
     @Override
@@ -350,35 +412,123 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     @Transactional(readOnly = true)
-    public List< CourseResponse> findByCoachId(Integer coachId) { // 返回 List< CourseResponse>
+    public Page< CourseResponse> findByCoachId(Integer coachId, Pageable pageable){
         logger.info("查詢教練 ID {} 的課程。", coachId);
-        List<Course> courses = courseDAO.findByCoachId(coachId);
-        logger.info("找到教練 ID {} 的 {} 個課程。", coachId, courses.size());
+        // 使用 CourseDAO 獲取教練的所有課程
+		Page<Course> coursePage = courseDAO.findByCoachId(coachId, pageable);
 
-        // 批量獲取提供體驗選項的課程的下一個排程的 bookedTrialCount
-        Map<Integer, Integer> bookedTrialCounts = getNextOccurrenceBookedTrialCounts(courses);
+        // 批量獲取這些課程的體驗預約計數
+        // 這個方法現在應該包含了正確獲取計數的邏輯 (假設您已經實現了 EnrollmentServiceImpl.getNextOccurrenceBookedTrialCounts 的具體內容)
+        Map<Integer, Integer> bookedTrialCounts = enrollmentService.getNextOccurrenceBookedTrialCounts(coursePage.getContent());
 
-        // 轉換並帶入 bookedTrialCount
-        return courses.stream()
-             .map(course -> convertToCourseResponse(course, bookedTrialCounts.getOrDefault(course.getId(), 0)))
-             .collect(Collectors.toList());
-    }
+        // 使用 Stream 處理課程列表，為每個 Course 獲取註冊人數並構建 CourseResponse DTO
+        return coursePage.map(course -> {
+            // 這裡的轉換邏輯與您現有 Stream 中的轉換邏輯類似，
+            // 針對每一個 Course 物件，獲取其 registeredCount 和 bookedTrialCount，
+            // 計算 full 和 trialFull 狀態，然後構建 CourseResponse 物件。
+            int registeredCount = enrollmentService.getEnrolledCount(course.getId());
+            Integer bookedTrialCount = bookedTrialCounts.getOrDefault(course.getId(), 0);
+            boolean isCourseActuallyFull = course.getMaxCapacity() != null && course.getMaxCapacity() > 0 && registeredCount >= course.getMaxCapacity();
+            boolean courseOffersTrial = course.getOffersTrialOption() != null && course.getOffersTrialOption();
+            boolean isCourseTrialActuallyFull = courseOffersTrial &&
+                                                course.getMaxTrialCapacity() != null && course.getMaxTrialCapacity() > 0 &&
+                                                bookedTrialCount >= course.getMaxTrialCapacity();
+
+             return CourseResponse.builder()
+                .id(course.getId())
+                .name(course.getName())
+                .description(course.getDescription())
+                .coachId(course.getCoach() != null ? course.getCoach().getId() : null)
+                .coachName(course.getCoach() != null ? course.getCoach().getName() : null)
+                .dayOfWeek(course.getDayOfWeek())
+                .startTime(course.getStartTime())
+                .duration(course.getDuration())
+                .maxCapacity(course.getMaxCapacity())
+                .offersTrialOption(course.getOffersTrialOption())
+                .maxTrialCapacity(course.getMaxTrialCapacity())
+                .registeredCount(registeredCount)
+                .bookedTrialCount(bookedTrialCount)
+                .full(isCourseActuallyFull)
+                .trialFull(isCourseTrialActuallyFull)
+                .build();
+       });
+	}
 
     @Override
     @Transactional(readOnly = true)
     public List< CourseResponse> searchCoursesByCourseName(String name) { // 返回 List< CourseResponse>
         logger.info("依課程名稱查詢：{}", name);
+        // 使用 CourseDAO 獲取匹配名稱的課程列表 (忽略大小寫)
         List<Course> courses = courseDAO.findByNameContainingIgnoreCase(name);
         logger.info("找到 {} 個匹配名稱 '{}' 的課程。", courses.size(), name);
 
-        // 批量獲取提供體驗選項的課程的下一個排程的 bookedTrialCount
-        Map<Integer, Integer> bookedTrialCounts = getNextOccurrenceBookedTrialCounts(courses);
+        // 批量獲取這些課程的體驗預約計數
+        // 這個方法現在應該包含了正確獲取計數的邏輯 (假設您已經實現了 EnrollmentServiceImpl.getNextOccurrenceBookedTrialCounts 的具體內容)
+        Map<Integer, Integer> bookedTrialCounts = enrollmentService.getNextOccurrenceBookedTrialCounts(courses);
 
-
-        // 轉換並帶入 bookedTrialCount
+        // 使用 Stream 處理課程列表，為每個 Course 獲取註冊人數並構建 CourseResponse DTO
         return courses.stream()
-             .map(course -> convertToCourseResponse(course, bookedTrialCounts.getOrDefault(course.getId(), 0)))
-             .collect(Collectors.toList());
+             .map(course -> {
+                 // 獲取常規課程的已報名人數
+                 // 請注意：在遍歷列表時為每個課程單獨呼叫 enrollmentService.getEnrolledCount 可能效率不高。
+                 // 如果 EnrollmentService 或 EnrollmentDAO 有批量獲取多個課程已報名人數的方法，會更優。
+                 int registeredCount = enrollmentService.getEnrolledCount(course.getId()); // 為每門課程呼叫獲取人數方法
+                 logger.debug("課程 ID {} 的常規已報名人數為: {}", course.getId(), registeredCount); // 添加調試日誌
+
+
+                 // 獲取該課程的 bookedTrialCount 從之前獲取的 Map
+                 // 使用 getOrDefault 以防 Map 中沒有該課程的鍵 (雖然 getNextOccurrenceBookedTrialCounts 應該確保每個課程都有)
+                 Integer bookedTrialCount = bookedTrialCounts.getOrDefault(course.getId(), 0);
+                 logger.debug("課程 ID {} 的體驗預約人數為: {}", course.getId(), bookedTrialCount); // 添加調試日誌
+
+
+                 // 計算常規額滿狀態
+                 boolean isCourseActuallyFull = course.getMaxCapacity() != null && course.getMaxCapacity() > 0 && registeredCount >= course.getMaxCapacity();
+                 logger.debug("課程 ID {} 的常規額滿狀態 (full) 計算為: {}", course.getId(), isCourseActuallyFull); // 添加調試日誌
+
+
+                 // *** 新增計算體驗額滿狀態 ***
+                 boolean courseOffersTrial = course.getOffersTrialOption() != null && course.getOffersTrialOption(); // 檢查是否提供體驗
+                 boolean isCourseTrialActuallyFull = courseOffersTrial && // 必須提供體驗選項
+                                                     course.getMaxTrialCapacity() != null && course.getMaxTrialCapacity() > 0 && // 必須有最大體驗容量且大於 0
+                                                     bookedTrialCount >= course.getMaxTrialCapacity(); // 已預約人數達到或超過最大容量
+                 logger.debug("課程 ID {} 的體驗額滿狀態 (trialFull) 計算為: {}", course.getId(), isCourseTrialActuallyFull); // 添加調試日誌
+
+
+                 // 構建 CourseResponse DTO，包含所有需要的數據
+                 // 假設 CourseResponse DTO 已經添加了 registeredCount, full, bookedTrialCount, trialFull (或 isTrialFull) 屬性
+                 CourseResponse response = CourseResponse.builder()
+                     .id(course.getId())
+                     .name(course.getName())
+                     .description(course.getDescription())
+                     // 從 User coach 物件中獲取教練 ID 和名字 (請確保 Course 實體有關聯 User 實體，且 User 實體有getId/getName方法)
+                     .coachId(course.getCoach() != null ? course.getCoach().getId() : null)
+                     .coachName(course.getCoach() != null ? course.getCoach().getName() : null)
+
+                     .dayOfWeek(course.getDayOfWeek())
+                     .startTime(course.getStartTime())
+                     .duration(course.getDuration())
+                     .maxCapacity(course.getMaxCapacity())
+                     .offersTrialOption(course.getOffersTrialOption())
+                     .maxTrialCapacity(course.getMaxTrialCapacity())
+
+                     // *** 設定已獲取的計數和計算出的狀態到 DTO 中 ***
+                     .registeredCount(registeredCount) // 設定常規已報名人數
+                     .bookedTrialCount(bookedTrialCount) // 設定已預約體驗人數
+
+                     // 設定計算出的額滿狀態
+                     .full(isCourseActuallyFull) // 設定常規額滿狀態 (對應前端的 scope.row.full)
+                     .trialFull(isCourseTrialActuallyFull) // *** 新增：設定體驗額滿狀態 (假設 DTO 屬性名為 trialFull) ***
+                     // 如果您的 DTO 屬性名為 isTrialFull，這裡就用 .isTrialFull(isCourseTrialActuallyFull)
+
+
+                     // 您可能還需要設定 waitlistCount, userStatus 等，如果 CourseResponse 包含這些欄位且前端需要
+                     // 例如：.waitlistCount(...) // 如果需要
+
+                     .build(); // 完成構建
+                 return response; // 返回構建好的 DTO
+             })
+             .collect(Collectors.toList()); // 收集為列表
     }
 
     @Override
@@ -391,12 +541,72 @@ public class CourseServiceImpl implements CourseService {
         logger.info("找到 {} 個匹配教練名稱 '{}' 的課程。", courses.size(), coachName);
 
         // 批量獲取提供體驗選項的課程的下一個排程的 bookedTrialCount
-        Map<Integer, Integer> bookedTrialCounts = getNextOccurrenceBookedTrialCounts(courses);
+        // 這個方法現在應該包含了正確獲取計數的邏輯 (假設您已經實現了 EnrollmentServiceImpl.getNextOccurrenceBookedTrialCounts 的具體內容)
+        Map<Integer, Integer> bookedTrialCounts = enrollmentService.getNextOccurrenceBookedTrialCounts(courses);
 
-        // 轉換並帶入 bookedTrialCount
+        // 使用 Stream 處理課程列表，為每個 Course 獲取註冊人數並構建 CourseResponse DTO
         return courses.stream()
-             .map(course -> convertToCourseResponse(course, bookedTrialCounts.getOrDefault(course.getId(), 0)))
-             .collect(Collectors.toList());
+             .map(course -> {
+                 // 獲取常規課程的已報名人數
+                 // 請注意：在遍歷列表時為每個課程單獨呼叫 enrollmentService.getEnrolledCount 可能效率不高。
+                 // 如果 EnrollmentService 或 EnrollmentDAO 有批量獲取多個課程已報名人數的方法，會更優。
+                 int registeredCount = enrollmentService.getEnrolledCount(course.getId()); // 為每門課程呼叫獲取人數方法
+                 logger.debug("課程 ID {} 的常規已報名人數為: {}", course.getId(), registeredCount); // 添加調試日誌
+
+
+                 // 獲取該課程的 bookedTrialCount 從之前獲取的 Map
+                 // 使用 getOrDefault 以防 Map 中沒有該課程的鍵 (雖然 getNextOccurrenceBookedTrialCounts 應該確保每個課程都有)
+                 Integer bookedTrialCount = bookedTrialCounts.getOrDefault(course.getId(), 0);
+                 logger.debug("課程 ID {} 的體驗預約人數為: {}", course.getId(), bookedTrialCount); // 添加調試日誌
+
+
+                 // 計算常規額滿狀態
+                 boolean isCourseActuallyFull = course.getMaxCapacity() != null && course.getMaxCapacity() > 0 && registeredCount >= course.getMaxCapacity();
+                 logger.debug("課程 ID {} 的常規額滿狀態 (full) 計算為: {}", course.getId(), isCourseActuallyFull); // 添加調試日誌
+
+
+                 // *** 新增計算體驗額滿狀態 ***
+                 boolean courseOffersTrial = course.getOffersTrialOption() != null && course.getOffersTrialOption(); // 檢查是否提供體驗
+                 boolean isCourseTrialActuallyFull = courseOffersTrial && // 必須提供體驗選項
+                                                     course.getMaxTrialCapacity() != null && course.getMaxTrialCapacity() > 0 && // 必須有最大體驗容量且大於 0
+                                                     bookedTrialCount >= course.getMaxTrialCapacity(); // 已預約人數達到或超過最大容量
+                 logger.debug("課程 ID {} 的體驗額滿狀態 (trialFull) 計算為: {}", course.getId(), isCourseTrialActuallyFull); // 添加調試日誌
+
+
+                 // 構建 CourseResponse DTO，包含所有需要的數據
+                 // 假設 CourseResponse DTO 已經添加了 registeredCount, full, bookedTrialCount, trialFull (或 isTrialFull) 屬性
+                 CourseResponse response = CourseResponse.builder()
+                     .id(course.getId())
+                     .name(course.getName())
+                     .description(course.getDescription())
+                     // 從 User coach 物件中獲取教練 ID 和名字 (請確保 Course 實體有關聯 User 實體，且 User 實體有getId/getName方法)
+                     .coachId(course.getCoach() != null ? course.getCoach().getId() : null)
+                     .coachName(course.getCoach() != null ? course.getCoach().getName() : null)
+
+                     .dayOfWeek(course.getDayOfWeek())
+                     .startTime(course.getStartTime())
+                     .duration(course.getDuration())
+                     .maxCapacity(course.getMaxCapacity())
+                     .offersTrialOption(course.getOffersTrialOption())
+                     .maxTrialCapacity(course.getMaxTrialCapacity())
+
+                     // *** 設定已獲取的計數和計算出的狀態到 DTO 中 ***
+                     .registeredCount(registeredCount) // 設定常規已報名人數
+                     .bookedTrialCount(bookedTrialCount) // 設定已預約體驗人數
+
+                     // 設定計算出的額滿狀態
+                     .full(isCourseActuallyFull) // 設定常規額滿狀態 (對應前端的 scope.row.full)
+                     .trialFull(isCourseTrialActuallyFull) // *** 新增：設定體驗額滿狀態 (假設 DTO 屬性名為 trialFull) ***
+                     // 如果您的 DTO 屬性名為 isTrialFull，這裡就用 .isTrialFull(isCourseTrialActuallyFull)
+
+
+                     // 您可能還需要設定 waitlistCount, userStatus 等，如果 CourseResponse 包含這些欄位且前端需要
+                     // 例如：.waitlistCount(...) // 如果需要
+
+                     .build(); // 完成構建
+                 return response; // 返回構建好的 DTO
+             })
+             .collect(Collectors.toList()); // 收集為列表
     }
 
     @Override
