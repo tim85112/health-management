@@ -12,6 +12,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime; // 假設 booked_at 是 LocalDateTime
 
+import org.hibernate.annotations.CreationTimestamp;
+
 @Data
 @Builder
 @NoArgsConstructor
