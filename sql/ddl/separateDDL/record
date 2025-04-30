@@ -20,7 +20,7 @@ CREATE TABLE [body_metrics] (
     [date_recorded] DATE DEFAULT GETDATE()
 );
 GO
-
+ㄕㄛ
 -- 創建 exercise_records 表
 CREATE TABLE [exercise_records] (
     [record_id] INT PRIMARY KEY IDENTITY(1, 1),

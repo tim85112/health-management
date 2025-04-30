@@ -1,0 +1,98 @@
+
+-- 創建 exercise_type_coefficients 表
+CREATE TABLE [exercise_type_coefficients]
+(
+    [exercise_type_id] INT PRIMARY KEY IDENTITY (1, 1),
+    [exercise_name]    NVARCHAR(50) NOT NULL,
+    [met]              FLOAT        NOT NULL
+);
+GO
+
+-- 創建 body_metrics 表
+CREATE TABLE [body_metrics]
+(
+    [id]                  INT PRIMARY KEY IDENTITY (1, 1),
+    [user_id]             INT   NOT NULL FOREIGN KEY REFERENCES [users] ([user_id]) ON DELETE CASCADE,
+    [weight]              FLOAT NOT NULL,
+    [body_fat]            FLOAT,
+    [muscle_mass]         FLOAT,
+    [waist_circumference] FLOAT,
+    [hip_circumference]   FLOAT,
+    [height]              FLOAT,
+    [bmi]                 FLOAT,
+    [date_recorded]       DATE DEFAULT GETDATE()
+);
+GO
+
+-- 創建 exercise_records 表
+CREATE TABLE [exercise_records]
+(
+    [record_id]         INT PRIMARY KEY IDENTITY (1, 1),
+    [user_id]           INT          NOT NULL FOREIGN KEY REFERENCES [users] ([user_id]) ON DELETE CASCADE,
+    [exercise_type]     NVARCHAR(50) NOT NULL,
+    [exercise_duration] INT          NOT NULL,
+    [calories_burned]   FLOAT        NOT NULL,
+    [exercise_date]     DATE         NOT NULL
+);
+GO
+
+-- 創建 nutrition_records 表
+CREATE TABLE [nutrition_records]
+(
+    [record_id]   INT PRIMARY KEY IDENTITY (1, 1),
+    [user_id]     INT FOREIGN KEY REFERENCES [users] ([user_id]) ON DELETE CASCADE,
+    [food_name]   NVARCHAR(255) NOT NULL,
+    [calories]    INT           NOT NULL,
+    [protein]     FLOAT         NOT NULL,
+    [carbs]       FLOAT         NOT NULL,
+    [fats]        FLOAT         NOT NULL,
+    [mealtime]    NVARCHAR(50) CHECK (mealtime IN ('早餐', '午餐', '晚餐', '點心')),
+    [record_date] DATETIME2 DEFAULT GETDATE()
+);
+GO
+
+-- 創建 fitness_goals 表
+CREATE TABLE [fitness_goals]
+(
+    [goal_id]          INT PRIMARY KEY IDENTITY (1, 1),
+    [user_id]          INT          NOT NULL FOREIGN KEY REFERENCES [users] ([user_id]) ON DELETE CASCADE,
+    [goal_type]        NVARCHAR(50) NOT NULL CHECK (goal_type IN ('減重', '增肌', '減脂')),
+    [target_value]     FLOAT        NOT NULL,
+    [current_progress] FLOAT                                                         DEFAULT 0,
+    [unit]             NVARCHAR(20) CHECK (unit IN ('公斤', '%')),
+    [start_date]       DATE                                                          DEFAULT GETDATE(),
+    [end_date]         DATETIME2    NULL,
+    [status]           NVARCHAR(20) CHECK (status IN ('進行中', '已完成', '未達成')) DEFAULT '進行中',
+    [start_weight] FLOAT NULL,        -- 起始體重 (用於減重)
+    [start_body_fat] FLOAT NULL,     -- 起始體脂率 (用於減脂)
+    [start_muscle_mass] FLOAT NULL,  -- 起始肌肉量 (用於增肌)
+    CONSTRAINT [CK_EndDate] CHECK ([end_date] IS NULL OR [end_date] >= [start_date])
+);
+GO
+
+-- 創建 achievements 表
+CREATE TABLE [achievements]
+(
+    [achievement_id]   INT PRIMARY KEY IDENTITY (1, 1),
+    [user_id]          INT                                                NOT NULL FOREIGN KEY REFERENCES [users] ([user_id]) ON DELETE CASCADE,
+    [achievement_type] NVARCHAR(50) ,
+    [title]            NVARCHAR(255) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
+    [description]      NVARCHAR(500),
+    [achieved_date]    DATE DEFAULT GETDATE(),
+    CONSTRAINT [UC_UniqueAchievement] UNIQUE ([user_id], [title])
+);
+GO
+-- 創建 achievement_definitions 表
+CREATE TABLE [achievement_definitions] (
+    [definition_id] INT PRIMARY KEY IDENTITY(1, 1),
+    [achievement_type] NVARCHAR(50) UNIQUE NOT NULL,
+    [title] NVARCHAR(100) NOT NULL,
+    [description] NVARCHAR(MAX) NULL,
+    [trigger_event] VARCHAR(50) NULL,
+    [trigger_condition] NVARCHAR(MAX) NULL,
+    [image_url] NVARCHAR(255) NULL,
+    [points] INT NULL,
+    [created_at] DATETIME DEFAULT GETDATE(),
+    [updated_at] DATETIME DEFAULT GETDATE()
+    );
+GO
