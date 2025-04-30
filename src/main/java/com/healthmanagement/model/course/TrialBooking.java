@@ -54,6 +54,7 @@ public class TrialBooking {
     private String bookingStatus;
 
     @Column(name = "booked_at") // 預約時間戳 (資料庫自動生成)
+    @CreationTimestamp
     private LocalDateTime bookedAt;
 
     // 如果您在 Course 實體中有 trial_bookings 列表，這裡的 @JsonBackReference 是對應的
