@@ -48,13 +48,17 @@ public class Course {
     @Column(name = "max_capacity", nullable = false)
     private Integer maxCapacity; // 最大容納人數
 
-    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
-    @JsonManagedReference("course-enrollments")
-    private List<Enrollment> enrollments; // 課程的報名紀錄
-
     @Column(name = "offers_trial_option", nullable = false)
     private Boolean offersTrialOption;
 
     @Column(name = "max_trial_capacity")
     private Integer maxTrialCapacity;
+    
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
+    @JsonManagedReference("course-enrollments")
+    private List<Enrollment> enrollments; // 課程的報名紀錄
+    
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
+    @JsonManagedReference("course-trialBookings")
+    private List<TrialBooking> trialBookings; // 課程的試聽預約記錄
 }
