@@ -45,6 +45,7 @@ public class AuthController {
                     .passwordHash(registerRequest.getPassword())
                     .gender(registerRequest.getGender())
                     .bio(registerRequest.getBio())
+                    .consecutiveLoginDays(0)
                     .build();
 
             User registeredUser = userService.registerUser(user);

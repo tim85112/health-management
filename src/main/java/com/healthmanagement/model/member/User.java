@@ -79,8 +79,8 @@ public class User {
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
-	@Column(name = "consecutive_login_days")
-	private Integer consecutiveLoginDays;
+    @Column(name = "consecutive_login_days", nullable = true, columnDefinition = "INT DEFAULT 0")
+    private Integer consecutiveLoginDays = 0;
 
 	// 兼容性方法
 	public Integer getUserId() {
