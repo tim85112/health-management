@@ -79,7 +79,7 @@ public class EnrollmentController {
     }
 
     @Operation(summary = "取消常規課程報名 (需本人或 admin/coach)")
-    @PreAuthorize("hasAnyAuthority('admin', 'coach') or @userSecurity.isCurrentUserByEnrollmentId(#enrollmentId, authentication.principal))")
+    @PreAuthorize("hasAnyAuthority('admin', 'coach') or @userSecurity.isCurrentUserByEnrollmentId(#enrollmentId)")
     @DeleteMapping("/{enrollmentId}")
     public ResponseEntity<?> cancelEnrollment(@PathVariable Integer enrollmentId) {
         try {
