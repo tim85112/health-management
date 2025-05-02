@@ -47,14 +47,18 @@ public class RecommendationController {
     public ResponseEntity<String> chatWithGemini(
             @PathVariable Integer userId,
             @RequestBody @Valid ChatRequestDTO requestBody
-    )    {
+    ) {
 
-        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + geminiApiKey;
+        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + geminiApiKey;
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
+        // 檢查 userInput 是否為 null，如果是則使用空字符串
         String userInput = requestBody.getPrompt();
+        if (userInput == null) {
+            userInput = ""; // 使用空字符串替代 null
+        }
 
         Map<String, Object> body = Map.of(
                 "contents", List.of(

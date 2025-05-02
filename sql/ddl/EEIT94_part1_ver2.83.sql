@@ -16,6 +16,7 @@ CREATE TABLE [users]
     [role]          VARCHAR(10) CHECK (role IN ('user', 'admin', 'coach', 'guest')),-- 角色
     [user_points]   INT           NOT NULL DEFAULT 0,								-- 使用者點數
     [last_login]    DATETIME               DEFAULT CURRENT_TIMESTAMP				-- 最後登入時間
+    [consecutive_login_days] INT DEFAULT 0 ,								        -- 連續登入天數
 );
 GO
 
