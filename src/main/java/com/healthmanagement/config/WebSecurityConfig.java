@@ -94,7 +94,8 @@ public class WebSecurityConfig {
                                 "/static-images/**",
                                 "/api/users/profile",
                                 "/login/oauth2/code/google", // 添加 OAuth2 重定向 URI
-                                "/error")
+                                "/error",
+                                "/api/upload/**")
                         .permitAll()
                         .requestMatchers("/api/users").hasAuthority("admin") // 獲取所有用戶僅限管理員
                         .requestMatchers("/api/users/{userId}").authenticated() // 獲取特定用戶需要登入，具體權限在Controller中控制
