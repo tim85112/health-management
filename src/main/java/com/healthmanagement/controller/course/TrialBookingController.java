@@ -171,7 +171,7 @@ public class TrialBookingController {
 
     // 取消體驗預約
     @Operation(summary = "取消體驗預約 (需本人/admin)")
-    @PreAuthorize("hasAuthority('admin') or @userSecurity.isTrialBookingOwner(#bookingId, authentication.principal)")
+    @PreAuthorize("hasAuthority('admin') or @userSecurity.isTrialBookingOwner(#bookingId)")
     @DeleteMapping("/{bookingId}")
     public ResponseEntity<Void> cancelTrialBooking(@PathVariable Integer bookingId) {
         // ... 保持不變，或根據需要在 Service 中處理權限邏輯 ...
