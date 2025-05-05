@@ -71,58 +71,58 @@ public class BodyMetricServiceImpl implements BodyMetricService {
 	}
 
 	@Transactional
-	private void updateFitnessGoalProgress(Integer userId, BodyMetric currentBodyData) {
+	public void updateFitnessGoalProgress(Integer userId, BodyMetric currentBodyData) {
 		System.out.println("updateFitnessGoalProgress - 開始執行，使用者 ID: " + userId + ", 時間: " + java.time.LocalDateTime.now());
-	    System.out.println("updateFitnessGoalProgress - 當前身體數據重量: " + (currentBodyData != null ? currentBodyData.getWeight() : "null"));
+		System.out.println("updateFitnessGoalProgress - 當前身體數據重量: " + (currentBodyData != null ? currentBodyData.getWeight() : "null"));
 
 		// 查詢用戶目前進行中的健身目標
 		List<FitnessGoal> activeGoals = fitnessGoalRepo.findByUserIdAndStatus(userId, "進行中");
 		System.out.println("updateFitnessGoalProgress - 找到 " + activeGoals.size() + " 個進行中的目標。");
 
 		for (FitnessGoal goal : activeGoals) {
-		    if ("減重".equalsIgnoreCase(goal.getGoalType())) {
-	            System.out.println("updateFitnessGoalProgress - 目標是減重。");
-	            if (goal.getTargetValue() != null && currentBodyData.getWeight() != null
-	                    && goal.getStartWeight() != null) {
-	                double startWeight = goal.getStartWeight();
-	                double targetValue = goal.getTargetValue();
-	                double currentWeight = currentBodyData.getWeight();
+			if ("減重".equalsIgnoreCase(goal.getGoalType())) {
+				System.out.println("updateFitnessGoalProgress - 目標是減重。");
+				if (goal.getTargetValue() != null && currentBodyData.getWeight() != null
+						&& goal.getStartWeight() != null) {
+					double startWeight = goal.getStartWeight();
+					double targetValue = goal.getTargetValue();
+					double currentWeight = currentBodyData.getWeight();
 
-	                System.out.println("updateFitnessGoalProgress - 起始體重: " + startWeight + ", 目標減少量: " + targetValue + ", 目前體重: " + currentWeight);
+					System.out.println("updateFitnessGoalProgress - 起始體重: " + startWeight + ", 目標減少量: " + targetValue + ", 目前體重: " + currentWeight);
 
-	                double weightDiff = startWeight - currentWeight;
-	                double targetDiff = targetValue;
-	                double progressPercentage = 0.0;
+					double weightDiff = startWeight - currentWeight;
+					double targetDiff = targetValue;
+					double progressPercentage = 0.0;
 
-	                if (targetDiff != 0) {
-	                    progressPercentage = Math.min(100.0, Math.max(0.0, (weightDiff / targetDiff) * 100));
-	                } else {
-	                    progressPercentage = weightDiff > 0 ? 100.0 : 0.0;
-	                }
+					if (targetDiff != 0) {
+						progressPercentage = Math.min(100.0, Math.max(0.0, (weightDiff / targetDiff) * 100));
+					} else {
+						progressPercentage = weightDiff > 0 ? 100.0 : 0.0;
+					}
 
-	                System.out.println("updateFitnessGoalProgress - 計算出的進度百分比: " + progressPercentage);
-	                goal.setCurrentProgress(progressPercentage);
-	                System.out.println("updateFitnessGoalProgress - 目標 ID: " + goal.getGoalId() + ", 設定目前進度為: " + progressPercentage);
+					System.out.println("updateFitnessGoalProgress - 計算出的進度百分比: " + progressPercentage);
+					goal.setCurrentProgress(progressPercentage);
+					System.out.println("updateFitnessGoalProgress - 目標 ID: " + goal.getGoalId() + ", 設定目前進度為: " + progressPercentage);
 
-	                if (progressPercentage >= 100) {
-	                    goal.setStatus("已完成");
-	                    System.out.println("updateFitnessGoalProgress - 目標 ID: " + goal.getGoalId() + ", 狀態更新為: 已完成");
-	                }
+					if (progressPercentage >= 100) {
+						goal.setStatus("已完成");
+						System.out.println("updateFitnessGoalProgress - 目標 ID: " + goal.getGoalId() + ", 狀態更新為: 已完成");
+					}
 
-	                fitnessGoalRepo.save(goal);
-	                System.out.println("updateFitnessGoalProgress - 目標 ID: " + goal.getGoalId() + ", 進度已保存到資料庫，目前進度: " + goal.getCurrentProgress() + ", 狀態: " + goal.getStatus());
+					fitnessGoalRepo.save(goal);
+					System.out.println("updateFitnessGoalProgress - 目標 ID: " + goal.getGoalId() + ", 進度已保存到資料庫，目前進度: " + goal.getCurrentProgress() + ", 狀態: " + goal.getStatus());
 
-	            } else {
-	                System.out.println("updateFitnessGoalProgress - 減重目標的必要數據為 null，跳過進度更新。目標 ID: " + goal.getGoalId() + ", targetValue: " + goal.getTargetValue() + ", currentWeight: " + currentBodyData.getWeight() + ", startWeight: " + goal.getStartWeight());
-	            }
-	        } else if ("增肌".equalsIgnoreCase(goal.getGoalType())) {
+				} else {
+					System.out.println("updateFitnessGoalProgress - 減重目標的必要數據為 null，跳過進度更新。目標 ID: " + goal.getGoalId() + ", targetValue: " + goal.getTargetValue() + ", currentWeight: " + currentBodyData.getWeight() + ", startWeight: " + goal.getStartWeight());
+				}
+			} else if ("增肌".equalsIgnoreCase(goal.getGoalType())) {
 				if (goal.getTargetValue() != null && currentBodyData.getMuscleMass() != null
 						&& goal.getStartMuscleMass() != null) {
 					double muscleGain = currentBodyData.getMuscleMass() - goal.getStartMuscleMass();
 					double targetGain = goal.getTargetValue();
 					if (targetGain != 0) {
-						double progressPercentage = Math.min(200.0, Math.max(0.0, (muscleGain / targetGain) * 100));						goal.setCurrentProgress(progressPercentage);
-						if (progressPercentage >= 100) {
+						double progressPercentage = Math.min(200.0, Math.max(0.0, (muscleGain / targetGain) * 100));
+						goal.setCurrentProgress(progressPercentage);	if (progressPercentage >= 100) {
 							goal.setStatus("已完成");
 						}
 					} else {
@@ -163,11 +163,11 @@ public class BodyMetricServiceImpl implements BodyMetricService {
 		bodyMetricDTO.setBmi(bmi);
 		return bodyMetricDTO;
 	}
-	
 
-    public boolean existsByUserId(Integer userId) {
-        return bodyMetricRepo.existsByUserId(userId);
-    }
+
+	public boolean existsByUserId(Integer userId) {
+		return bodyMetricRepo.existsByUserId(userId);
+	}
 
 	@Override
 	public void deleteBodyMetric(Integer bodyMetricId) {
@@ -235,7 +235,7 @@ public class BodyMetricServiceImpl implements BodyMetricService {
 
 	@Override
 	public List<BodyMetricDTO> findByMultipleCriteria(Integer userId, String userName, String startDate,
-			String endDate) {
+													  String endDate) {
 		LocalDate startLocalDate = null;
 		LocalDate endLocalDate = null;
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -269,7 +269,7 @@ public class BodyMetricServiceImpl implements BodyMetricService {
 
 	@Override
 	public Page<BodyMetricDTO> findByMultipleCriteriaWithPagination(Integer userId, String userName, String startDate,
-			String endDate, Pageable pageable) {
+																	String endDate, Pageable pageable) {
 		LocalDate startLocalDate = null;
 		LocalDate endLocalDate = null;
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");

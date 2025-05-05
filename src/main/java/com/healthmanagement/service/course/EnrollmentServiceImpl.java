@@ -111,7 +111,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     }
 
     @Transactional
-    private Enrollment performEnrollmentLogic(User user, Course course) {
+    protected Enrollment performEnrollmentLogic(User user, Course course) {
         logger.info("執行核心報名邏輯，使用者 ID: {}，課程 ID: {}", user.getId(), course.getId());
         if (enrollmentDAO.existsByUserAndCourseAndStatusNotIn(user, course, INACTIVE_ENROLLMENT_STATUSES)) {
              logger.warn("使用者 ID {} 已有課程 ID {} 的活躍常規報名記錄。", user.getId(), course.getId());
@@ -844,8 +844,14 @@ public class EnrollmentServiceImpl implements EnrollmentService {
      dto.setStatus(enrollment.getStatus());
      dto.setEnrollmentTime(enrollment.getEnrollmentTime());
 
-     // ... 其他欄位 (userId, userName, courseId, courseName) 的設定 ...
-     // 確保 courseId 和 courseName 也是從 enrollment.getCourse() 獲取
+     // 添加設置用戶 ID 和用戶名的代碼
+     if (enrollment.getUser() != null) {
+         dto.setUserId(enrollment.getUser().getId());
+         dto.setUserName(enrollment.getUser().getName());
+     } else {
+         dto.setUserId(null);
+         dto.setUserName("未知用戶");
+     }
 
      if (enrollment.getCourse() != null) {
          dto.setCourseId(enrollment.getCourse().getId());
