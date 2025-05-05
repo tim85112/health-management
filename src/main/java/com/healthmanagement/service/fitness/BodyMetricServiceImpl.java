@@ -71,7 +71,7 @@ public class BodyMetricServiceImpl implements BodyMetricService {
 	}
 
 	@Transactional
-	protected void updateFitnessGoalProgress(Integer userId, BodyMetric currentBodyData) {
+	public void updateFitnessGoalProgress(Integer userId, BodyMetric currentBodyData) {
 		System.out.println("updateFitnessGoalProgress - 開始執行，使用者 ID: " + userId + ", 時間: " + java.time.LocalDateTime.now());
 		System.out.println("updateFitnessGoalProgress - 當前身體數據重量: " + (currentBodyData != null ? currentBodyData.getWeight() : "null"));
 
