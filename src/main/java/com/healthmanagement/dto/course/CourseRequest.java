@@ -2,6 +2,7 @@ package com.healthmanagement.dto.course;
 
 import lombok.Data;
 import java.time.LocalTime;
+import java.util.List;
 
 // 導入驗證註解
 import jakarta.validation.constraints.Max;     // <--- 改為 jakarta
@@ -54,4 +55,6 @@ public class CourseRequest {
     // @NotNull(message = "最大體驗人數不能為空") // 只有在 offersTrialOption 為 true 時才需要 NotNull
     @Min(value = 1, message = "最大體驗人數必須大於 0")
 	private Integer maxTrialCapacity; // 在 offersTrialOption 為 true 時有效
+    
+    private List<CourseImageDTO> images;
 }

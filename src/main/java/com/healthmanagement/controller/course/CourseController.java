@@ -3,8 +3,8 @@ package com.healthmanagement.controller.course;
 import com.healthmanagement.dto.course.CourseRequest;
 import com.healthmanagement.dto.course.CourseResponse;
 import com.healthmanagement.service.course.CourseService;
-import com.healthmanagement.service.course.EnrollmentService; // 引入 EnrollmentService
-import com.healthmanagement.service.member.UserService; // 引入 UserService 用於根據郵箱查找使用者
+import com.healthmanagement.service.course.EnrollmentService;
+import com.healthmanagement.service.member.UserService;
 
 import com.healthmanagement.dto.course.CourseInfoDTO;
 
@@ -16,12 +16,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.annotation.AuthenticationPrincipal; // 引入 AuthenticationPrincipal
-import org.springframework.security.core.userdetails.UserDetails; // 引入 UserDetails
+
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.dao.EmptyResultDataAccessException;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -30,10 +29,10 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
+
 import java.util.List;
 import java.util.Collections;
-import java.util.Optional; // 引入 Optional
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,23 +105,66 @@ public class CourseController {
 		}
 	}
 
-	// 依照課程ID查詢。
-	@Operation(summary = "依照課程ID查詢")
-	@GetMapping("/{id}")
-	public ResponseEntity<CourseResponse> getCourseById(@PathVariable Integer id) {
-		logger.info("收到依課程 ID 查詢請求：{}", id);
-		try {
-			CourseResponse course = courseService.getCourseById(id);
-			logger.info("返回課程 ID: {}。", id);
-			return ResponseEntity.ok(course);
-		} catch (EntityNotFoundException e) {
-			logger.warn("找不到課程 ID: {}。", id, e);
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-		} catch (Exception e) {
-			logger.error("查詢課程 ID {} 時發生錯誤。", id, e);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+
+	// == 處理依課程ID查詢，並包含當前使用者狀態 ==
+	@Operation(summary = "依照課程ID查詢 (包含當前使用者狀態)") // 更新 Swagger 摘要
+	@GetMapping("/{id}") // 路徑保持不變
+	public ResponseEntity<CourseResponse> getCourseDetailsWithUserStatus( // 方法名稱可以修改得更精確
+				@PathVariable Integer id,
+				@AuthenticationPrincipal UserDetails userDetails // <-- 加入這個參數以獲取當前使用者
+		) {
+			logger.info("收到依課程 ID 查詢請求 (含使用者狀態)：{}", id);
+			CourseResponse courseDetails; // 接收 Service 返回的 DTO
+
+			try {
+				// 1. 呼叫 Service 層方法，獲取課程詳細資訊，包含人數和滿額狀態
+				courseDetails = courseService.getCourseDetailsIncludingCounts(id);
+
+				// 2. 如果使用者已登入，查詢使用者對這個課程的報名/預約狀態
+				if (userDetails != null) {
+					try {
+						String email = userDetails.getUsername();
+						Optional<com.healthmanagement.model.member.User> userOptional = userService.findByEmail(email);
+
+						if (userOptional.isPresent()) {
+							Integer userId = userOptional.get().getId();
+							logger.debug("已認證使用者 (Principal: {}) 查詢課程 ID {} 的個人狀態。", email, id);
+
+							boolean isRegistered = enrollmentService.isUserEnrolled(userId, id);
+							boolean isTrialBooked = enrollmentService.isUserTrialBooked(userId, id);
+
+							courseDetails.setUserStatus(isRegistered ? "已報名" : "未報名");
+							courseDetails.setUserTrialBookingStatus(isTrialBooked ? "已預約" : "未預約"); // Corrected setter call
+
+						} else {
+							logger.warn("已認證使用者 (Principal: {}) 找不到對應 User 實體，無法查詢個人狀態。", email);
+							courseDetails.setUserStatus("未知用戶");
+							courseDetails.setUserTrialBookingStatus("未知用戶"); // Corrected setter call
+						}
+					} catch (Exception e) {
+						logger.error("查詢使用者對課程 {} 的狀態失敗。", id, e);
+						courseDetails.setUserStatus("查詢錯誤");
+						courseDetails.setUserTrialBookingStatus("查詢錯誤"); // Corrected setter call
+					}
+				} else {
+					logger.debug("匿名使用者查詢課程 ID {} (不含個人狀態)。", id);
+					courseDetails.setUserStatus("未登入");
+					courseDetails.setUserTrialBookingStatus("未登入"); // Corrected setter call
+				}
+
+
+				logger.info("返回課程 ID: {} (含使用者狀態)。", id);
+				return ResponseEntity.ok(courseDetails);
+
+			} catch (EntityNotFoundException e) {
+				logger.warn("找不到課程 ID: {}。", id, e);
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+
+			} catch (Exception e) {
+				logger.error("查詢課程 ID {} 時發生錯誤。", id, e);
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+			}
 		}
-	}
 
 	// 新增課程 (需admin)
 	@Operation(summary = "新增課程 (需admin)")
@@ -196,7 +238,7 @@ public class CourseController {
 	@Operation(summary = "依照教練ID查詢")
 	@GetMapping("/coach")
 	public ResponseEntity<Page<CourseResponse>> findByCoachId(@RequestParam Integer coachId,
-			@PageableDefault(size = 10) Pageable pageable) { // size = 10 是預設每頁大小
+			@PageableDefault(size = 10) Pageable pageable) {
 		logger.info("收到依教練 ID 查詢請求 (分頁)：{}。頁碼: {}, 每頁大小: {}", coachId, pageable.getPageNumber(),
 				pageable.getPageSize());
 		Page<CourseResponse> coursesPage = courseService.findByCoachId(coachId, pageable);

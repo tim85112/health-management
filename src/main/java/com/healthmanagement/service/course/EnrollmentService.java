@@ -4,12 +4,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.data.domain.Page; // 引入 Page 類別
+import org.springframework.data.domain.Page;
 
 import com.healthmanagement.dto.course.EnrollmentDTO;
 import com.healthmanagement.dto.course.EnrollmentStatusUpdateDTO;
 import com.healthmanagement.model.course.Course;
-// 引入新的 CourseInfoDTO
 import com.healthmanagement.dto.course.CourseInfoDTO;
 
 public interface EnrollmentService {
@@ -37,7 +36,7 @@ public interface EnrollmentService {
     // 修改方法簽名以支援分頁和篩選
     // 查詢課程列表，包含使用者的報名/預約狀態和人數，並支援分頁及體驗課、星期幾篩選
     Page<CourseInfoDTO> getAllCoursesWithUserStatus(Integer userId, Integer page, Integer size, Boolean offersTrialOption, Integer dayOfWeek, String fullnessStatus);
-    
+
 	// 檢查特定課程是否存在活躍的常規報名記錄 (新增用於 CourseService 刪除檢查)
     boolean hasActiveEnrollmentsForCourse(Integer courseId);
     // 獲取給定課程列表中，每個課程的「下一個排程」的體驗預約人數。
@@ -46,8 +45,11 @@ public interface EnrollmentService {
     // 查詢報名紀錄並支援分頁。
     // 這個方法是查詢報名記錄 (Enrollment)，不是課程 (Course)
     Page<EnrollmentDTO> findEnrollmentsPaginated(int page, int pageSize, String status);
-    
+
     Optional<EnrollmentDTO> findEnrollmentById(Integer id);
-    
+
     List<EnrollmentDTO> searchEnrollmentsByUserName(String userName);
+
+	// 新增方法：查詢特定使用者是否已預約特定體驗課程
+    boolean isUserTrialBooked(Integer userId, Integer courseId);
 }
