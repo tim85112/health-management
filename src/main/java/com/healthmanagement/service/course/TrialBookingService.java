@@ -23,8 +23,8 @@ public interface TrialBookingService {
     TrialBookingDTO getTrialBookingDetails(Integer bookingId);
 	// 更新試上預約記錄的狀態
     TrialBookingDTO updateBookingStatus(Integer bookingId, String newStatus);
-    // 新增: 獲取所有體驗預約紀錄 (支援分頁和篩選)
+    // 獲取所有體驗預約紀錄 (支援分頁和篩選)
     Page<TrialBookingDTO> getAllTrialBookings(Pageable pageable, String bookingStatus, Integer courseId, Integer userId);
-    // *** 新增: 根據會員名稱查詢體驗預約記錄的方法簽名 ***
+    // 根據會員名稱查詢體驗預約記錄的方法簽名 ***
     List<TrialBookingDTO> searchTrialBookingsByUserName(String userName);
 }

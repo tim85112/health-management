@@ -3,7 +3,7 @@ package com.healthmanagement.controller.course;
 import com.healthmanagement.dto.course.EnrollmentDTO;
 import com.healthmanagement.dto.course.EnrollmentStatusUpdateDTO;
 import com.healthmanagement.dto.course.ErrorResponse;
-import com.healthmanagement.model.course.Enrollment;
+
 import com.healthmanagement.model.member.User;
 import com.healthmanagement.security.UserSecurity;
 import com.healthmanagement.service.course.EnrollmentService;
@@ -32,14 +32,12 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.healthmanagement.dto.course.CourseInfoDTO;
-
 @RestController
 @RequestMapping("/api/enrollments")
 @CrossOrigin(origins = "*")
 @Tag(name = "報名管理", description = "報名管理API")
 public class EnrollmentController {
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(EnrollmentController.class);
 
     private final EnrollmentService enrollmentService;
@@ -59,10 +57,13 @@ public class EnrollmentController {
     public ResponseEntity<?> enrollUserToCourse(@AuthenticationPrincipal UserDetails userDetails, @PathVariable Integer courseId) {
         try {
             String email = userDetails.getUsername();
+            // 恢復原邏輯：在 Controller 中根據 email 查找 User，並獲取 userId
             User user = userService.findByEmail(email)
                     .orElseThrow(() -> new IllegalStateException("無法找到對應的使用者"));
             Integer userId = user.getId();
+
             logger.info("使用者 {} 嘗試報名課程 {}", userId, courseId);
+            // 呼叫 Service 方法，傳遞正確的 userId (Integer) 和 courseId (Integer)
             EnrollmentDTO enrollmentDTO = enrollmentService.enrollUserToCourse(userId, courseId);
             logger.info("使用者 {} 報名課程 {} 成功，報名 ID: {}", userId, courseId, enrollmentDTO.getId());
             return new ResponseEntity<>(enrollmentDTO, HttpStatus.CREATED);
@@ -79,7 +80,7 @@ public class EnrollmentController {
     }
 
     @Operation(summary = "取消常規課程報名 (需本人或 admin/coach)")
-    @PreAuthorize("hasAnyAuthority('admin', 'coach') or @userSecurity.isCurrentUserByEnrollmentId(#enrollmentId, authentication.principal))")
+    @PreAuthorize("hasAnyAuthority('admin', 'coach') or @userSecurity.isCurrentUserByEnrollmentId(#enrollmentId)")
     @DeleteMapping("/{enrollmentId}")
     public ResponseEntity<?> cancelEnrollment(@PathVariable Integer enrollmentId) {
         try {
@@ -189,19 +190,17 @@ public class EnrollmentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("查詢已報名人數失敗。"));
         }
     }
-    
-    // 新增手動更新報名記錄狀態的端點
+
     @Operation(summary = "手動更新報名記錄狀態 (需admin/coach)")
-    @PreAuthorize("hasAnyAuthority('admin', 'coach')") // 只有 admin/coach 可以手動更新狀態
-    @PutMapping("/{enrollmentId}") // 使用 PUT 或 PATCH
+    @PreAuthorize("hasAnyAuthority('admin', 'coach')")
+    @PutMapping("/{enrollmentId}")
     public ResponseEntity<?> updateEnrollmentStatus(@PathVariable Integer enrollmentId,
-                                                    @Valid @RequestBody EnrollmentStatusUpdateDTO updateDTO) { // @Valid 驗證 DTO
+                                                    @Valid @RequestBody EnrollmentStatusUpdateDTO updateDTO) {
         try {
             logger.info("管理員/教練嘗試手動更新報名記錄 ID {} 的狀態為 {}", enrollmentId, updateDTO.getStatus());
-            // 呼叫 Service 方法進行更新
             EnrollmentDTO updatedEnrollment = enrollmentService.updateEnrollmentStatus(enrollmentId, updateDTO);
             logger.info("成功手動更新報名記錄 ID {} 的狀態為 {}", enrollmentId, updatedEnrollment.getStatus());
-            return ResponseEntity.ok(updatedEnrollment); // 返回更新後的 DTO
+            return ResponseEntity.ok(updatedEnrollment);
 
         } catch (EntityNotFoundException e) {
             logger.error("手動更新報名記錄 {} 失敗: 未找到記錄. {}", enrollmentId, e.getMessage(), e);
@@ -214,38 +213,33 @@ public class EnrollmentController {
              return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(e.getMessage()));
         } catch (Exception e) {
             logger.error("手動更新報名記錄 {} 發生內部錯誤. {}", enrollmentId, e.getMessage(), e);
-             e.printStackTrace(); // 保留開發階段追蹤
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("更新失敗: " + e.getMessage()));
         }
     }
-    
-    // **實現支援分頁的查詢報名紀錄方法**
+
     @Operation(summary = "查詢報名紀錄 (支援分頁和篩選, 需admin/coach)")
     @PreAuthorize("hasAnyAuthority('admin', 'coach')")
-    @GetMapping // <-- 這個會對應到 /api/enrollments
+    @GetMapping
     public ResponseEntity<?> getEnrollmentsPaginated(
-        @RequestParam(defaultValue = "0") int page, // 接收頁碼參數
-        @RequestParam(defaultValue = "10") int pageSize, // 接收每頁筆數參數
-        @RequestParam(required = false) String status // <-- 新增：接收可選的 status 參數
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int pageSize,
+        @RequestParam(required = false) String status
     ) {
         try {
             logger.info("查詢報名紀錄 - 頁碼: {}, 每頁筆數: {}, 篩選狀態: {}", page, pageSize, status);
 
-            // 呼叫 Service 層支援分頁和篩選的方法
-            // Service 層的頁碼通常從 0 開始
-            Page<EnrollmentDTO> paginatedResult = enrollmentService.findEnrollmentsPaginated(page, pageSize, status); // <-- 將 status 傳給 Service
+            Page<EnrollmentDTO> paginatedResult = enrollmentService.findEnrollmentsPaginated(page, pageSize, status);
 
             List<EnrollmentDTO> enrollmentsPage = paginatedResult.getContent();
             long total = paginatedResult.getTotalElements();
 
             logger.info("查詢到 {} 筆報名記錄 (總共 {} 筆)。", enrollmentsPage.size(), total);
 
-            // 返回包含資料列表和總筆數的結構
             Map<String, Object> responseBody = new HashMap<>();
-            responseBody.put("data", enrollmentsPage); // 放入當前頁的資料列表
-            responseBody.put("total", total); // 放入篩選後的總資料筆數
+            responseBody.put("data", enrollmentsPage);
+            responseBody.put("total", total);
 
-            return ResponseEntity.ok(responseBody); // 返回包含分頁資料和總數的結構
+            return ResponseEntity.ok(responseBody);
 
         } catch (Exception e) {
             logger.error("查詢報名紀錄發生內部錯誤", e);
@@ -256,11 +250,10 @@ public class EnrollmentController {
 
     @Operation(summary = "依報名編號查詢報名紀錄 (需admin/coach)")
     @PreAuthorize("hasAnyAuthority('admin', 'coach')")
-    @GetMapping("/search/by-id/{id}") // 新增：依 ID 查詢
+    @GetMapping("/search/by-id/{id}")
     public ResponseEntity<?> searchEnrollmentById(@PathVariable Integer id) {
         try {
             logger.info("嘗試依報名編號查詢報名紀錄: {}", id);
-            // 假設您的 EnrollmentService 有一個 findEnrollmentById 方法，返回 Optional<EnrollmentDTO>
             Optional<EnrollmentDTO> enrollmentDTO = enrollmentService.findEnrollmentById(id);
 
             if (enrollmentDTO.isPresent()) {
@@ -275,13 +268,11 @@ public class EnrollmentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("查詢失敗: " + e.getMessage()));
         }
     }
-    
- // **新增或修改這個方法來處理依會員名稱查詢**
-    // 請確保 @GetMapping 的路徑與前端呼叫的 /search/by-user-name 相符
-    @Operation(summary = "依會員名稱查詢報名紀錄 (需admin/coach)") // 如果使用 Swagger/OpenAPI
-    @PreAuthorize("hasAnyAuthority('admin', 'coach')") // 如果需要權限控制
-    @GetMapping("/search/by-user-name") // <-- **檢查或修改這裡的路徑**
-    public ResponseEntity<?> searchEnrollmentsByUserName(@RequestParam String name) { // <-- 接收名稱參數
+
+    @Operation(summary = "依會員名稱查詢報名紀錄 (需admin/coach)")
+    @PreAuthorize("hasAnyAuthority('admin', 'coach')")
+    @GetMapping("/search/by-user-name")
+    public ResponseEntity<?> searchEnrollmentsByUserName(@RequestParam String name) {
         try {
             logger.info("依會員名稱查詢報名紀錄，名稱: {}", name);
 
@@ -289,19 +280,14 @@ public class EnrollmentController {
                  return ResponseEntity.badRequest().body(new ErrorResponse("會員名稱不能為空。"));
             }
 
-            // 呼叫 Service 層的方法來執行查詢
-            List<EnrollmentDTO> enrollments = enrollmentService.searchEnrollmentsByUserName(name.trim()); // <-- 假設你的 Service 有這個方法
+            List<EnrollmentDTO> enrollments = enrollmentService.searchEnrollmentsByUserName(name.trim());
 
             logger.info("依會員名稱查詢，找到 {} 條報名記錄。", enrollments.size());
 
-            // 根據查詢結果返回回應
             if (enrollments.isEmpty()) {
-                // 如果沒有找到，可以返回 404 或 200 OK 帶空列表，這裡返回 200 OK 帶空列表更常用
-                 return ResponseEntity.ok(enrollments); // 返回空列表
-                // 或者返回 404 如果你認為找不到是資源不存在
-                // return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse("找不到符合條件的報名紀錄。"));
+                 return ResponseEntity.ok(enrollments);
             } else {
-                return ResponseEntity.ok(enrollments); // 返回找到的報名紀錄列表
+                return ResponseEntity.ok(enrollments);
             }
 
         } catch (Exception e) {
