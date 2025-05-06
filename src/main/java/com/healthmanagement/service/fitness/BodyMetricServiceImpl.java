@@ -71,7 +71,7 @@ public class BodyMetricServiceImpl implements BodyMetricService {
 	}
 
 	@Transactional
-	private void updateFitnessGoalProgress(Integer userId, BodyMetric currentBodyData) {
+	protected void updateFitnessGoalProgress(Integer userId, BodyMetric currentBodyData) {
 		System.out.println("updateFitnessGoalProgress - 開始執行，使用者 ID: " + userId + ", 時間: " + java.time.LocalDateTime.now());
 	    System.out.println("updateFitnessGoalProgress - 當前身體數據重量: " + (currentBodyData != null ? currentBodyData.getWeight() : "null"));
 
@@ -121,8 +121,8 @@ public class BodyMetricServiceImpl implements BodyMetricService {
 					double muscleGain = currentBodyData.getMuscleMass() - goal.getStartMuscleMass();
 					double targetGain = goal.getTargetValue();
 					if (targetGain != 0) {
-						double progressPercentage = Math.min(200.0, Math.max(0.0, (muscleGain / targetGain) * 100));						goal.setCurrentProgress(progressPercentage);
-						if (progressPercentage >= 100) {
+						double progressPercentage = Math.min(200.0, Math.max(0.0, (muscleGain / targetGain) * 100));
+						goal.setCurrentProgress(progressPercentage);	if (progressPercentage >= 100) {
 							goal.setStatus("已完成");
 						}
 					} else {
